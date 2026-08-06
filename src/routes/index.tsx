@@ -82,7 +82,7 @@ function HomePage() {
         <SectionHeader title="진행 중인 경기" to="/games" cta="경기" />
         {liveMatches.length > 0 ? (
           <ul className="space-y-2">
-            {liveMatches.map((m, i) => (
+            {liveMatches.map((m) => (
               <li
                 key={m.id}
                 className="flex items-center gap-2 rounded-2xl border border-destructive/40 bg-card p-3"
@@ -91,10 +91,10 @@ function HomePage() {
                   <span className="size-1.5 rounded-full bg-destructive-foreground" /> LIVE
                 </span>
                 <span className="min-w-0 flex-1 truncate text-xs font-bold text-foreground">
-                  코트 {m.court ?? i + 1}
+                  코트 {m.courtIndex + 1}
                 </span>
                 <span className="shrink-0 text-sm font-extrabold tabular-nums text-foreground">
-                  {m.scoreA ?? 0} : {m.scoreB ?? 0}
+                  {m.scoreA} : {m.scoreB}
                 </span>
               </li>
             ))}
