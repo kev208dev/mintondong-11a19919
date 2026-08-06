@@ -565,6 +565,45 @@ function ClubPage() {
           </AccordionItem>
         ) : null}
       </Accordion>
+
+      {/* 공개 설정 · 가입 정책 (UI 준비 단계) */}
+      <h2 className="mt-5 px-1 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
+        공개 설정 · 가입 정책
+      </h2>
+      <section className="mt-2 rounded-2xl border border-border bg-card p-3">
+        <p className="text-[11px] font-bold text-muted-foreground">공개 범위</p>
+        <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+          {["공개", "비공개"].map((v, i) => (
+            <button
+              key={v}
+              disabled
+              className={`h-10 rounded-xl text-xs font-bold disabled:opacity-60 ${
+                i === 0 ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+              }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-[11px] font-bold text-muted-foreground">가입 방식</p>
+        <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+          {["바로 가입", "승인 후 가입", "초대 전용"].map((v, i) => (
+            <button
+              key={v}
+              disabled
+              className={`h-10 rounded-xl text-[11px] font-bold disabled:opacity-60 ${
+                i === 2 ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+              }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+        <p className="mt-2.5 rounded-xl bg-secondary px-3 py-2 text-[11px] text-secondary-foreground">
+          준비 중 · 저장 기능은 공개/가입 정책 컬럼이 추가된 뒤 활성화돼요. 현재는 초대 코드 기반
+          비공개 가입만 동작합니다.
+        </p>
+      </section>
     </>
   );
 }
