@@ -19,6 +19,7 @@ import { Route as RecordsRouteImport } from './routes/records'
 import { Route as ClubIndexRouteImport } from './routes/club.index'
 import { Route as ClubAttendanceRouteImport } from './routes/club.attendance'
 import { Route as ClubManageRouteImport } from './routes/club.manage'
+import { Route as ClubRankingRouteImport } from './routes/club.ranking'
 import { Route as ClubScheduleRouteImport } from './routes/club.schedule'
 import { Route as PaymentsTossFailRouteImport } from './routes/payments.toss.fail'
 import { Route as PaymentsTossSuccessRouteImport } from './routes/payments.toss.success'
@@ -73,6 +74,11 @@ const ClubManageRoute = ClubManageRouteImport.update({
   path: '/manage',
   getParentRoute: () => ClubRoute,
 } as any)
+const ClubRankingRoute = ClubRankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
+  getParentRoute: () => ClubRoute,
+} as any)
 const ClubScheduleRoute = ClubScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/records': typeof RecordsRoute
   '/club/attendance': typeof ClubAttendanceRoute
   '/club/manage': typeof ClubManageRoute
+  '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
   '/club/': typeof ClubIndexRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/records': typeof RecordsRoute
   '/club/attendance': typeof ClubAttendanceRoute
   '/club/manage': typeof ClubManageRoute
+  '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
   '/club': typeof ClubIndexRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/records': typeof RecordsRoute
   '/club/attendance': typeof ClubAttendanceRoute
   '/club/manage': typeof ClubManageRoute
+  '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
   '/club/': typeof ClubIndexRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/club/attendance'
     | '/club/manage'
+    | '/club/ranking'
     | '/club/schedule'
     | '/club/'
     | '/payments/toss/fail'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/club/attendance'
     | '/club/manage'
+    | '/club/ranking'
     | '/club/schedule'
     | '/club'
     | '/payments/toss/fail'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/records'
     | '/club/attendance'
     | '/club/manage'
+    | '/club/ranking'
     | '/club/schedule'
     | '/club/'
     | '/payments/toss/fail'
@@ -265,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubManageRouteImport
       parentRoute: typeof ClubRoute
     }
+    '/club/ranking': {
+      id: '/club/ranking'
+      path: '/ranking'
+      fullPath: '/club/ranking'
+      preLoaderRoute: typeof ClubRankingRouteImport
+      parentRoute: typeof ClubRoute
+    }
     '/club/schedule': {
       id: '/club/schedule'
       path: '/schedule'
@@ -292,6 +311,7 @@ declare module '@tanstack/react-router' {
 interface ClubRouteChildren {
   ClubAttendanceRoute: typeof ClubAttendanceRoute
   ClubManageRoute: typeof ClubManageRoute
+  ClubRankingRoute: typeof ClubRankingRoute
   ClubScheduleRoute: typeof ClubScheduleRoute
   ClubIndexRoute: typeof ClubIndexRoute
 }
@@ -299,6 +319,7 @@ interface ClubRouteChildren {
 const ClubRouteChildren: ClubRouteChildren = {
   ClubAttendanceRoute: ClubAttendanceRoute,
   ClubManageRoute: ClubManageRoute,
+  ClubRankingRoute: ClubRankingRoute,
   ClubScheduleRoute: ClubScheduleRoute,
   ClubIndexRoute: ClubIndexRoute,
 }
