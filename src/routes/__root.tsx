@@ -101,8 +101,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "민턴동 – 배드민턴 클럽 관리 앱" },
       { name: "twitter:description", content: "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/064c1d95-dac4-461d-a991-ab48653632e6/id-preview-14c0ed09--dd255d9a-3576-4edd-9e31-2af60fb4c099.lovable.app-1785942092528.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/064c1d95-dac4-461d-a991-ab48653632e6/id-preview-14c0ed09--dd255d9a-3576-4edd-9e31-2af60fb4c099.lovable.app-1785942092528.png" },
     ],
     links: [
       {
