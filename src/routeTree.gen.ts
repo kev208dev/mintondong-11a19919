@@ -22,6 +22,7 @@ import { Route as ClubFinanceRouteImport } from './routes/club.finance'
 import { Route as ClubManageRouteImport } from './routes/club.manage'
 import { Route as ClubMembersRouteImport } from './routes/club.members'
 import { Route as ClubMoreRouteImport } from './routes/club.more'
+import { Route as ClubNoticesRouteImport } from './routes/club.notices'
 import { Route as ClubRankingRouteImport } from './routes/club.ranking'
 import { Route as ClubScheduleRouteImport } from './routes/club.schedule'
 import { Route as PaymentsTossFailRouteImport } from './routes/payments.toss.fail'
@@ -92,6 +93,11 @@ const ClubMoreRoute = ClubMoreRouteImport.update({
   path: '/more',
   getParentRoute: () => ClubRoute,
 } as any)
+const ClubNoticesRoute = ClubNoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
+  getParentRoute: () => ClubRoute,
+} as any)
 const ClubRankingRoute = ClubRankingRouteImport.update({
   id: '/ranking',
   path: '/ranking',
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/club/manage': typeof ClubManageRoute
   '/club/members': typeof ClubMembersRoute
   '/club/more': typeof ClubMoreRoute
+  '/club/notices': typeof ClubNoticesRoute
   '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
   '/club/': typeof ClubIndexRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/club/manage': typeof ClubManageRoute
   '/club/members': typeof ClubMembersRoute
   '/club/more': typeof ClubMoreRoute
+  '/club/notices': typeof ClubNoticesRoute
   '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
   '/club': typeof ClubIndexRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/club/manage': typeof ClubManageRoute
   '/club/members': typeof ClubMembersRoute
   '/club/more': typeof ClubMoreRoute
+  '/club/notices': typeof ClubNoticesRoute
   '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
   '/club/': typeof ClubIndexRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/club/manage'
     | '/club/members'
     | '/club/more'
+    | '/club/notices'
     | '/club/ranking'
     | '/club/schedule'
     | '/club/'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/club/manage'
     | '/club/members'
     | '/club/more'
+    | '/club/notices'
     | '/club/ranking'
     | '/club/schedule'
     | '/club'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/club/manage'
     | '/club/members'
     | '/club/more'
+    | '/club/notices'
     | '/club/ranking'
     | '/club/schedule'
     | '/club/'
@@ -334,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubMoreRouteImport
       parentRoute: typeof ClubRoute
     }
+    '/club/notices': {
+      id: '/club/notices'
+      path: '/notices'
+      fullPath: '/club/notices'
+      preLoaderRoute: typeof ClubNoticesRouteImport
+      parentRoute: typeof ClubRoute
+    }
     '/club/ranking': {
       id: '/club/ranking'
       path: '/ranking'
@@ -371,6 +390,7 @@ interface ClubRouteChildren {
   ClubManageRoute: typeof ClubManageRoute
   ClubMembersRoute: typeof ClubMembersRoute
   ClubMoreRoute: typeof ClubMoreRoute
+  ClubNoticesRoute: typeof ClubNoticesRoute
   ClubRankingRoute: typeof ClubRankingRoute
   ClubScheduleRoute: typeof ClubScheduleRoute
   ClubIndexRoute: typeof ClubIndexRoute
@@ -382,6 +402,7 @@ const ClubRouteChildren: ClubRouteChildren = {
   ClubManageRoute: ClubManageRoute,
   ClubMembersRoute: ClubMembersRoute,
   ClubMoreRoute: ClubMoreRoute,
+  ClubNoticesRoute: ClubNoticesRoute,
   ClubRankingRoute: ClubRankingRoute,
   ClubScheduleRoute: ClubScheduleRoute,
   ClubIndexRoute: ClubIndexRoute,
