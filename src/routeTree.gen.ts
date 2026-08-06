@@ -10,33 +10,141 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ClubRouteImport } from './routes/club'
+import { Route as GamesRouteImport } from './routes/games'
+import { Route as LessonsRouteImport } from './routes/lessons'
+import { Route as MeRouteImport } from './routes/me'
+import { Route as RecordsRouteImport } from './routes/records'
+import { Route as PaymentsTossFailRouteImport } from './routes/payments.toss.fail'
+import { Route as PaymentsTossSuccessRouteImport } from './routes/payments.toss.success'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClubRoute = ClubRouteImport.update({
+  id: '/club',
+  path: '/club',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LessonsRoute = LessonsRouteImport.update({
+  id: '/lessons',
+  path: '/lessons',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecordsRoute = RecordsRouteImport.update({
+  id: '/records',
+  path: '/records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsTossFailRoute = PaymentsTossFailRouteImport.update({
+  id: '/payments/toss/fail',
+  path: '/payments/toss/fail',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentsTossSuccessRoute = PaymentsTossSuccessRouteImport.update({
+  id: '/payments/toss/success',
+  path: '/payments/toss/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/club': typeof ClubRoute
+  '/games': typeof GamesRoute
+  '/lessons': typeof LessonsRoute
+  '/me': typeof MeRoute
+  '/records': typeof RecordsRoute
+  '/payments/toss/fail': typeof PaymentsTossFailRoute
+  '/payments/toss/success': typeof PaymentsTossSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/club': typeof ClubRoute
+  '/games': typeof GamesRoute
+  '/lessons': typeof LessonsRoute
+  '/me': typeof MeRoute
+  '/records': typeof RecordsRoute
+  '/payments/toss/fail': typeof PaymentsTossFailRoute
+  '/payments/toss/success': typeof PaymentsTossSuccessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/club': typeof ClubRoute
+  '/games': typeof GamesRoute
+  '/lessons': typeof LessonsRoute
+  '/me': typeof MeRoute
+  '/records': typeof RecordsRoute
+  '/payments/toss/fail': typeof PaymentsTossFailRoute
+  '/payments/toss/success': typeof PaymentsTossSuccessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/club'
+    | '/games'
+    | '/lessons'
+    | '/me'
+    | '/records'
+    | '/payments/toss/fail'
+    | '/payments/toss/success'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/club'
+    | '/games'
+    | '/lessons'
+    | '/me'
+    | '/records'
+    | '/payments/toss/fail'
+    | '/payments/toss/success'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/club'
+    | '/games'
+    | '/lessons'
+    | '/me'
+    | '/records'
+    | '/payments/toss/fail'
+    | '/payments/toss/success'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  ClubRoute: typeof ClubRoute
+  GamesRoute: typeof GamesRoute
+  LessonsRoute: typeof LessonsRoute
+  MeRoute: typeof MeRoute
+  RecordsRoute: typeof RecordsRoute
+  PaymentsTossFailRoute: typeof PaymentsTossFailRoute
+  PaymentsTossSuccessRoute: typeof PaymentsTossSuccessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +156,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/club': {
+      id: '/club'
+      path: '/club'
+      fullPath: '/club'
+      preLoaderRoute: typeof ClubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lessons': {
+      id: '/lessons'
+      path: '/lessons'
+      fullPath: '/lessons'
+      preLoaderRoute: typeof LessonsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/records': {
+      id: '/records'
+      path: '/records'
+      fullPath: '/records'
+      preLoaderRoute: typeof RecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/toss/fail': {
+      id: '/payments/toss/fail'
+      path: '/payments/toss/fail'
+      fullPath: '/payments/toss/fail'
+      preLoaderRoute: typeof PaymentsTossFailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payments/toss/success': {
+      id: '/payments/toss/success'
+      path: '/payments/toss/success'
+      fullPath: '/payments/toss/success'
+      preLoaderRoute: typeof PaymentsTossSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  ClubRoute: ClubRoute,
+  GamesRoute: GamesRoute,
+  LessonsRoute: LessonsRoute,
+  MeRoute: MeRoute,
+  RecordsRoute: RecordsRoute,
+  PaymentsTossFailRoute: PaymentsTossFailRoute,
+  PaymentsTossSuccessRoute: PaymentsTossSuccessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
