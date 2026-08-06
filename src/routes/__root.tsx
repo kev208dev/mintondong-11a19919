@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
-  Outlet,
   Link,
   createRootRouteWithContext,
   useRouter,
@@ -11,6 +10,11 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { StoreProvider } from "../lib/badminton/store";
+import { Toaster } from "../components/ui/sonner";
+import { AppShell } from "../components/app/AppShell";
+import { AuthProvider, useAuth } from "../lib/auth/AuthProvider";
+
 
 function NotFoundComponent() {
   return (
@@ -73,27 +77,48 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  ssr: false,
+
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1, viewport-fit=cover",
+      },
+      { title: "민턴동 – 배드민턴 클럽 관리 앱" },
+      {
+        name: "description",
+        content:
+          "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱.",
+      },
+      { property: "og:title", content: "민턴동 – 배드민턴 클럽 관리 앱" },
+      {
+        property: "og:description",
+        content: "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "민턴동 – 배드민턴 클럽 관리 앱" },
+      { name: "twitter:description", content: "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/064c1d95-dac4-461d-a991-ab48653632e6/id-preview-14c0ed09--dd255d9a-3576-4edd-9e31-2af60fb4c099.lovable.app-1785942092528.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/064c1d95-dac4-461d-a991-ab48653632e6/id-preview-14c0ed09--dd255d9a-3576-4edd-9e31-2af60fb4c099.lovable.app-1785942092528.png" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap",
+      },
+      { rel: "icon", type: "image/png", href: "/mintondong-icon.png" },
+      { rel: "apple-touch-icon", href: "/mintondong-icon.png" },
     ],
   }),
+
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -102,7 +127,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="ko">
       <head>
         <HeadContent />
       </head>
@@ -114,13 +139,33 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/** Google OAuth returns to the app origin; restore the intended destination. */
+function PostAuthRedirect() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (loading || !user) return;
+    const next = sessionStorage.getItem("shuttleon:next");
+    if (!next) return;
+    sessionStorage.removeItem("shuttleon:next");
+    if (next.startsWith("/") && !next.startsWith("//")) void router.navigate({ to: next });
+  }, [user, loading, router]);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <AuthProvider>
+        <StoreProvider>
+          <PostAuthRedirect />
+          <AppShell />
+          <Toaster position="top-center" />
+        </StoreProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
+
