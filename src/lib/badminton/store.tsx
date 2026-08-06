@@ -31,7 +31,7 @@ import type {
   ScoreSource,
 } from "./types";
 
-const STORAGE_KEY = "badminton-club-state-v2";
+const STORAGE_KEY = "badminton-club-state-v3";
 
 export interface BookingDraftInput {
   coachId: string;
@@ -154,7 +154,14 @@ function normalize(state: AppState): AppState {
       finance: c.finance ?? seeded?.finance ?? { monthlyDues: 0, entries: [] },
     };
   }
-  return { ...state, clubs };
+  // 클럽이 하나도 없거나 순서/현재 클럽이 깨진 경우 스타터 상태로 안전하게 복구한다.
+  const ids = Object.keys(clubs);
+  if (ids.length === 0) return SEED_STATE;
+  const order = (state.clubOrder ?? []).filter((id) => clubs[id]);
+  for (const id of ids) if (!order.includes(id)) order.push(id);
+  const currentClubId = clubs[state.currentClubId] ? state.currentClubId : order[0]!;
+  const meId = state.meId ?? SEED_STATE.meId;
+  return { ...state, clubs, clubOrder: order, currentClubId, meId };
 }
 
 /** 구버전/손상된 역할 데이터는 유효한 권한만 남기되 사용자 정의 내용은 보존한다. */
@@ -545,7 +552,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setState((p) => ({ ...p, currentClubId: found.club.id }));
           return { ok: true, message: "이미 가입된 클럽이에요." };
         }
-        return { ok: false, message: "초대 코드를 찾을 수 없어요. (데모: RALLY26)" };
+        return { ok: false, message: "초대 코드를 찾을 수 없어요." };
       },
       leaveClub: (id) =>
         setState((p) => {
