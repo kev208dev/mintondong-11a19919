@@ -31,7 +31,7 @@ import type {
   ScoreSource,
 } from "./types";
 
-const STORAGE_KEY = "badminton-club-state-v2";
+const STORAGE_KEY = "badminton-club-state-v3";
 
 export interface BookingDraftInput {
   coachId: string;
@@ -552,7 +552,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setState((p) => ({ ...p, currentClubId: found.club.id }));
           return { ok: true, message: "이미 가입된 클럽이에요." };
         }
-        return { ok: false, message: "초대 코드를 찾을 수 없어요. (데모: RALLY26)" };
+        return { ok: false, message: "초대 코드를 찾을 수 없어요." };
       },
       leaveClub: (id) =>
         setState((p) => {
