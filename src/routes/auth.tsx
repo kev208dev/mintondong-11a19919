@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth/AuthProvider";
 
 export const Route = createFileRoute("/auth")({
@@ -101,41 +100,29 @@ function AuthPage() {
     }
   };
 
-  const apple = async () => {
+  // Apple / Google 은 Lovable 관리형 auth 대신 외부 Supabase Auth 로 처리한다.
+  // provider 자격증명이 아직 없으면 Supabase 가 에러를 돌려주고, UI 는 안내만 띄운다.
+  const oauth = async (provider: "apple" | "google", label: string) => {
     setBusy(true);
     try {
       sessionStorage.setItem("shuttleon:next", safePath(next));
-      const result = await lovable.auth.signInWithOAuth("apple", {
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin },
       });
-      if (result.error) {
-        toast.error("Apple 로그인에 실패했어요.");
+      if (error) {
+        toast.error(`${label} 로그인 설정이 필요해요.`);
         return;
       }
     } catch {
-      toast.error("Apple 로그인에 실패했어요.");
+      toast.error(`${label} 로그인 설정이 필요해요.`);
     } finally {
       setBusy(false);
     }
   };
 
-  const google = async () => {
-    setBusy(true);
-    try {
-      sessionStorage.setItem("shuttleon:next", safePath(next));
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-      });
-      if (result.error) {
-        toast.error("구글 로그인에 실패했어요.");
-        return;
-      }
-    } catch {
-      toast.error("구글 로그인에 실패했어요.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const apple = () => oauth("apple", "Apple");
+  const google = () => oauth("google", "구글");
 
   return (
     <section className="rounded-3xl border border-border bg-card p-5">
