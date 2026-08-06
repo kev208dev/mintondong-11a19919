@@ -100,29 +100,8 @@ function AuthPage() {
     }
   };
 
-  // Apple / Google 은 Lovable 관리형 auth 대신 외부 Supabase Auth 로 처리한다.
-  // provider 자격증명이 아직 없으면 Supabase 가 에러를 돌려주고, UI 는 안내만 띄운다.
-  const oauth = async (provider: "apple" | "google", label: string) => {
-    setBusy(true);
-    try {
-      sessionStorage.setItem("shuttleon:next", safePath(next));
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo: window.location.origin },
-      });
-      if (error) {
-        toast.error(`${label} 로그인 설정이 필요해요.`);
-        return;
-      }
-    } catch {
-      toast.error(`${label} 로그인 설정이 필요해요.`);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const apple = () => oauth("apple", "Apple");
-  const google = () => oauth("google", "구글");
+  // Apple / Google 은 외부 Supabase provider 자격증명 설정 전이라 비활성(준비 중) 상태로 둔다.
+  // Lovable 관리형 auth 는 사용하지 않는다.
 
   return (
     <section className="rounded-3xl border border-border bg-card p-5">
@@ -142,20 +121,19 @@ function AuthPage() {
       </button>
 
       <button
-        className="mt-2 flex h-12 w-full items-center justify-center rounded-2xl bg-foreground text-sm font-bold text-background active:scale-95 disabled:opacity-60"
-        disabled={busy}
-        onClick={apple}
+        className="mt-2 flex h-12 w-full items-center justify-center rounded-2xl bg-secondary text-sm font-bold text-muted-foreground disabled:opacity-60"
+        disabled
       >
-        Apple로 계속하기
+        Apple로 계속하기 · 준비 중
       </button>
 
       <button
-        className="mt-2 flex h-10 w-full items-center justify-center rounded-2xl border border-border bg-card text-xs font-bold text-muted-foreground active:scale-95 disabled:opacity-60"
-        disabled={busy}
-        onClick={google}
+        className="mt-2 flex h-10 w-full items-center justify-center rounded-2xl border border-border bg-card text-xs font-bold text-muted-foreground disabled:opacity-60"
+        disabled
       >
-        구글로 계속하기
+        구글로 계속하기 · 준비 중
       </button>
+
 
 
       <div className="my-4 flex items-center gap-3">
