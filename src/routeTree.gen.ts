@@ -16,6 +16,7 @@ import { Route as GamesRouteImport } from './routes/games'
 import { Route as LessonsRouteImport } from './routes/lessons'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as RecordsRouteImport } from './routes/records'
+import { Route as ClubManageRouteImport } from './routes/club.manage'
 import { Route as PaymentsTossFailRouteImport } from './routes/payments.toss.fail'
 import { Route as PaymentsTossSuccessRouteImport } from './routes/payments.toss.success'
 
@@ -54,6 +55,11 @@ const RecordsRoute = RecordsRouteImport.update({
   path: '/records',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClubManageRoute = ClubManageRouteImport.update({
+  id: '/manage',
+  path: '/manage',
+  getParentRoute: () => ClubRoute,
+} as any)
 const PaymentsTossFailRoute = PaymentsTossFailRouteImport.update({
   id: '/payments/toss/fail',
   path: '/payments/toss/fail',
@@ -68,22 +74,24 @@ const PaymentsTossSuccessRoute = PaymentsTossSuccessRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/club': typeof ClubRoute
+  '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
+  '/club/manage': typeof ClubManageRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/club': typeof ClubRoute
+  '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
+  '/club/manage': typeof ClubManageRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
 }
@@ -91,11 +99,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/club': typeof ClubRoute
+  '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
+  '/club/manage': typeof ClubManageRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/lessons'
     | '/me'
     | '/records'
+    | '/club/manage'
     | '/payments/toss/fail'
     | '/payments/toss/success'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/lessons'
     | '/me'
     | '/records'
+    | '/club/manage'
     | '/payments/toss/fail'
     | '/payments/toss/success'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/lessons'
     | '/me'
     | '/records'
+    | '/club/manage'
     | '/payments/toss/fail'
     | '/payments/toss/success'
   fileRoutesById: FileRoutesById
@@ -138,7 +150,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
-  ClubRoute: typeof ClubRoute
+  ClubRoute: typeof ClubRouteWithChildren
   GamesRoute: typeof GamesRoute
   LessonsRoute: typeof LessonsRoute
   MeRoute: typeof MeRoute
@@ -198,6 +210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecordsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/club/manage': {
+      id: '/club/manage'
+      path: '/manage'
+      fullPath: '/club/manage'
+      preLoaderRoute: typeof ClubManageRouteImport
+      parentRoute: typeof ClubRoute
+    }
     '/payments/toss/fail': {
       id: '/payments/toss/fail'
       path: '/payments/toss/fail'
@@ -215,10 +234,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ClubRouteChildren {
+  ClubManageRoute: typeof ClubManageRoute
+}
+
+const ClubRouteChildren: ClubRouteChildren = {
+  ClubManageRoute: ClubManageRoute,
+}
+
+const ClubRouteWithChildren = ClubRoute._addFileChildren(ClubRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
-  ClubRoute: ClubRoute,
+  ClubRoute: ClubRouteWithChildren,
   GamesRoute: GamesRoute,
   LessonsRoute: LessonsRoute,
   MeRoute: MeRoute,
