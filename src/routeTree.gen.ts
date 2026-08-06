@@ -16,6 +16,17 @@ import { Route as GamesRouteImport } from './routes/games'
 import { Route as LessonsRouteImport } from './routes/lessons'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as RecordsRouteImport } from './routes/records'
+import { Route as TournamentsRouteImport } from './routes/tournaments'
+import { Route as ClubIndexRouteImport } from './routes/club.index'
+import { Route as ClubAttendanceRouteImport } from './routes/club.attendance'
+import { Route as ClubFinanceRouteImport } from './routes/club.finance'
+import { Route as ClubManageRouteImport } from './routes/club.manage'
+import { Route as ClubMembersRouteImport } from './routes/club.members'
+import { Route as ClubMoreRouteImport } from './routes/club.more'
+import { Route as ClubNoticesRouteImport } from './routes/club.notices'
+import { Route as ClubRankingRouteImport } from './routes/club.ranking'
+import { Route as ClubScheduleRouteImport } from './routes/club.schedule'
+import { Route as ClubsFindRouteImport } from './routes/clubs.find'
 import { Route as PaymentsTossFailRouteImport } from './routes/payments.toss.fail'
 import { Route as PaymentsTossSuccessRouteImport } from './routes/payments.toss.success'
 
@@ -54,6 +65,61 @@ const RecordsRoute = RecordsRouteImport.update({
   path: '/records',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TournamentsRoute = TournamentsRouteImport.update({
+  id: '/tournaments',
+  path: '/tournaments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClubIndexRoute = ClubIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ClubRoute,
+} as any)
+const ClubAttendanceRoute = ClubAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => ClubRoute,
+} as any)
+const ClubFinanceRoute = ClubFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => ClubRoute,
+} as any)
+const ClubManageRoute = ClubManageRouteImport.update({
+  id: '/manage',
+  path: '/manage',
+  getParentRoute: () => ClubRoute,
+} as any)
+const ClubMembersRoute = ClubMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => ClubRoute,
+} as any)
+const ClubMoreRoute = ClubMoreRouteImport.update({
+  id: '/more',
+  path: '/more',
+  getParentRoute: () => ClubRoute,
+} as any)
+const ClubNoticesRoute = ClubNoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
+  getParentRoute: () => ClubRoute,
+} as any)
+const ClubRankingRoute = ClubRankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
+  getParentRoute: () => ClubRoute,
+} as any)
+const ClubScheduleRoute = ClubScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => ClubRoute,
+} as any)
+const ClubsFindRoute = ClubsFindRouteImport.update({
+  id: '/clubs/find',
+  path: '/clubs/find',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PaymentsTossFailRoute = PaymentsTossFailRouteImport.update({
   id: '/payments/toss/fail',
   path: '/payments/toss/fail',
@@ -68,22 +134,43 @@ const PaymentsTossSuccessRoute = PaymentsTossSuccessRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/club': typeof ClubRoute
+  '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
+  '/tournaments': typeof TournamentsRoute
+  '/club/attendance': typeof ClubAttendanceRoute
+  '/club/finance': typeof ClubFinanceRoute
+  '/club/manage': typeof ClubManageRoute
+  '/club/members': typeof ClubMembersRoute
+  '/club/more': typeof ClubMoreRoute
+  '/club/notices': typeof ClubNoticesRoute
+  '/club/ranking': typeof ClubRankingRoute
+  '/club/schedule': typeof ClubScheduleRoute
+  '/clubs/find': typeof ClubsFindRoute
+  '/club/': typeof ClubIndexRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/club': typeof ClubRoute
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
+  '/tournaments': typeof TournamentsRoute
+  '/club/attendance': typeof ClubAttendanceRoute
+  '/club/finance': typeof ClubFinanceRoute
+  '/club/manage': typeof ClubManageRoute
+  '/club/members': typeof ClubMembersRoute
+  '/club/more': typeof ClubMoreRoute
+  '/club/notices': typeof ClubNoticesRoute
+  '/club/ranking': typeof ClubRankingRoute
+  '/club/schedule': typeof ClubScheduleRoute
+  '/clubs/find': typeof ClubsFindRoute
+  '/club': typeof ClubIndexRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
 }
@@ -91,11 +178,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/club': typeof ClubRoute
+  '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
+  '/tournaments': typeof TournamentsRoute
+  '/club/attendance': typeof ClubAttendanceRoute
+  '/club/finance': typeof ClubFinanceRoute
+  '/club/manage': typeof ClubManageRoute
+  '/club/members': typeof ClubMembersRoute
+  '/club/more': typeof ClubMoreRoute
+  '/club/notices': typeof ClubNoticesRoute
+  '/club/ranking': typeof ClubRankingRoute
+  '/club/schedule': typeof ClubScheduleRoute
+  '/clubs/find': typeof ClubsFindRoute
+  '/club/': typeof ClubIndexRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
 }
@@ -109,17 +207,38 @@ export interface FileRouteTypes {
     | '/lessons'
     | '/me'
     | '/records'
+    | '/tournaments'
+    | '/club/attendance'
+    | '/club/finance'
+    | '/club/manage'
+    | '/club/members'
+    | '/club/more'
+    | '/club/notices'
+    | '/club/ranking'
+    | '/club/schedule'
+    | '/clubs/find'
+    | '/club/'
     | '/payments/toss/fail'
     | '/payments/toss/success'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/club'
     | '/games'
     | '/lessons'
     | '/me'
     | '/records'
+    | '/tournaments'
+    | '/club/attendance'
+    | '/club/finance'
+    | '/club/manage'
+    | '/club/members'
+    | '/club/more'
+    | '/club/notices'
+    | '/club/ranking'
+    | '/club/schedule'
+    | '/clubs/find'
+    | '/club'
     | '/payments/toss/fail'
     | '/payments/toss/success'
   id:
@@ -131,6 +250,17 @@ export interface FileRouteTypes {
     | '/lessons'
     | '/me'
     | '/records'
+    | '/tournaments'
+    | '/club/attendance'
+    | '/club/finance'
+    | '/club/manage'
+    | '/club/members'
+    | '/club/more'
+    | '/club/notices'
+    | '/club/ranking'
+    | '/club/schedule'
+    | '/clubs/find'
+    | '/club/'
     | '/payments/toss/fail'
     | '/payments/toss/success'
   fileRoutesById: FileRoutesById
@@ -138,11 +268,13 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
-  ClubRoute: typeof ClubRoute
+  ClubRoute: typeof ClubRouteWithChildren
   GamesRoute: typeof GamesRoute
   LessonsRoute: typeof LessonsRoute
   MeRoute: typeof MeRoute
   RecordsRoute: typeof RecordsRoute
+  TournamentsRoute: typeof TournamentsRoute
+  ClubsFindRoute: typeof ClubsFindRoute
   PaymentsTossFailRoute: typeof PaymentsTossFailRoute
   PaymentsTossSuccessRoute: typeof PaymentsTossSuccessRoute
 }
@@ -198,6 +330,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecordsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tournaments': {
+      id: '/tournaments'
+      path: '/tournaments'
+      fullPath: '/tournaments'
+      preLoaderRoute: typeof TournamentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/club/': {
+      id: '/club/'
+      path: '/'
+      fullPath: '/club/'
+      preLoaderRoute: typeof ClubIndexRouteImport
+      parentRoute: typeof ClubRoute
+    }
+    '/club/attendance': {
+      id: '/club/attendance'
+      path: '/attendance'
+      fullPath: '/club/attendance'
+      preLoaderRoute: typeof ClubAttendanceRouteImport
+      parentRoute: typeof ClubRoute
+    }
+    '/club/finance': {
+      id: '/club/finance'
+      path: '/finance'
+      fullPath: '/club/finance'
+      preLoaderRoute: typeof ClubFinanceRouteImport
+      parentRoute: typeof ClubRoute
+    }
+    '/club/manage': {
+      id: '/club/manage'
+      path: '/manage'
+      fullPath: '/club/manage'
+      preLoaderRoute: typeof ClubManageRouteImport
+      parentRoute: typeof ClubRoute
+    }
+    '/club/members': {
+      id: '/club/members'
+      path: '/members'
+      fullPath: '/club/members'
+      preLoaderRoute: typeof ClubMembersRouteImport
+      parentRoute: typeof ClubRoute
+    }
+    '/club/more': {
+      id: '/club/more'
+      path: '/more'
+      fullPath: '/club/more'
+      preLoaderRoute: typeof ClubMoreRouteImport
+      parentRoute: typeof ClubRoute
+    }
+    '/club/notices': {
+      id: '/club/notices'
+      path: '/notices'
+      fullPath: '/club/notices'
+      preLoaderRoute: typeof ClubNoticesRouteImport
+      parentRoute: typeof ClubRoute
+    }
+    '/club/ranking': {
+      id: '/club/ranking'
+      path: '/ranking'
+      fullPath: '/club/ranking'
+      preLoaderRoute: typeof ClubRankingRouteImport
+      parentRoute: typeof ClubRoute
+    }
+    '/club/schedule': {
+      id: '/club/schedule'
+      path: '/schedule'
+      fullPath: '/club/schedule'
+      preLoaderRoute: typeof ClubScheduleRouteImport
+      parentRoute: typeof ClubRoute
+    }
+    '/clubs/find': {
+      id: '/clubs/find'
+      path: '/clubs/find'
+      fullPath: '/clubs/find'
+      preLoaderRoute: typeof ClubsFindRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/payments/toss/fail': {
       id: '/payments/toss/fail'
       path: '/payments/toss/fail'
@@ -215,14 +424,42 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ClubRouteChildren {
+  ClubAttendanceRoute: typeof ClubAttendanceRoute
+  ClubFinanceRoute: typeof ClubFinanceRoute
+  ClubManageRoute: typeof ClubManageRoute
+  ClubMembersRoute: typeof ClubMembersRoute
+  ClubMoreRoute: typeof ClubMoreRoute
+  ClubNoticesRoute: typeof ClubNoticesRoute
+  ClubRankingRoute: typeof ClubRankingRoute
+  ClubScheduleRoute: typeof ClubScheduleRoute
+  ClubIndexRoute: typeof ClubIndexRoute
+}
+
+const ClubRouteChildren: ClubRouteChildren = {
+  ClubAttendanceRoute: ClubAttendanceRoute,
+  ClubFinanceRoute: ClubFinanceRoute,
+  ClubManageRoute: ClubManageRoute,
+  ClubMembersRoute: ClubMembersRoute,
+  ClubMoreRoute: ClubMoreRoute,
+  ClubNoticesRoute: ClubNoticesRoute,
+  ClubRankingRoute: ClubRankingRoute,
+  ClubScheduleRoute: ClubScheduleRoute,
+  ClubIndexRoute: ClubIndexRoute,
+}
+
+const ClubRouteWithChildren = ClubRoute._addFileChildren(ClubRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
-  ClubRoute: ClubRoute,
+  ClubRoute: ClubRouteWithChildren,
   GamesRoute: GamesRoute,
   LessonsRoute: LessonsRoute,
   MeRoute: MeRoute,
   RecordsRoute: RecordsRoute,
+  TournamentsRoute: TournamentsRoute,
+  ClubsFindRoute: ClubsFindRoute,
   PaymentsTossFailRoute: PaymentsTossFailRoute,
   PaymentsTossSuccessRoute: PaymentsTossSuccessRoute,
 }
