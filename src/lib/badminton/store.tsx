@@ -154,7 +154,14 @@ function normalize(state: AppState): AppState {
       finance: c.finance ?? seeded?.finance ?? { monthlyDues: 0, entries: [] },
     };
   }
-  return { ...state, clubs };
+  // 클럽이 하나도 없거나 순서/현재 클럽이 깨진 경우 스타터 상태로 안전하게 복구한다.
+  const ids = Object.keys(clubs);
+  if (ids.length === 0) return SEED_STATE;
+  const order = (state.clubOrder ?? []).filter((id) => clubs[id]);
+  for (const id of ids) if (!order.includes(id)) order.push(id);
+  const currentClubId = clubs[state.currentClubId] ? state.currentClubId : order[0]!;
+  const meId = state.meId ?? SEED_STATE.meId;
+  return { ...state, clubs, clubOrder: order, currentClubId, meId };
 }
 
 /** 구버전/손상된 역할 데이터는 유효한 권한만 남기되 사용자 정의 내용은 보존한다. */
