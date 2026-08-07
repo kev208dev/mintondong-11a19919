@@ -29,6 +29,10 @@ import { Route as ClubScheduleRouteImport } from './routes/club.schedule'
 import { Route as ClubsClubIdRouteImport } from './routes/clubs.$clubId'
 import { Route as ClubsFindRouteImport } from './routes/clubs.find'
 import { Route as ClubsNewRouteImport } from './routes/clubs.new'
+import { Route as ClubsClubIdIndexRouteImport } from './routes/clubs.$clubId.index'
+import { Route as ClubsClubIdLessonsRouteImport } from './routes/clubs.$clubId.lessons'
+import { Route as ClubsClubIdMembersRouteImport } from './routes/clubs.$clubId.members'
+import { Route as ClubsClubIdScheduleRouteImport } from './routes/clubs.$clubId.schedule'
 import { Route as PaymentsTossFailRouteImport } from './routes/payments.toss.fail'
 import { Route as PaymentsTossSuccessRouteImport } from './routes/payments.toss.success'
 
@@ -132,6 +136,26 @@ const ClubsNewRoute = ClubsNewRouteImport.update({
   path: '/clubs/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClubsClubIdIndexRoute = ClubsClubIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ClubsClubIdRoute,
+} as any)
+const ClubsClubIdLessonsRoute = ClubsClubIdLessonsRouteImport.update({
+  id: '/lessons',
+  path: '/lessons',
+  getParentRoute: () => ClubsClubIdRoute,
+} as any)
+const ClubsClubIdMembersRoute = ClubsClubIdMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => ClubsClubIdRoute,
+} as any)
+const ClubsClubIdScheduleRoute = ClubsClubIdScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => ClubsClubIdRoute,
+} as any)
 const PaymentsTossFailRoute = PaymentsTossFailRouteImport.update({
   id: '/payments/toss/fail',
   path: '/payments/toss/fail',
@@ -160,12 +184,16 @@ export interface FileRoutesByFullPath {
   '/club/notices': typeof ClubNoticesRoute
   '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
-  '/clubs/$clubId': typeof ClubsClubIdRoute
+  '/clubs/$clubId': typeof ClubsClubIdRouteWithChildren
   '/clubs/find': typeof ClubsFindRoute
   '/clubs/new': typeof ClubsNewRoute
   '/club/': typeof ClubIndexRoute
+  '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
+  '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
+  '/clubs/$clubId/schedule': typeof ClubsClubIdScheduleRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
+  '/clubs/$clubId/': typeof ClubsClubIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -183,12 +211,15 @@ export interface FileRoutesByTo {
   '/club/notices': typeof ClubNoticesRoute
   '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
-  '/clubs/$clubId': typeof ClubsClubIdRoute
   '/clubs/find': typeof ClubsFindRoute
   '/clubs/new': typeof ClubsNewRoute
   '/club': typeof ClubIndexRoute
+  '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
+  '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
+  '/clubs/$clubId/schedule': typeof ClubsClubIdScheduleRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
+  '/clubs/$clubId': typeof ClubsClubIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -208,12 +239,16 @@ export interface FileRoutesById {
   '/club/notices': typeof ClubNoticesRoute
   '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
-  '/clubs/$clubId': typeof ClubsClubIdRoute
+  '/clubs/$clubId': typeof ClubsClubIdRouteWithChildren
   '/clubs/find': typeof ClubsFindRoute
   '/clubs/new': typeof ClubsNewRoute
   '/club/': typeof ClubIndexRoute
+  '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
+  '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
+  '/clubs/$clubId/schedule': typeof ClubsClubIdScheduleRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
+  '/clubs/$clubId/': typeof ClubsClubIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -238,8 +273,12 @@ export interface FileRouteTypes {
     | '/clubs/find'
     | '/clubs/new'
     | '/club/'
+    | '/clubs/$clubId/lessons'
+    | '/clubs/$clubId/members'
+    | '/clubs/$clubId/schedule'
     | '/payments/toss/fail'
     | '/payments/toss/success'
+    | '/clubs/$clubId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -257,12 +296,15 @@ export interface FileRouteTypes {
     | '/club/notices'
     | '/club/ranking'
     | '/club/schedule'
-    | '/clubs/$clubId'
     | '/clubs/find'
     | '/clubs/new'
     | '/club'
+    | '/clubs/$clubId/lessons'
+    | '/clubs/$clubId/members'
+    | '/clubs/$clubId/schedule'
     | '/payments/toss/fail'
     | '/payments/toss/success'
+    | '/clubs/$clubId'
   id:
     | '__root__'
     | '/'
@@ -285,8 +327,12 @@ export interface FileRouteTypes {
     | '/clubs/find'
     | '/clubs/new'
     | '/club/'
+    | '/clubs/$clubId/lessons'
+    | '/clubs/$clubId/members'
+    | '/clubs/$clubId/schedule'
     | '/payments/toss/fail'
     | '/payments/toss/success'
+    | '/clubs/$clubId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -298,7 +344,7 @@ export interface RootRouteChildren {
   MeRoute: typeof MeRoute
   RecordsRoute: typeof RecordsRoute
   TournamentsRoute: typeof TournamentsRoute
-  ClubsClubIdRoute: typeof ClubsClubIdRoute
+  ClubsClubIdRoute: typeof ClubsClubIdRouteWithChildren
   ClubsFindRoute: typeof ClubsFindRoute
   ClubsNewRoute: typeof ClubsNewRoute
   PaymentsTossFailRoute: typeof PaymentsTossFailRoute
@@ -447,6 +493,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clubs/$clubId/': {
+      id: '/clubs/$clubId/'
+      path: '/'
+      fullPath: '/clubs/$clubId/'
+      preLoaderRoute: typeof ClubsClubIdIndexRouteImport
+      parentRoute: typeof ClubsClubIdRoute
+    }
+    '/clubs/$clubId/lessons': {
+      id: '/clubs/$clubId/lessons'
+      path: '/lessons'
+      fullPath: '/clubs/$clubId/lessons'
+      preLoaderRoute: typeof ClubsClubIdLessonsRouteImport
+      parentRoute: typeof ClubsClubIdRoute
+    }
+    '/clubs/$clubId/members': {
+      id: '/clubs/$clubId/members'
+      path: '/members'
+      fullPath: '/clubs/$clubId/members'
+      preLoaderRoute: typeof ClubsClubIdMembersRouteImport
+      parentRoute: typeof ClubsClubIdRoute
+    }
+    '/clubs/$clubId/schedule': {
+      id: '/clubs/$clubId/schedule'
+      path: '/schedule'
+      fullPath: '/clubs/$clubId/schedule'
+      preLoaderRoute: typeof ClubsClubIdScheduleRouteImport
+      parentRoute: typeof ClubsClubIdRoute
+    }
     '/payments/toss/fail': {
       id: '/payments/toss/fail'
       path: '/payments/toss/fail'
@@ -490,6 +564,24 @@ const ClubRouteChildren: ClubRouteChildren = {
 
 const ClubRouteWithChildren = ClubRoute._addFileChildren(ClubRouteChildren)
 
+interface ClubsClubIdRouteChildren {
+  ClubsClubIdLessonsRoute: typeof ClubsClubIdLessonsRoute
+  ClubsClubIdMembersRoute: typeof ClubsClubIdMembersRoute
+  ClubsClubIdScheduleRoute: typeof ClubsClubIdScheduleRoute
+  ClubsClubIdIndexRoute: typeof ClubsClubIdIndexRoute
+}
+
+const ClubsClubIdRouteChildren: ClubsClubIdRouteChildren = {
+  ClubsClubIdLessonsRoute: ClubsClubIdLessonsRoute,
+  ClubsClubIdMembersRoute: ClubsClubIdMembersRoute,
+  ClubsClubIdScheduleRoute: ClubsClubIdScheduleRoute,
+  ClubsClubIdIndexRoute: ClubsClubIdIndexRoute,
+}
+
+const ClubsClubIdRouteWithChildren = ClubsClubIdRoute._addFileChildren(
+  ClubsClubIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -499,7 +591,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeRoute: MeRoute,
   RecordsRoute: RecordsRoute,
   TournamentsRoute: TournamentsRoute,
-  ClubsClubIdRoute: ClubsClubIdRoute,
+  ClubsClubIdRoute: ClubsClubIdRouteWithChildren,
   ClubsFindRoute: ClubsFindRoute,
   ClubsNewRoute: ClubsNewRoute,
   PaymentsTossFailRoute: PaymentsTossFailRoute,
