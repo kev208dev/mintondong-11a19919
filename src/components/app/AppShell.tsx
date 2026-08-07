@@ -49,6 +49,8 @@ function usePageTitle(pathname: string) {
   return useMemo(() => {
     if (pathname === "/") return "홈";
     if (pathname.startsWith("/clubs/find")) return "동호회 찾기";
+    if (pathname.startsWith("/clubs/new")) return "동호회 만들기";
+    if (pathname.startsWith("/clubs/")) return "동호회";
     if (pathname.startsWith("/games")) return "경기";
     if (pathname.startsWith("/lessons")) return "레슨";
     if (pathname.startsWith("/payments/toss")) return "레슨 결제";
