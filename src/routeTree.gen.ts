@@ -27,6 +27,7 @@ import { Route as ClubNoticesRouteImport } from './routes/club.notices'
 import { Route as ClubRankingRouteImport } from './routes/club.ranking'
 import { Route as ClubScheduleRouteImport } from './routes/club.schedule'
 import { Route as ClubsFindRouteImport } from './routes/clubs.find'
+import { Route as ClubsNewRouteImport } from './routes/clubs.new'
 import { Route as PaymentsTossFailRouteImport } from './routes/payments.toss.fail'
 import { Route as PaymentsTossSuccessRouteImport } from './routes/payments.toss.success'
 
@@ -120,6 +121,11 @@ const ClubsFindRoute = ClubsFindRouteImport.update({
   path: '/clubs/find',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClubsNewRoute = ClubsNewRouteImport.update({
+  id: '/clubs/new',
+  path: '/clubs/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PaymentsTossFailRoute = PaymentsTossFailRouteImport.update({
   id: '/payments/toss/fail',
   path: '/payments/toss/fail',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
   '/clubs/find': typeof ClubsFindRoute
+  '/clubs/new': typeof ClubsNewRoute
   '/club/': typeof ClubIndexRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
   '/clubs/find': typeof ClubsFindRoute
+  '/clubs/new': typeof ClubsNewRoute
   '/club': typeof ClubIndexRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/club/ranking': typeof ClubRankingRoute
   '/club/schedule': typeof ClubScheduleRoute
   '/clubs/find': typeof ClubsFindRoute
+  '/clubs/new': typeof ClubsNewRoute
   '/club/': typeof ClubIndexRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/club/ranking'
     | '/club/schedule'
     | '/clubs/find'
+    | '/clubs/new'
     | '/club/'
     | '/payments/toss/fail'
     | '/payments/toss/success'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/club/ranking'
     | '/club/schedule'
     | '/clubs/find'
+    | '/clubs/new'
     | '/club'
     | '/payments/toss/fail'
     | '/payments/toss/success'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/club/ranking'
     | '/club/schedule'
     | '/clubs/find'
+    | '/clubs/new'
     | '/club/'
     | '/payments/toss/fail'
     | '/payments/toss/success'
@@ -275,6 +287,7 @@ export interface RootRouteChildren {
   RecordsRoute: typeof RecordsRoute
   TournamentsRoute: typeof TournamentsRoute
   ClubsFindRoute: typeof ClubsFindRoute
+  ClubsNewRoute: typeof ClubsNewRoute
   PaymentsTossFailRoute: typeof PaymentsTossFailRoute
   PaymentsTossSuccessRoute: typeof PaymentsTossSuccessRoute
 }
@@ -407,6 +420,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubsFindRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clubs/new': {
+      id: '/clubs/new'
+      path: '/clubs/new'
+      fullPath: '/clubs/new'
+      preLoaderRoute: typeof ClubsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/payments/toss/fail': {
       id: '/payments/toss/fail'
       path: '/payments/toss/fail'
@@ -460,6 +480,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecordsRoute: RecordsRoute,
   TournamentsRoute: TournamentsRoute,
   ClubsFindRoute: ClubsFindRoute,
+  ClubsNewRoute: ClubsNewRoute,
   PaymentsTossFailRoute: PaymentsTossFailRoute,
   PaymentsTossSuccessRoute: PaymentsTossSuccessRoute,
 }
