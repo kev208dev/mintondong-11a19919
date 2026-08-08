@@ -43,18 +43,19 @@ const MEMBER_COLUMNS = "id, club_id, user_id, name, role, status, joined_at, lev
 /** RPC 는 원본 컬럼(location)을 반환하므로 UI 형태로 정규화한다. */
 function normalizeClub(row: Record<string, unknown>): ClubRow {
   return {
-    id: String(row.id),
-    name: String(row.name ?? ""),
-    description: (row.description as string | null) ?? null,
-    profile_image_url: (row.profile_image_url as string | null) ?? null,
-    cover_image_url: (row.cover_image_url as string | null) ?? null,
-    region: ((row.region ?? row.location) as string | null) ?? null,
-    is_public: Boolean(row.is_public),
-    owner_id: String(row.owner_id ?? ""),
-    member_count: Number(row.member_count ?? 0),
-    created_at: String(row.created_at ?? new Date().toISOString()),
+    id: String(row["id"]),
+    name: String(row["name"] ?? ""),
+    description: (row["description"] as string | null) ?? null,
+    profile_image_url: (row["profile_image_url"] as string | null) ?? null,
+    cover_image_url: (row["cover_image_url"] as string | null) ?? null,
+    region: ((row["region"] ?? row["location"]) as string | null) ?? null,
+    is_public: Boolean(row["is_public"]),
+    owner_id: String(row["owner_id"] ?? ""),
+    member_count: Number(row["member_count"] ?? 0),
+    created_at: String(row["created_at"] ?? new Date().toISOString()),
   };
 }
+
 
 export const clubKeys = {
   search: (q: string) => ["clubs", "search", q] as const,
