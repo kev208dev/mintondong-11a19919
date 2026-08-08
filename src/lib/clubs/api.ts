@@ -162,16 +162,22 @@ export async function createClub(input: CreateClubInput): Promise<ClubRow> {
   let club = normalizeClub(row as Record<string, unknown>);
 
   if (input.imageFile) {
-    const url = await uploadClubImage(input.imageFile, club.id);
-    const { data: updated, error: updateError } = await db
-      .from("clubs")
-      .update({ profile_image_url: url })
-      .eq("id", club.id)
-      .select(CLUB_COLUMNS)
-      .single();
-    if (updateError) throw updateError;
-    club = normalizeClub(updated as Record<string, unknown>);
+    // 이미지 실패로 생성된 동호회를 잃지 않도록 여기서는 경고만 남긴다.
+    try {
+      const url = await uploadClubImage(input.imageFile, club.id);
+      const { data: updated, error: updateError } = await db
+        .from("clubs")
+        .update({ profile_image_url: url })
+        .eq("id", club.id)
+        .select(CLUB_COLUMNS)
+        .single();
+      if (updateError) throw updateError;
+      club = normalizeClub(updated as Record<string, unknown>);
+    } catch (imageError) {
+      console.warn("[clubs] profile image upload failed", imageError);
+    }
   }
+
 
   return club;
 }
