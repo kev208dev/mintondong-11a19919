@@ -23,7 +23,7 @@ export const Route = createFileRoute("/clubs/new")({
 function NewClubPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
