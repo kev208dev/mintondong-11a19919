@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { createClub, uploadClubImage } from "@/lib/clubs/api";
+import { createClub } from "@/lib/clubs/api";
 
 export const Route = createFileRoute("/clubs/new")({
   head: () => ({
