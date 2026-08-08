@@ -20,7 +20,7 @@ const TABS = [
 function ClubDetailLayout() {
   const { clubId } = Route.useParams();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const clubQuery = useQuery({ queryKey: clubKeys.detail(clubId), queryFn: () => getClub(clubId) });
