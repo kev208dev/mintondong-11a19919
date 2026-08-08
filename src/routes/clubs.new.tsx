@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { createClub, uploadClubImage } from "@/lib/clubs/api";
+import { createClub } from "@/lib/clubs/api";
 
 export const Route = createFileRoute("/clubs/new")({
   head: () => ({
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/clubs/new")({
 function NewClubPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
@@ -37,7 +37,7 @@ function NewClubPage() {
   const submit = async () => {
     if (!user) {
       toast.error("로그인이 필요해요.");
-      void navigate({ to: "/auth" });
+      void navigate({ to: "/auth", search: { next: "/clubs/new" } });
       return;
     }
     if (!name.trim()) {
@@ -46,21 +46,7 @@ function NewClubPage() {
     }
     setSaving(true);
     try {
-      let profileImageUrl: string | null = null;
-      if (file) {
-        try {
-          profileImageUrl = await uploadClubImage(file, user.id);
-        } catch {
-          toast.warning("이미지 업로드에 실패해 이미지 없이 생성했어요.");
-        }
-      }
-      const club = await createClub(
-        { name, region, description, isPublic, profileImageUrl },
-        {
-          id: user.id,
-          displayName: profile?.display_name || user.email?.split("@")[0] || "회원",
-        },
-      );
+      const club = await createClub({ name, region, description, isPublic, imageFile: file });
       await queryClient.invalidateQueries({ queryKey: ["clubs"] });
       toast.success("동호회를 만들었어요.");
       void navigate({ to: "/clubs/$clubId", params: { clubId: club.id } });
@@ -71,6 +57,7 @@ function NewClubPage() {
       setSaving(false);
     }
   };
+
 
   return (
     <div className="space-y-5">

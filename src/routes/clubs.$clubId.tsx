@@ -20,7 +20,7 @@ const TABS = [
 function ClubDetailLayout() {
   const { clubId } = Route.useParams();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const clubQuery = useQuery({ queryKey: clubKeys.detail(clubId), queryFn: () => getClub(clubId) });
@@ -33,15 +33,9 @@ function ClubDetailLayout() {
   const join = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("unauthenticated");
-      await joinClub(
-        clubId,
-        {
-          id: user.id,
-          displayName: profile?.display_name || user.email?.split("@")[0] || "회원",
-        },
-        clubQuery.data?.is_public ?? true,
-      );
+      await joinClub(clubId);
     },
+
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["clubs"] });
       toast.success(
