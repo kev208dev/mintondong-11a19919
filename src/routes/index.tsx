@@ -13,16 +13,16 @@ import { useStore, useTodayPlayers } from "@/lib/badminton/store";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "민턴동 – 배드민턴 동호회 대시보드" },
+      { title: "민턴동 – 배드민턴 동호회 운영 앱" },
       {
         name: "description",
         content:
-          "오늘 운동 요약, 진행 중인 경기, 다가오는 일정과 대회, 최근 공지를 한 화면에서 확인하는 배드민턴 동호회 앱.",
+          "출석 체크, 경기 배정, 회원 관리, 일정 관리까지. 배드민턴 동호회 운영을 더 간편하게 만드는 모바일 앱 민턴동.",
       },
-      { property: "og:title", content: "민턴동 – 배드민턴 동호회 대시보드" },
+      { property: "og:title", content: "민턴동 – 배드민턴 동호회 운영 앱" },
       {
         property: "og:description",
-        content: "오늘 운동 요약, LIVE 경기, 다가오는 일정과 공지를 한눈에.",
+        content: "출석 · 경기 배정 · 회원 관리 · 일정 관리를 한 화면에서.",
       },
     ],
   }),
@@ -43,19 +43,31 @@ function SectionHeader({ title, to, cta }: { title: string; to?: string; cta?: s
 }
 
 function HomePage() {
-  const { club } = useStore();
+  const { club, can } = useStore();
   const { coming, counts } = useTodayPlayers();
   const liveMatches = club.matches.filter((m) => m.status === "LIVE");
   const doneCount = club.matches.filter((m) => m.status === "DONE").length;
   const checkedIn = club.checkedIn.length;
+  const canSettings = can("MANAGE_CLUB_SETTINGS");
+  const placeUnset = !club.club.location || club.club.location === "장소 미설정";
+  const scheduleUnset = club.sessionLabel === "운동 일정 미설정";
 
   return (
     <div className="space-y-4">
+      <section className="px-1">
+        <p className="text-[15px] font-extrabold tracking-tight text-foreground">
+          배드민턴 동호회 운영을 더 간편하게
+        </p>
+        <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+          출석 · 경기 배정 · 회원 관리 · 일정 관리
+        </p>
+      </section>
+
       <section className="brand-gradient rounded-2xl p-4 text-primary-foreground">
         <p className="text-[11px] font-semibold opacity-75">오늘 운동 요약</p>
         <p className="mt-0.5 truncate text-[15px] font-extrabold">{club.club.name}</p>
         <p className="text-[11px] opacity-80">
-          {club.sessionLabel} · {club.sessionTime}
+          {scheduleUnset ? "정기 운동 일정이 아직 없어요" : `${club.sessionLabel} · ${club.sessionTime}`}
         </p>
         <dl className="mt-3 grid grid-cols-4 gap-1.5 text-center">
           {[
@@ -70,13 +82,42 @@ function HomePage() {
             </div>
           ))}
         </dl>
-        <Link
-          to="/club/attendance"
-          className="mt-3 flex h-9 items-center justify-center rounded-xl bg-primary-foreground/20 text-xs font-bold"
-        >
-          <UserCheck className="mr-1 size-4" /> 출석 체크하기
-        </Link>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Link
+            to="/club/attendance"
+            className="flex h-10 items-center justify-center rounded-xl bg-primary-foreground text-xs font-extrabold text-primary"
+          >
+            <UserCheck className="mr-1 size-4" /> 출석 체크
+          </Link>
+          <Link
+            to="/games"
+            className="flex h-10 items-center justify-center rounded-xl bg-primary-foreground/20 text-xs font-extrabold"
+          >
+            <Zap className="mr-1 size-4" /> 경기 배정
+          </Link>
+        </div>
       </section>
+
+      {placeUnset ? (
+        <section className="rounded-2xl border border-border bg-card p-3.5">
+          <p className="text-xs font-bold text-foreground">
+            오늘 운동 장소가 아직 설정되지 않았어요
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            {canSettings
+              ? "장소를 등록하면 회원들이 모임 위치를 바로 확인할 수 있어요."
+              : "운영진이 장소를 등록하면 여기에 표시돼요."}
+          </p>
+          {canSettings ? (
+            <Link
+              to="/club/manage"
+              className="mt-2.5 flex h-9 items-center justify-center rounded-xl bg-secondary text-xs font-bold text-secondary-foreground"
+            >
+              장소 설정하기
+            </Link>
+          ) : null}
+        </section>
+      ) : null}
 
       <section>
         <SectionHeader title="진행 중인 경기" to="/games" cta="경기" />
@@ -102,7 +143,7 @@ function HomePage() {
         ) : (
           <div className="rounded-2xl border border-border bg-card p-4 text-center">
             <Zap className="mx-auto size-4 text-muted-foreground" />
-            <p className="mt-1.5 text-xs font-bold text-foreground">진행 중인 경기가 없어요</p>
+            <p className="mt-1.5 text-xs font-bold text-foreground">지금 진행 중인 경기가 없어요</p>
             <Link to="/games" className="mt-1 inline-block text-[11px] font-bold text-primary">
               경기 배정 시작하기
             </Link>
@@ -111,26 +152,20 @@ function HomePage() {
       </section>
 
       <section>
-        <SectionHeader title="랭킹 요약" to="/club/ranking" />
-        <div className="rounded-2xl border border-dashed border-border p-4 text-center">
-          <p className="text-xs font-bold text-foreground">랭킹 산정 준비 중</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            시즌 점수제 랭킹은 다음 단계에서 열려요.
-          </p>
-        </div>
-      </section>
-
-      <section>
-        <SectionHeader title="다가오는 일정 · 대회" to="/club/schedule" cta="일정" />
+        <SectionHeader title="다가오는 일정" to="/club/schedule" cta="일정" />
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
           <li className="flex items-center gap-2.5 px-3.5 py-3">
             <CalendarDays className="size-4 shrink-0 text-primary" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-xs font-bold text-foreground">
-                {club.sessionLabel}
+                {scheduleUnset ? "등록된 운동 일정이 없어요" : club.sessionLabel}
               </span>
               <span className="block truncate text-[11px] text-muted-foreground">
-                {club.sessionTime}
+                {scheduleUnset
+                  ? canSettings
+                    ? "정기 운동 요일과 시간을 등록해 보세요."
+                    : "운영진이 일정을 등록하면 알려드려요."
+                  : club.sessionTime}
               </span>
             </span>
           </li>
@@ -138,10 +173,10 @@ function HomePage() {
             <Trophy className="size-4 shrink-0 text-primary" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-xs font-bold text-foreground">
-                등록된 대회 없음
+                참가 예정 대회가 없어요
               </span>
               <span className="block truncate text-[11px] text-muted-foreground">
-                대회 기능 준비 중
+                대회 소식은 대회 탭에서 확인할 수 있어요.
               </span>
             </span>
           </li>
@@ -152,7 +187,7 @@ function HomePage() {
         <SectionHeader title="최근 공지" to="/club/notices" />
         <div className="rounded-2xl border border-border bg-card p-4 text-center">
           <Megaphone className="mx-auto size-4 text-muted-foreground" />
-          <p className="mt-1.5 text-xs text-muted-foreground">등록된 공지가 없어요.</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">아직 등록된 공지가 없어요.</p>
         </div>
       </section>
 
