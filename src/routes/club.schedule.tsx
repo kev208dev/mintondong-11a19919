@@ -23,7 +23,8 @@ function SchedulePage() {
         <p className="text-[11px] font-bold text-muted-foreground">정기 운동</p>
         <p className="mt-1 text-[15px] font-extrabold text-foreground">{club.sessionLabel}</p>
         <p className="text-xs text-muted-foreground">
-          {club.sessionTime} · {club.club.location}
+          {club.sessionTime} ·{" "}
+          {club.club.location === "장소 미설정" ? "운동 장소 미등록" : club.club.location}
         </p>
         <Link
           to="/club/attendance"
@@ -34,10 +35,9 @@ function SchedulePage() {
       </section>
 
       <section className="rounded-2xl border border-dashed border-border p-6 text-center">
-        <p className="text-sm font-bold text-foreground">일정 캘린더 준비 중</p>
+        <p className="text-sm font-bold text-foreground">등록된 다음 일정이 없어요</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          회차별 일정 등록·반복 일정 기능은 다음 단계에서 연결돼요. 현재는 정기 운동 정보와 출석
-          체크만 동작합니다.
+          정기 운동 외 일정이 추가되면 이곳에서 확인할 수 있어요.
         </p>
       </section>
     </div>

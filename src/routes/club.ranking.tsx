@@ -6,7 +6,7 @@ export const Route = createFileRoute("/club/ranking")({
   head: () => ({
     meta: [
       { title: "동호회 랭킹 – 민턴동" },
-      { name: "description", content: "동호회 내 참여·승패 기반 랭킹 화면 (준비 중)." },
+      { name: "description", content: "동호회 내 참여·승패 기반 랭킹을 확인해요." },
       { property: "og:title", content: "동호회 랭킹 – 민턴동" },
       { property: "og:description", content: "참여·승패 기반 동호회 랭킹." },
     ],
@@ -28,8 +28,7 @@ function RankingPage() {
         <section className="rounded-2xl border border-dashed border-border p-6 text-center">
           <p className="text-sm font-bold text-foreground">아직 랭킹 데이터가 없어요</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            정식 랭킹 산정 방식(시즌·점수제)은 준비 중이에요. 경기를 기록하면 임시 참여 순위가
-            표시됩니다.
+경기를 기록하면 참여·승수 기준 순위가 여기에 표시돼요.
           </p>
           <Link
             to="/games"
@@ -41,7 +40,7 @@ function RankingPage() {
       ) : (
         <>
           <p className="px-1 text-[11px] text-muted-foreground">
-            임시 순위 · 승수 기준 (정식 랭킹 산정은 준비 중)
+            승수 기준 순위
           </p>
           <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
             {rows.map((r, i) => (

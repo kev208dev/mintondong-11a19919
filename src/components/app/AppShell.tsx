@@ -107,7 +107,7 @@ export function AppShell() {
             <button
               type="button"
               aria-label="알림"
-              onClick={() => toast.info("알림 기능은 준비 중이에요.")}
+              onClick={() => toast.info("새로운 알림이 없어요.")}
               className="grid size-9 place-items-center rounded-full text-muted-foreground active:bg-accent"
             >
               <Bell className="size-[18px]" />

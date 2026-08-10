@@ -95,7 +95,7 @@ function ClubHomePage() {
                       {c.name}
                     </span>
                     <span className="text-[11px] text-muted-foreground">
-                      멤버 {c.member_count} · {c.region ?? "지역 미설정"}
+                      멤버 {c.member_count} · {c.region ?? "지역 미등록"}
                     </span>
                   </span>
                 </Link>
@@ -113,7 +113,9 @@ function ClubHomePage() {
             <p className="truncate text-[15px] font-extrabold text-foreground">{club.club.name}</p>
             <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
               <MapPin className="size-3 shrink-0" />
-              <span className="truncate">{club.club.location}</span>
+              <span className="truncate">
+                {club.club.location === "장소 미설정" ? "운동 장소 미등록" : club.club.location}
+              </span>
             </p>
           </div>
         </div>
