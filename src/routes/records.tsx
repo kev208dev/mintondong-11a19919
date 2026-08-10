@@ -1,4 +1,4 @@
-import { RequireAuth } from "@/components/app/RequireAuth";
+import { authGuard } from "@/components/app/RequireAuth";
 import { createFileRoute } from "@tanstack/react-router";
 import { playerName } from "@/lib/badminton/engine";
 import { useStore } from "@/lib/badminton/store";
@@ -16,11 +16,8 @@ export const Route = createFileRoute("/records")({
       { property: "og:description", content: "최근 경기와 멤버별 참여 기록." },
     ],
   }),
-  component: () => (
-    <RequireAuth>
-      <RecordsPage />
-    </RequireAuth>
-  ),
+  ...authGuard(),
+  component: RecordsPage,
 });
 
 function RecordsPage() {

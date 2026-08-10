@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NoPermission, RequireAuth } from "@/components/app/RequireAuth";
+import { NoPermission } from "@/components/app/RequireAuth";
 import {
   Copy,
   GraduationCap,
@@ -47,11 +47,7 @@ export const Route = createFileRoute("/club/manage")({
       { property: "og:description", content: "멀티 클럽 소속과 초대코드 가입을 지원해요." },
     ],
   }),
-  component: () => (
-    <RequireAuth>
-      <ClubPage />
-    </RequireAuth>
-  ),
+  component: ClubPage,
 });
 
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
