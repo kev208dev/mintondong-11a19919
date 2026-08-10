@@ -1,5 +1,5 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 
@@ -8,12 +8,15 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const href = useRouterState({ select: (s) => s.location.href });
   const navigate = useNavigate();
+  const sent = useRef(false);
+  const target = useRef(href);
+  if (!href.startsWith("/auth")) target.current = href;
 
   useEffect(() => {
-    if (!loading && !user) {
-      void navigate({ to: "/auth", search: { next: href }, replace: true });
-    }
-  }, [loading, user, href, navigate]);
+    if (loading || user || sent.current) return;
+    sent.current = true;
+    void navigate({ to: "/auth", search: { next: target.current }, replace: true });
+  }, [loading, user, navigate]);
 
   if (loading || !user) {
     return (
