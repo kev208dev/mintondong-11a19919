@@ -1,3 +1,4 @@
+import { RequireAuth } from "@/components/app/RequireAuth";
 import { createFileRoute } from "@tanstack/react-router";
 import { Camera, Minus, Plus, Sparkles, Timer, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -20,7 +21,11 @@ export const Route = createFileRoute("/games")({
       { property: "og:description", content: "공정한 복식 배정과 점수판을 한 화면에서." },
     ],
   }),
-  component: GamesPage,
+  component: () => (
+    <RequireAuth>
+      <GamesPage />
+    </RequireAuth>
+  ),
 });
 
 const TARGETS = [21, 15, 11];
