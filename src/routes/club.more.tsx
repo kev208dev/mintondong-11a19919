@@ -24,7 +24,7 @@ const ITEMS = [
   { to: "/club/members", label: "회원", desc: "회원·게스트·역할 확인", icon: Users },
   { to: "/club/notices", label: "공지", desc: "동호회 공지사항", icon: Megaphone },
   { to: "/club/finance", label: "회비/재정", desc: "월 회비와 수입·지출", icon: Wallet },
-  { to: "/club/manage", label: "동호회 관리", desc: "설정·초대코드·역할·레슨 운영", icon: Settings2 },
+  { to: "/club/manage", label: "동호회 관리", desc: "운영진 전용 설정", icon: Settings2 },
   { to: "/club/attendance", label: "출석 체크", desc: "오늘 참석·현장 체크인", icon: UserCheck },
   { to: "/records", label: "활동 기록", desc: "경기 결과와 멤버 활동", icon: ClipboardList },
 ] as const;

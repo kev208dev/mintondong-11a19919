@@ -5,7 +5,7 @@ export const Route = createFileRoute("/club/notices")({
   head: () => ({
     meta: [
       { title: "동호회 공지 – 민턴동" },
-      { name: "description", content: "동호회 공지사항 화면 (준비 중)." },
+      { name: "description", content: "동호회 공지사항을 확인해요." },
       { property: "og:title", content: "동호회 공지 – 민턴동" },
       { property: "og:description", content: "동호회 공지사항." },
     ],
@@ -20,7 +20,7 @@ function NoticesPage() {
         <Megaphone className="mx-auto size-5 text-muted-foreground" />
         <p className="mt-2 text-sm font-bold text-foreground">등록된 공지가 없어요</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          공지 작성·고정 기능은 준비 중이에요. 지금은 동호회 관리에서 기본 정보를 안내할 수 있어요.
+          새로운 소식이 등록되면 이곳에 표시돼요.
         </p>
         <Link
           to="/club/manage"

@@ -1,3 +1,4 @@
+import { authGuard } from "@/components/app/RequireAuth";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { cancelTossPayment } from "@/lib/toss/payments.functions";
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/lessons")({
       },
     ],
   }),
+  ...authGuard(),
   component: LessonsPage,
 });
 

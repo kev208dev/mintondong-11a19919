@@ -78,7 +78,9 @@ export function AppShell() {
 
   useEffect(() => {
     const run = () => {
+      // 로그인 가드가 있는 탭(/club)은 사전 로딩에서 제외한다.
       for (const tab of TABS) {
+        if (tab.to === "/club") continue;
         void router.preloadRoute({ to: tab.to }).catch(() => {});
       }
     };
@@ -107,7 +109,7 @@ export function AppShell() {
             <button
               type="button"
               aria-label="알림"
-              onClick={() => toast.info("알림 기능은 준비 중이에요.")}
+              onClick={() => toast.info("새로운 알림이 없어요.")}
               className="grid size-9 place-items-center rounded-full text-muted-foreground active:bg-accent"
             >
               <Bell className="size-[18px]" />

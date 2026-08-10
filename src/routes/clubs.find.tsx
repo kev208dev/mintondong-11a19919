@@ -95,7 +95,7 @@ function FindClubPage() {
                   <span className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
                     <span className="flex min-w-0 items-center gap-1">
                       <MapPin className="size-3 shrink-0" />
-                      <span className="truncate">{club.region ?? "지역 미설정"}</span>
+                      <span className="truncate">{club.region ?? "지역 미등록"}</span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1">
                       <Users className="size-3" />

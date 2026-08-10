@@ -5,7 +5,10 @@ export const Route = createFileRoute("/tournaments")({
   head: () => ({
     meta: [
       { title: "대회 – 민턴동" },
-      { name: "description", content: "지역 배드민턴 대회 정보와 참가 신청 (준비 중)." },
+      {
+        name: "description",
+        content: "배드민턴 대회 정보와 참가 신청을 한곳에서 확인할 수 있도록 준비하고 있어요.",
+      },
       { property: "og:title", content: "대회 – 민턴동" },
       { property: "og:description", content: "배드민턴 대회 정보와 참가 신청." },
     ],
@@ -16,18 +19,22 @@ export const Route = createFileRoute("/tournaments")({
 function TournamentsPage() {
   return (
     <div className="space-y-3">
-      <section className="rounded-2xl border border-dashed border-border p-6 text-center">
-        <Trophy className="mx-auto size-5 text-muted-foreground" />
-        <p className="mt-2 text-sm font-bold text-foreground">대회 기능 준비 중</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          대회 일정·참가 신청·대진표는 다음 단계에서 열려요. 지금은 동호회 내부 경기 기록을 사용해
-          주세요.
+      <section className="rounded-2xl border border-border bg-card p-6 text-center">
+        <span className="mx-auto grid size-11 place-items-center rounded-2xl bg-accent">
+          <Trophy className="size-5 text-primary" />
+        </span>
+        <p className="mt-2.5 text-sm font-extrabold text-foreground">
+          배드민턴 대회 정보를 모으고 있어요
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          지역 대회 일정과 참가 신청을 한곳에서 확인할 수 있도록 준비하고 있어요. 그동안은 동호회
+          내부 경기로 실력을 점검해 보세요.
         </p>
         <Link
           to="/games"
-          className="mt-3 inline-flex h-9 items-center rounded-xl bg-secondary px-4 text-xs font-bold text-secondary-foreground"
+          className="mt-3 inline-flex h-10 items-center rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground"
         >
-          동호회 경기로 가기
+          동호회 경기 시작하기
         </Link>
       </section>
     </div>
