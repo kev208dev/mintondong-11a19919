@@ -78,7 +78,9 @@ export function AppShell() {
 
   useEffect(() => {
     const run = () => {
+      // 로그인 가드가 있는 탭(/club)은 사전 로딩에서 제외한다.
       for (const tab of TABS) {
+        if (tab.to === "/club") continue;
         void router.preloadRoute({ to: tab.to }).catch(() => {});
       }
     };
