@@ -1,31 +1,21 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useRef, type ReactNode } from "react";
-import { Loader2 } from "lucide-react";
-import { useAuth } from "@/lib/auth/AuthProvider";
+import { redirect } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 
-/** 로그인이 필요한 화면 보호막. 비로그인 시 /auth?next=현재경로 로 보낸다. */
-export function RequireAuth({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
-  const href = useRouterState({ select: (s) => s.location.href });
-  const navigate = useNavigate();
-  const sent = useRef(false);
-  const target = useRef(href);
-  if (!href.startsWith("/auth")) target.current = href;
-
-  useEffect(() => {
-    if (loading || user || sent.current) return;
-    sent.current = true;
-    void navigate({ to: "/auth", search: { next: target.current }, replace: true });
-  }, [loading, user, navigate]);
-
-  if (loading || !user) {
-    return (
-      <div className="grid min-h-[40vh] place-items-center">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-  return <>{children}</>;
+/** 로그인이 필요한 화면 공통 옵션. 비로그인 시 /auth?next=현재경로 로 보낸다. */
+export function authGuard() {
+  return {
+    ssr: false as const,
+    beforeLoad: async ({ location }: { location: { href: string } }) => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (data.user) return;
+      } catch {
+        // Supabase 를 사용할 수 없으면 로그인 화면으로 안내한다.
+      }
+      const next = location.href.startsWith("/auth") ? "/" : location.href;
+      throw redirect({ to: "/auth", search: { next }, replace: true });
+    },
+  };
 }
 
 /** 권한이 없을 때 보여줄 안내 (관리 화면 등) */
