@@ -13,10 +13,10 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "카카오·Apple·이메일로 로그인해 내 배드민턴 클럽의 출석·경기·레슨 정보를 안전하게 관리하세요.",
+          "카카오 또는 이메일로 로그인해 내 배드민턴 동호회의 출석·경기·레슨을 관리하세요.",
       },
       { property: "og:title", content: "로그인 – 민턴동" },
-      { property: "og:description", content: "카카오·Apple·이메일로 민턴동에 로그인하세요." },
+      { property: "og:description", content: "카카오 또는 이메일로 민턴동에 로그인하세요." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -100,8 +100,6 @@ function AuthPage() {
     }
   };
 
-  // Apple / Google 은 외부 Supabase provider 자격증명 설정 전이라 비활성(준비 중) 상태로 둔다.
-  // Lovable 관리형 auth 는 사용하지 않는다.
 
   return (
     <section className="rounded-3xl border border-border bg-card p-5">
@@ -109,7 +107,7 @@ function AuthPage() {
         {mode === "signin" ? "로그인" : "회원가입"}
       </h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        클럽 데이터를 여러 기기에서 안전하게 쓰려면 로그인이 필요해요.
+        동호회 출석·경기 기록을 여러 기기에서 안전하게 이어서 사용할 수 있어요.
       </p>
 
       <button
@@ -119,22 +117,9 @@ function AuthPage() {
       >
         카카오로 시작하기
       </button>
-
-      <button
-        className="mt-2 flex h-12 w-full items-center justify-center rounded-2xl bg-secondary text-sm font-bold text-muted-foreground disabled:opacity-60"
-        disabled
-      >
-        Apple로 계속하기 · 준비 중
-      </button>
-
-      <button
-        className="mt-2 flex h-10 w-full items-center justify-center rounded-2xl border border-border bg-card text-xs font-bold text-muted-foreground disabled:opacity-60"
-        disabled
-      >
-        구글로 계속하기 · 준비 중
-      </button>
-
-
+      <p className="mt-2 text-center text-[11px] leading-relaxed text-muted-foreground">
+        로그인하면 민턴동 이용약관과 개인정보 처리방침에 동의하게 됩니다.
+      </p>
 
       <div className="my-4 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
