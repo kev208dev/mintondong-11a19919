@@ -14,6 +14,7 @@ import { StoreProvider } from "../lib/badminton/store";
 import { Toaster } from "../components/ui/sonner";
 import { AppShell } from "../components/app/AppShell";
 import { AuthProvider, useAuth } from "../lib/auth/AuthProvider";
+import { NEXT_STORAGE_KEY } from "../lib/auth/providers";
 
 
 function NotFoundComponent() {
