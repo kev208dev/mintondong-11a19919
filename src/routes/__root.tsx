@@ -14,6 +14,7 @@ import { StoreProvider } from "../lib/badminton/store";
 import { Toaster } from "../components/ui/sonner";
 import { AppShell } from "../components/app/AppShell";
 import { AuthProvider, useAuth } from "../lib/auth/AuthProvider";
+import { NEXT_STORAGE_KEY } from "../lib/auth/providers";
 
 
 function NotFoundComponent() {
@@ -137,17 +138,28 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-/** Google OAuth returns to the app origin; restore the intended destination. */
+/** 소셜 로그인은 앱 origin 으로 돌아온다: 아이디 온보딩 또는 원래 목적지로 보낸다. */
 function PostAuthRedirect() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading, profileLoading } = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (loading || !user) return;
-    const next = sessionStorage.getItem("shuttleon:next");
+    if (loading || profileLoading || !user) return;
+    const path = window.location.pathname;
+    if (path.startsWith("/onboarding") || path.startsWith("/auth/reset-password")) return;
+
+    // 아이디가 없는 계정(소셜 최초 로그인)은 아이디 만들기로 안내한다.
+    if (!profile?.username) {
+      void router.navigate({ to: "/onboarding/account", replace: true });
+      return;
+    }
+
+    const next = sessionStorage.getItem(NEXT_STORAGE_KEY);
     if (!next) return;
-    sessionStorage.removeItem("shuttleon:next");
-    if (next.startsWith("/") && !next.startsWith("//")) void router.navigate({ to: next });
-  }, [user, loading, router]);
+    sessionStorage.removeItem(NEXT_STORAGE_KEY);
+    if (next.startsWith("/") && !next.startsWith("//") && next !== path) {
+      void router.navigate({ to: next });
+    }
+  }, [user, profile, loading, profileLoading, router]);
   return null;
 }
 

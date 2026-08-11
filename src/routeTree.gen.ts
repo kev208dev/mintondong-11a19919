@@ -17,6 +17,10 @@ import { Route as LessonsRouteImport } from './routes/lessons'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as TournamentsRouteImport } from './routes/tournaments'
+import { Route as AuthIndexRouteImport } from './routes/auth.index'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
+import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
+import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as ClubIndexRouteImport } from './routes/club.index'
 import { Route as ClubAttendanceRouteImport } from './routes/club.attendance'
 import { Route as ClubFinanceRouteImport } from './routes/club.finance'
@@ -29,6 +33,7 @@ import { Route as ClubScheduleRouteImport } from './routes/club.schedule'
 import { Route as ClubsClubIdRouteImport } from './routes/clubs.$clubId'
 import { Route as ClubsFindRouteImport } from './routes/clubs.find'
 import { Route as ClubsNewRouteImport } from './routes/clubs.new'
+import { Route as OnboardingAccountRouteImport } from './routes/onboarding.account'
 import { Route as ClubsClubIdIndexRouteImport } from './routes/clubs.$clubId.index'
 import { Route as ClubsClubIdLessonsRouteImport } from './routes/clubs.$clubId.lessons'
 import { Route as ClubsClubIdMembersRouteImport } from './routes/clubs.$clubId.members'
@@ -75,6 +80,26 @@ const TournamentsRoute = TournamentsRouteImport.update({
   id: '/tournaments',
   path: '/tournaments',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignupRoute = AuthSignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => AuthRoute,
 } as any)
 const ClubIndexRoute = ClubIndexRouteImport.update({
   id: '/',
@@ -136,6 +161,11 @@ const ClubsNewRoute = ClubsNewRouteImport.update({
   path: '/clubs/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingAccountRoute = OnboardingAccountRouteImport.update({
+  id: '/onboarding/account',
+  path: '/onboarding/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClubsClubIdIndexRoute = ClubsClubIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -169,13 +199,16 @@ const PaymentsTossSuccessRoute = PaymentsTossSuccessRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
   '/tournaments': typeof TournamentsRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/club/attendance': typeof ClubAttendanceRoute
   '/club/finance': typeof ClubFinanceRoute
   '/club/manage': typeof ClubManageRoute
@@ -187,6 +220,8 @@ export interface FileRoutesByFullPath {
   '/clubs/$clubId': typeof ClubsClubIdRouteWithChildren
   '/clubs/find': typeof ClubsFindRoute
   '/clubs/new': typeof ClubsNewRoute
+  '/onboarding/account': typeof OnboardingAccountRoute
+  '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
@@ -197,12 +232,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
   '/tournaments': typeof TournamentsRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/club/attendance': typeof ClubAttendanceRoute
   '/club/finance': typeof ClubFinanceRoute
   '/club/manage': typeof ClubManageRoute
@@ -213,6 +250,8 @@ export interface FileRoutesByTo {
   '/club/schedule': typeof ClubScheduleRoute
   '/clubs/find': typeof ClubsFindRoute
   '/clubs/new': typeof ClubsNewRoute
+  '/onboarding/account': typeof OnboardingAccountRoute
+  '/auth': typeof AuthIndexRoute
   '/club': typeof ClubIndexRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
@@ -224,13 +263,16 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
   '/tournaments': typeof TournamentsRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/auth/signup': typeof AuthSignupRoute
   '/club/attendance': typeof ClubAttendanceRoute
   '/club/finance': typeof ClubFinanceRoute
   '/club/manage': typeof ClubManageRoute
@@ -242,6 +284,8 @@ export interface FileRoutesById {
   '/clubs/$clubId': typeof ClubsClubIdRouteWithChildren
   '/clubs/find': typeof ClubsFindRoute
   '/clubs/new': typeof ClubsNewRoute
+  '/onboarding/account': typeof OnboardingAccountRoute
+  '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
@@ -261,6 +305,9 @@ export interface FileRouteTypes {
     | '/me'
     | '/records'
     | '/tournaments'
+    | '/auth/forgot-password'
+    | '/auth/reset-password'
+    | '/auth/signup'
     | '/club/attendance'
     | '/club/finance'
     | '/club/manage'
@@ -272,6 +319,8 @@ export interface FileRouteTypes {
     | '/clubs/$clubId'
     | '/clubs/find'
     | '/clubs/new'
+    | '/onboarding/account'
+    | '/auth/'
     | '/club/'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
@@ -282,12 +331,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
     | '/games'
     | '/lessons'
     | '/me'
     | '/records'
     | '/tournaments'
+    | '/auth/forgot-password'
+    | '/auth/reset-password'
+    | '/auth/signup'
     | '/club/attendance'
     | '/club/finance'
     | '/club/manage'
@@ -298,6 +349,8 @@ export interface FileRouteTypes {
     | '/club/schedule'
     | '/clubs/find'
     | '/clubs/new'
+    | '/onboarding/account'
+    | '/auth'
     | '/club'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
@@ -315,6 +368,9 @@ export interface FileRouteTypes {
     | '/me'
     | '/records'
     | '/tournaments'
+    | '/auth/forgot-password'
+    | '/auth/reset-password'
+    | '/auth/signup'
     | '/club/attendance'
     | '/club/finance'
     | '/club/manage'
@@ -326,6 +382,8 @@ export interface FileRouteTypes {
     | '/clubs/$clubId'
     | '/clubs/find'
     | '/clubs/new'
+    | '/onboarding/account'
+    | '/auth/'
     | '/club/'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
@@ -337,7 +395,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ClubRoute: typeof ClubRouteWithChildren
   GamesRoute: typeof GamesRoute
   LessonsRoute: typeof LessonsRoute
@@ -347,6 +405,7 @@ export interface RootRouteChildren {
   ClubsClubIdRoute: typeof ClubsClubIdRouteWithChildren
   ClubsFindRoute: typeof ClubsFindRoute
   ClubsNewRoute: typeof ClubsNewRoute
+  OnboardingAccountRoute: typeof OnboardingAccountRoute
   PaymentsTossFailRoute: typeof PaymentsTossFailRoute
   PaymentsTossSuccessRoute: typeof PaymentsTossSuccessRoute
 }
@@ -408,6 +467,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/tournaments'
       preLoaderRoute: typeof TournamentsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/': {
+      id: '/auth/'
+      path: '/'
+      fullPath: '/auth/'
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/reset-password': {
+      id: '/auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/signup': {
+      id: '/auth/signup'
+      path: '/signup'
+      fullPath: '/auth/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/club/': {
       id: '/club/'
@@ -493,6 +580,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding/account': {
+      id: '/onboarding/account'
+      path: '/onboarding/account'
+      fullPath: '/onboarding/account'
+      preLoaderRoute: typeof OnboardingAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clubs/$clubId/': {
       id: '/clubs/$clubId/'
       path: '/'
@@ -537,6 +631,22 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthRouteChildren {
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthSignupRoute: typeof AuthSignupRoute
+  AuthIndexRoute: typeof AuthIndexRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthSignupRoute: AuthSignupRoute,
+  AuthIndexRoute: AuthIndexRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface ClubRouteChildren {
   ClubAttendanceRoute: typeof ClubAttendanceRoute
@@ -584,7 +694,7 @@ const ClubsClubIdRouteWithChildren = ClubsClubIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   ClubRoute: ClubRouteWithChildren,
   GamesRoute: GamesRoute,
   LessonsRoute: LessonsRoute,
@@ -594,6 +704,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClubsClubIdRoute: ClubsClubIdRouteWithChildren,
   ClubsFindRoute: ClubsFindRoute,
   ClubsNewRoute: ClubsNewRoute,
+  OnboardingAccountRoute: OnboardingAccountRoute,
   PaymentsTossFailRoute: PaymentsTossFailRoute,
   PaymentsTossSuccessRoute: PaymentsTossSuccessRoute,
 }
