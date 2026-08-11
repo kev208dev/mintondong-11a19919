@@ -1,0 +1,126 @@
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { NEXT_STORAGE_KEY } from "@/lib/auth/providers";
+import { safeNextPath, validateDisplayName, validateUsername } from "@/lib/auth/username";
+import { checkUsernameAvailable } from "@/lib/auth/account.functions";
+
+export const Route = createFileRoute("/onboarding/account")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "민턴동 아이디 만들기" },
+      {
+        name: "description",
+        content: "민턴동에서 사용할 고유 아이디와 닉네임을 정하고 동호회 활동을 시작하세요.",
+      },
+      { property: "og:title", content: "민턴동 아이디 만들기" },
+      { property: "og:description", content: "민턴동에서 사용할 아이디를 정해주세요." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: OnboardingAccountPage,
+});
+
+function OnboardingAccountPage() {
+  const navigate = useNavigate();
+  const { user, profile, loading, profileLoading, refreshProfile } = useAuth();
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      void navigate({ to: "/auth", search: { next: "/" }, replace: true });
+      return;
+    }
+    if (!profileLoading && profile?.username) {
+      let next = "/";
+      try {
+        next = safeNextPath(sessionStorage.getItem(NEXT_STORAGE_KEY));
+        sessionStorage.removeItem(NEXT_STORAGE_KEY);
+      } catch {
+        next = "/";
+      }
+      void navigate({ to: next, replace: true });
+    }
+  }, [loading, profileLoading, user, profile, navigate]);
+
+  useEffect(() => {
+    if (!displayName && profile?.display_name) setDisplayName(profile.display_name);
+  }, [profile?.display_name, displayName]);
+
+  const submit = async () => {
+    if (busy) return;
+    const problem = validateUsername(username) || validateDisplayName(displayName);
+    if (problem) {
+      toast.error(problem);
+      return;
+    }
+    setBusy(true);
+    try {
+      const { available } = await checkUsernameAvailable({ data: { username } });
+      if (!available) {
+        setNote("이미 사용 중인 아이디예요.");
+        return;
+      }
+      const { error } = await supabase.rpc("claim_username", {
+        p_username: username.trim().toLowerCase(),
+        p_display_name: displayName.trim(),
+      } as never);
+      if (error) throw error;
+      await refreshProfile();
+      let next = "/";
+      try {
+        next = safeNextPath(sessionStorage.getItem(NEXT_STORAGE_KEY));
+        sessionStorage.removeItem(NEXT_STORAGE_KEY);
+      } catch {
+        next = "/";
+      }
+      toast.success("민턴동 아이디를 만들었어요!");
+      void navigate({ to: next, replace: true });
+    } catch {
+      setNote("아이디를 저장하지 못했어요. 다른 아이디로 다시 시도해 주세요.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="rounded-3xl border border-border bg-card p-5">
+      <h2 className="text-base font-extrabold text-foreground">민턴동 아이디 만들기</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        민턴동에서 사용할 고유 아이디를 정해주세요.
+      </p>
+      <div className="mt-4 space-y-2">
+        <Input
+          className="h-12 rounded-2xl"
+          placeholder="아이디 (영문 소문자·숫자·_ 4~20자)"
+          autoCapitalize="none"
+          value={username}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            setNote(null);
+          }}
+        />
+        <Input
+          className="h-12 rounded-2xl"
+          placeholder="닉네임 (2~20자)"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+        />
+        {note ? <p className="px-1 text-[11px] font-semibold text-destructive">{note}</p> : null}
+        <Button className="h-12 w-full rounded-2xl font-bold" disabled={busy} onClick={submit}>
+          {busy ? "저장 중..." : "시작하기"}
+        </Button>
+      </div>
+    </section>
+  );
+}

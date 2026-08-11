@@ -18,6 +18,7 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as TournamentsRouteImport } from './routes/tournaments'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
+import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as ClubIndexRouteImport } from './routes/club.index'
 import { Route as ClubAttendanceRouteImport } from './routes/club.attendance'
@@ -81,6 +82,11 @@ const TournamentsRoute = TournamentsRouteImport.update({
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
@@ -188,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
   '/tournaments': typeof TournamentsRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
   '/club/attendance': typeof ClubAttendanceRoute
   '/club/finance': typeof ClubFinanceRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
   '/tournaments': typeof TournamentsRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
   '/club/attendance': typeof ClubAttendanceRoute
   '/club/finance': typeof ClubFinanceRoute
@@ -246,6 +254,7 @@ export interface FileRoutesById {
   '/me': typeof MeRoute
   '/records': typeof RecordsRoute
   '/tournaments': typeof TournamentsRoute
+  '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
   '/club/attendance': typeof ClubAttendanceRoute
   '/club/finance': typeof ClubFinanceRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/records'
     | '/tournaments'
+    | '/auth/forgot-password'
     | '/auth/signup'
     | '/club/attendance'
     | '/club/finance'
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/records'
     | '/tournaments'
+    | '/auth/forgot-password'
     | '/auth/signup'
     | '/club/attendance'
     | '/club/finance'
@@ -335,6 +346,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/records'
     | '/tournaments'
+    | '/auth/forgot-password'
     | '/auth/signup'
     | '/club/attendance'
     | '/club/finance'
@@ -436,6 +448,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/auth/'
       preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/forgot-password': {
+      id: '/auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/auth/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof AuthRoute
     }
     '/auth/signup': {
@@ -575,11 +594,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthRouteChildren {
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthSignupRoute: typeof AuthSignupRoute
   AuthIndexRoute: typeof AuthIndexRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthSignupRoute: AuthSignupRoute,
   AuthIndexRoute: AuthIndexRoute,
 }
@@ -648,13 +669,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
