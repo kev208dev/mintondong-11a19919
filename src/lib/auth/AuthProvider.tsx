@@ -1,14 +1,31 @@
 import type { Session, User } from "@supabase/supabase-js";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type Profile = { id: string; display_name: string | null; avatar_url: string | null };
+type Profile = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  username: string | null;
+};
 
 type AuthValue = {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  /** 프로필을 아직 불러오는 중인지 (username 온보딩 판단용) */
+  profileLoading: boolean;
+  refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -17,6 +34,8 @@ const AuthContext = createContext<AuthValue>({
   session: null,
   profile: null,
   loading: true,
+  profileLoading: true,
+  refreshProfile: async () => {},
   signOut: async () => {},
 });
 
@@ -24,6 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // 호스팅 환경에서 Supabase env 가 주입되지 않으면 client 접근이 throw 한다.
@@ -53,29 +74,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const userId = session?.user.id ?? null;
+
+  const loadProfile = useCallback(async (id: string) => {
+    setProfileLoading(true);
+    try {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, username")
+        .eq("id", id)
+        .maybeSingle();
+      setProfile((data as Profile | null) ?? null);
+    } catch (error) {
+      console.error("[auth] profile fetch failed", error);
+    } finally {
+      setProfileLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!userId) {
       setProfile(null);
+      setProfileLoading(false);
       return;
     }
-    let cancelled = false;
-    try {
-      void supabase
-        .from("profiles")
-        .select("id, display_name, avatar_url")
-        .eq("id", userId)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (!cancelled) setProfile(data ?? null);
-        });
-    } catch (error) {
-      console.error("[auth] profile fetch failed", error);
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
-
+    void loadProfile(userId);
+  }, [userId, loadProfile]);
 
   const value = useMemo<AuthValue>(
     () => ({
@@ -83,8 +106,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       profile,
       loading,
+      profileLoading,
+      refreshProfile: async () => {
+        if (userId) await loadProfile(userId);
+      },
       signOut: async () => {
         try {
+          await queryClient.cancelQueries();
+          queryClient.clear();
           await supabase.auth.signOut();
         } catch (error) {
           console.error("[auth] signOut failed", error);
@@ -92,9 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setProfile(null);
       },
-
     }),
-    [session, profile, loading],
+    [session, profile, loading, profileLoading, userId, loadProfile, queryClient],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
