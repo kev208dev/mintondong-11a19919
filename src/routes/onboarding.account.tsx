@@ -71,10 +71,11 @@ function OnboardingAccountPage() {
         setNote("이미 사용 중인 아이디예요.");
         return;
       }
-      const { error } = await supabase.rpc("claim_username", {
+      const db = supabase as unknown as { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }> };
+      const { error } = await db.rpc("claim_username", {
         p_username: username.trim().toLowerCase(),
         p_display_name: displayName.trim(),
-      } as never);
+      });
       if (error) throw error;
       await refreshProfile();
       let next = "/";
