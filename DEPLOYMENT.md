@@ -65,6 +65,11 @@ PortOne 활성화 및 PG 심사 전에 추가할 브라우저 공개 build 변�
 
 - SUPABASE_SERVICE_ROLE_KEY
 
+이 값은 Cloudflare Worker의 Runtime Settings → Variables and Secrets에 Secret 타입으로
+등록합니다. Git build에서 Dashboard runtime secret의 존재 여부를 확인할 수 없으므로
+`wrangler.jsonc`의 `secrets.required`로 검증하지 않습니다. 값이 없으면 service-role이
+필요한 서버 함수가 `SUPABASE_SERVICE_ROLE_KEY_MISSING`으로 안전하게 실패합니다.
+
 `VITE_PORTONE_ENABLED=true`로 실제 결제를 활성화하기 전에 추가해야 하는 Workers runtime
 secret:
 
@@ -96,9 +101,10 @@ Cloudflare Git 연결은 다음 값으로 설정되어 있습니다.
 - Build command: npm run build
 - Deploy command: npx wrangler deploy
 
-Cloudflare Dashboard의 Workers Builds 설정에서 위 세 공개 필수 변수와
-`SUPABASE_SERVICE_ROLE_KEY` secret을 등록합니다. 이후 main에 새 commit이 push되면 자동
-build와 deployment가 시작됩니다.
+Cloudflare Dashboard의 Workers Builds에는 위 세 `VITE_*` 공개 build variables를
+등록합니다. `SUPABASE_SERVICE_ROLE_KEY`는 Worker Runtime Settings → Variables and
+Secrets에 Secret 타입으로 별도 등록합니다. 이후 main에 새 commit이 push되면 자동 build와
+deployment가 시작됩니다.
 
 첫 배포 예상 URL은 다음과 같으며 실제 배포 완료 후 Dashboard와 브라우저에서 확인합니다.
 

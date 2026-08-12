@@ -4,7 +4,4 @@
   "main": "@tanstack/react-start/server-entry",
   "compatibility_date": "2026-08-11",
   "compatibility_flags": ["nodejs_compat"],
-  "secrets": {
-    "required": ["SUPABASE_SERVICE_ROLE_KEY"],
-  },
 }
