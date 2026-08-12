@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { NEXT_STORAGE_KEY } from "@/lib/auth/providers";
-import { safeNextPath, validateDisplayName, validateUsername } from "@/lib/auth/username";
+import { validateDisplayName, validateUsername } from "@/lib/auth/username";
 import { checkUsernameAvailable } from "@/lib/auth/account.functions";
 
 export const Route = createFileRoute("/onboarding/account")({
@@ -42,14 +41,7 @@ function OnboardingAccountPage() {
       return;
     }
     if (!profileLoading && profile?.username) {
-      let next = "/";
-      try {
-        next = safeNextPath(sessionStorage.getItem(NEXT_STORAGE_KEY));
-        sessionStorage.removeItem(NEXT_STORAGE_KEY);
-      } catch {
-        next = "/";
-      }
-      void navigate({ to: next, replace: true });
+      void navigate({ to: "/onboarding", replace: true });
     }
   }, [loading, profileLoading, user, profile, navigate]);
 
@@ -71,22 +63,17 @@ function OnboardingAccountPage() {
         setNote("이미 사용 중인 아이디예요.");
         return;
       }
-      const db = supabase as unknown as { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }> };
+      const db = supabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>;
+      };
       const { error } = await db.rpc("claim_username", {
         p_username: username.trim().toLowerCase(),
         p_display_name: displayName.trim(),
       });
       if (error) throw error;
       await refreshProfile();
-      let next = "/";
-      try {
-        next = safeNextPath(sessionStorage.getItem(NEXT_STORAGE_KEY));
-        sessionStorage.removeItem(NEXT_STORAGE_KEY);
-      } catch {
-        next = "/";
-      }
       toast.success("민턴동 아이디를 만들었어요!");
-      void navigate({ to: next, replace: true });
+      void navigate({ to: "/onboarding", replace: true });
     } catch {
       setNote("아이디를 저장하지 못했어요. 다른 아이디로 다시 시도해 주세요.");
     } finally {
@@ -119,7 +106,7 @@ function OnboardingAccountPage() {
         />
         {note ? <p className="px-1 text-[11px] font-semibold text-destructive">{note}</p> : null}
         <Button className="h-12 w-full rounded-2xl font-bold" disabled={busy} onClick={submit}>
-          {busy ? "저장 중..." : "시작하기"}
+          {busy ? "저장 중..." : "다음"}
         </Button>
       </div>
     </section>
