@@ -3,5 +3,5 @@
   "name": "mintondong-11a19919",
   "main": "@tanstack/react-start/server-entry",
   "compatibility_date": "2026-08-11",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"]
 }
