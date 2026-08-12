@@ -58,8 +58,8 @@ function BusinessInfoPage() {
       ) : null}
       {!isGeneralCustomerServicePhone(businessConfig.customerServicePhone) ? (
         <p className="border-t border-amber-300 bg-amber-50 px-5 py-4 text-[11px] leading-relaxed text-amber-900">
-          PG 심사 제출 전 사업자 명의의 일반전화 또는 전국대표번호를 고객센터 번호로 등록해야
-          합니다. 휴대전화 번호만으로는 심사 준비 완료로 보지 않습니다.
+          PG·카드사 심사용 사이트에는 휴대전화가 아닌 전화번호를 표시해야 합니다. 심사 제출 전에
+          실제 고객 문의에 사용하는 전화번호를 등록해 주세요.
         </p>
       ) : null}
     </article>
