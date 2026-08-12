@@ -23,8 +23,8 @@ function isTabActive(to: string, pathname: string) {
 function showsPublicFooter(pathname: string) {
   return (
     pathname === "/" ||
-    pathname === "/clubs/find" ||
-    (pathname.startsWith("/clubs/") && pathname !== "/clubs/new") ||
+    pathname === "/lessons" ||
+    (pathname.startsWith("/clubs/") && pathname.includes("/lessons")) ||
     pathname === "/terms" ||
     pathname === "/privacy" ||
     pathname === "/refund-policy" ||
@@ -61,6 +61,7 @@ const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
 function usePageTitle(pathname: string) {
   return useMemo(() => {
     if (pathname === "/") return "홈";
+    if (pathname.startsWith("/onboarding")) return "시작하기";
     if (pathname.startsWith("/clubs/find")) return "동호회 찾기";
     if (pathname.startsWith("/clubs/new")) return "동호회 만들기";
     if (pathname.startsWith("/clubs/")) return "동호회";
@@ -93,6 +94,7 @@ export function AppShell() {
   const title = usePageTitle(pathname);
   const router = useRouter();
   const showPublicFooter = showsPublicFooter(pathname);
+  const onboardingFlow = pathname.startsWith("/onboarding");
 
   useEffect(() => {
     const run = () => {
@@ -137,7 +139,11 @@ export function AppShell() {
         </div>
       </header>
 
-      <main className={`flex-1 px-4 pt-3 ${showPublicFooter ? "pb-8" : "pb-24"}`}>
+      <main
+        className={`flex-1 px-4 pt-3 ${
+          onboardingFlow ? "pb-8" : showPublicFooter ? "pb-8" : "pb-24"
+        }`}
+      >
         {isClubSection(pathname) ? <ClubSectionNav pathname={pathname} /> : null}
         <h1 className="mt-1 mb-3 text-[17px] font-extrabold tracking-tight text-foreground">
           {title}
@@ -147,7 +153,7 @@ export function AppShell() {
 
       {showPublicFooter ? <PublicFooter /> : null}
 
-      <BottomNav pathname={pathname} />
+      {onboardingFlow ? null : <BottomNav pathname={pathname} />}
     </div>
   );
 }
