@@ -8,7 +8,7 @@ const ids = z.object({
 });
 
 export const getCheckoutLesson = createServerFn({ method: "GET" })
-  .inputValidator((value) => ids.parse(value))
+  .validator((value) => ids.parse(value))
   .handler(async ({ data }) => {
     const { readCheckoutProduct } = await import("./portone.server");
     return readCheckoutProduct(data.clubId, data.lessonId);
@@ -16,7 +16,7 @@ export const getCheckoutLesson = createServerFn({ method: "GET" })
 
 export const preparePortOnePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((value) =>
+  .validator((value) =>
     ids
       .extend({
         customerName: z.string().trim().min(1).max(50),
@@ -39,7 +39,7 @@ export const preparePortOnePayment = createServerFn({ method: "POST" })
 
 export const completePortOnePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((value) =>
+  .validator((value) =>
     z.object({ paymentId: z.string().regex(/^[A-Za-z0-9_-]{16,64}$/) }).parse(value),
   )
   .handler(async ({ data, context }) => {
@@ -49,7 +49,7 @@ export const completePortOnePayment = createServerFn({ method: "POST" })
 
 export const requestPortOneCancellation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((value) =>
+  .validator((value) =>
     z
       .object({
         paymentId: z.string().regex(/^[A-Za-z0-9_-]{16,64}$/),
