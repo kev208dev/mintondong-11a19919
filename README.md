@@ -24,3 +24,7 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## PG 입점 심사 준비
+
+공개 사업자 정보, 법적 페이지, 공개 레슨 상품 노출과 배포 전 수동 작업은 [PG_REVIEW_SETUP.md](./PG_REVIEW_SETUP.md)를 확인하세요. 저장소에는 확인되지 않은 사업자 정보나 가짜 레슨·가격을 넣지 않습니다.

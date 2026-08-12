@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Search, Users } from "lucide-react";
+import { GraduationCap, MapPin, Search, Users } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { clubKeys, searchPublicClubs, type ClubRow } from "@/lib/clubs/api";
@@ -81,11 +81,11 @@ function FindClubPage() {
       ) : (
         <ul className="divide-y divide-border">
           {data!.map((club) => (
-            <li key={club.id}>
+            <li key={club.id} className="flex min-w-0 items-center gap-2 py-3">
               <Link
                 to="/clubs/$clubId"
                 params={{ clubId: club.id }}
-                className="flex items-center gap-3 py-3 active:opacity-70"
+                className="flex min-w-0 flex-1 items-center gap-3 active:opacity-70"
               >
                 <ClubAvatar club={club} />
                 <span className="min-w-0 flex-1">
@@ -103,6 +103,14 @@ function FindClubPage() {
                     </span>
                   </span>
                 </span>
+              </Link>
+              <Link
+                to="/clubs/$clubId/lessons"
+                params={{ clubId: club.id }}
+                aria-label={`${club.name} 공개 레슨 보기`}
+                className="flex h-9 shrink-0 items-center gap-1 rounded-xl bg-secondary px-2.5 text-[10px] font-bold text-secondary-foreground active:bg-accent"
+              >
+                <GraduationCap className="size-3.5" /> 레슨
               </Link>
             </li>
           ))}

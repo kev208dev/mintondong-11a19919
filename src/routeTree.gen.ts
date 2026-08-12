@@ -11,11 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BusinessInfoRouteImport } from './routes/business-info'
 import { Route as ClubRouteImport } from './routes/club'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as LessonsRouteImport } from './routes/lessons'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RecordsRouteImport } from './routes/records'
+import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TournamentsRouteImport } from './routes/tournaments'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
@@ -51,6 +55,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BusinessInfoRoute = BusinessInfoRouteImport.update({
+  id: '/business-info',
+  path: '/business-info',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClubRoute = ClubRouteImport.update({
   id: '/club',
   path: '/club',
@@ -71,9 +80,24 @@ const MeRoute = MeRouteImport.update({
   path: '/me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecordsRoute = RecordsRouteImport.update({
   id: '/records',
   path: '/records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundPolicyRoute = RefundPolicyRouteImport.update({
+  id: '/refund-policy',
+  path: '/refund-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TournamentsRoute = TournamentsRouteImport.update({
@@ -200,11 +224,15 @@ const PaymentsTossSuccessRoute = PaymentsTossSuccessRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/business-info': typeof BusinessInfoRoute
   '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
+  '/refund-policy': typeof RefundPolicyRoute
+  '/terms': typeof TermsRoute
   '/tournaments': typeof TournamentsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -232,10 +260,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/business-info': typeof BusinessInfoRoute
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
+  '/refund-policy': typeof RefundPolicyRoute
+  '/terms': typeof TermsRoute
   '/tournaments': typeof TournamentsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -264,11 +296,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/business-info': typeof BusinessInfoRoute
   '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
+  '/refund-policy': typeof RefundPolicyRoute
+  '/terms': typeof TermsRoute
   '/tournaments': typeof TournamentsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -299,11 +335,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/business-info'
     | '/club'
     | '/games'
     | '/lessons'
     | '/me'
+    | '/privacy'
     | '/records'
+    | '/refund-policy'
+    | '/terms'
     | '/tournaments'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -331,10 +371,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/business-info'
     | '/games'
     | '/lessons'
     | '/me'
+    | '/privacy'
     | '/records'
+    | '/refund-policy'
+    | '/terms'
     | '/tournaments'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -362,11 +406,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/business-info'
     | '/club'
     | '/games'
     | '/lessons'
     | '/me'
+    | '/privacy'
     | '/records'
+    | '/refund-policy'
+    | '/terms'
     | '/tournaments'
     | '/auth/forgot-password'
     | '/auth/reset-password'
@@ -396,11 +444,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
+  BusinessInfoRoute: typeof BusinessInfoRoute
   ClubRoute: typeof ClubRouteWithChildren
   GamesRoute: typeof GamesRoute
   LessonsRoute: typeof LessonsRoute
   MeRoute: typeof MeRoute
+  PrivacyRoute: typeof PrivacyRoute
   RecordsRoute: typeof RecordsRoute
+  RefundPolicyRoute: typeof RefundPolicyRoute
+  TermsRoute: typeof TermsRoute
   TournamentsRoute: typeof TournamentsRoute
   ClubsClubIdRoute: typeof ClubsClubIdRouteWithChildren
   ClubsFindRoute: typeof ClubsFindRoute
@@ -424,6 +476,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/business-info': {
+      id: '/business-info'
+      path: '/business-info'
+      fullPath: '/business-info'
+      preLoaderRoute: typeof BusinessInfoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/club': {
@@ -454,11 +513,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/records': {
       id: '/records'
       path: '/records'
       fullPath: '/records'
       preLoaderRoute: typeof RecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund-policy': {
+      id: '/refund-policy'
+      path: '/refund-policy'
+      fullPath: '/refund-policy'
+      preLoaderRoute: typeof RefundPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tournaments': {
@@ -695,11 +775,15 @@ const ClubsClubIdRouteWithChildren = ClubsClubIdRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
+  BusinessInfoRoute: BusinessInfoRoute,
   ClubRoute: ClubRouteWithChildren,
   GamesRoute: GamesRoute,
   LessonsRoute: LessonsRoute,
   MeRoute: MeRoute,
+  PrivacyRoute: PrivacyRoute,
   RecordsRoute: RecordsRoute,
+  RefundPolicyRoute: RefundPolicyRoute,
+  TermsRoute: TermsRoute,
   TournamentsRoute: TournamentsRoute,
   ClubsClubIdRoute: ClubsClubIdRouteWithChildren,
   ClubsFindRoute: ClubsFindRoute,
@@ -711,3 +795,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

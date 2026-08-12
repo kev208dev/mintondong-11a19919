@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ClubSectionNav, isClubSection } from "./ClubSectionNav";
 import { AccountButton } from "./AccountButton";
 import { ClubSwitcher } from "./ClubSwitcher";
+import { PublicFooter } from "./PublicFooter";
 
 const TABS = [
   { to: "/", label: "홈", icon: Home },
@@ -17,6 +18,18 @@ function isTabActive(to: string, pathname: string) {
   if (to === "/") return pathname === "/" || pathname.startsWith("/clubs/find");
   if (to === "/club") return isClubSection(pathname);
   return pathname === to || pathname.startsWith(`${to}/`);
+}
+
+function showsPublicFooter(pathname: string) {
+  return (
+    pathname === "/" ||
+    pathname === "/clubs/find" ||
+    (pathname.startsWith("/clubs/") && pathname !== "/clubs/new") ||
+    pathname === "/terms" ||
+    pathname === "/privacy" ||
+    pathname === "/refund-policy" ||
+    pathname === "/business-info"
+  );
 }
 
 const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
@@ -54,6 +67,10 @@ function usePageTitle(pathname: string) {
     if (pathname.startsWith("/games")) return "경기";
     if (pathname.startsWith("/lessons")) return "레슨";
     if (pathname.startsWith("/payments/toss")) return "레슨 결제";
+    if (pathname.startsWith("/terms")) return "이용약관";
+    if (pathname.startsWith("/privacy")) return "개인정보처리방침";
+    if (pathname.startsWith("/refund-policy")) return "취소 및 환불 정책";
+    if (pathname.startsWith("/business-info")) return "사업자 정보";
     if (pathname.startsWith("/records")) return "활동 기록";
     if (pathname.startsWith("/club/attendance")) return "출석 체크";
     if (pathname.startsWith("/club/schedule")) return "일정";
@@ -75,6 +92,7 @@ export function AppShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const title = usePageTitle(pathname);
   const router = useRouter();
+  const showPublicFooter = showsPublicFooter(pathname);
 
   useEffect(() => {
     const run = () => {
@@ -119,13 +137,15 @@ export function AppShell() {
         </div>
       </header>
 
-      <main className="flex-1 px-4 pb-24 pt-3">
+      <main className={`flex-1 px-4 pt-3 ${showPublicFooter ? "pb-8" : "pb-24"}`}>
         {isClubSection(pathname) ? <ClubSectionNav pathname={pathname} /> : null}
         <h1 className="mt-1 mb-3 text-[17px] font-extrabold tracking-tight text-foreground">
           {title}
         </h1>
         <Outlet />
       </main>
+
+      {showPublicFooter ? <PublicFooter /> : null}
 
       <BottomNav pathname={pathname} />
     </div>

@@ -21,6 +21,9 @@ export type ClubRow = {
   is_public: boolean;
   owner_id: string;
   member_count: number;
+  lessons_enabled: boolean;
+  session_label: string | null;
+  session_time: string | null;
   created_at: string;
 };
 
@@ -36,7 +39,10 @@ export type ClubMemberRow = {
 };
 
 const CLUB_COLUMNS =
-  "id, name, description, profile_image_url, cover_image_url, region:location, is_public, owner_id, member_count, created_at";
+  "id, name, description, profile_image_url, cover_image_url, region:location, is_public, owner_id, member_count, lessons_enabled, session_label, session_time, created_at";
+
+const LEGACY_CLUB_COLUMNS =
+  "id, name, region:location, owner_id, lessons_enabled, session_label, session_time, created_at";
 
 const MEMBER_COLUMNS = "id, club_id, user_id, name, role, status, joined_at, level";
 
@@ -49,13 +55,20 @@ function normalizeClub(row: Record<string, unknown>): ClubRow {
     profile_image_url: (row["profile_image_url"] as string | null) ?? null,
     cover_image_url: (row["cover_image_url"] as string | null) ?? null,
     region: ((row["region"] ?? row["location"]) as string | null) ?? null,
-    is_public: Boolean(row["is_public"]),
+    // is_public 도입 전 스키마에서는 공개/비공개 구분이 없었고 RLS가 공개 범위를 결정한다.
+    is_public: row["is_public"] === undefined ? true : Boolean(row["is_public"]),
     owner_id: String(row["owner_id"] ?? ""),
     member_count: Number(row["member_count"] ?? 0),
+    lessons_enabled: Boolean(row["lessons_enabled"]),
+    session_label: (row["session_label"] as string | null) ?? null,
+    session_time: (row["session_time"] as string | null) ?? null,
     created_at: String(row["created_at"] ?? new Date().toISOString()),
   };
 }
 
+function isMissingDirectoryColumn(error: { code?: string } | null): boolean {
+  return error?.code === "42703" || error?.code === "PGRST204";
+}
 
 export const clubKeys = {
   search: (q: string) => ["clubs", "search", q] as const,
@@ -63,6 +76,7 @@ export const clubKeys = {
   members: (id: string) => ["clubs", "members", id] as const,
   membership: (id: string, userId: string | null) => ["clubs", "membership", id, userId] as const,
   mine: (userId: string | null) => ["clubs", "mine", userId] as const,
+  publicLessons: (id: string) => ["clubs", "public-lessons", id] as const,
 };
 
 export async function searchPublicClubs(q: string): Promise<ClubRow[]> {
@@ -75,14 +89,25 @@ export async function searchPublicClubs(q: string): Promise<ClubRow[]> {
   const term = q.trim();
   if (term) query = query.ilike("name", `%${term}%`);
   const { data, error } = await query;
-  if (error) throw error;
-  return ((data ?? []) as Record<string, unknown>[]).map(normalizeClub);
+  if (!error) return ((data ?? []) as Record<string, unknown>[]).map(normalizeClub);
+  if (!isMissingDirectoryColumn(error)) throw error;
+
+  // club-directory.sql 적용 전의 기존 스키마와 읽기 호환. 공개 범위는 DB RLS가 결정한다.
+  let legacy = db.from("clubs").select(LEGACY_CLUB_COLUMNS).limit(30);
+  if (term) legacy = legacy.ilike("name", `%${term}%`);
+  const fallback = await legacy;
+  if (fallback.error) throw fallback.error;
+  return ((fallback.data ?? []) as Record<string, unknown>[]).map(normalizeClub);
 }
 
 export async function getClub(id: string): Promise<ClubRow | null> {
   const { data, error } = await db.from("clubs").select(CLUB_COLUMNS).eq("id", id).maybeSingle();
-  if (error) throw error;
-  return data ? normalizeClub(data as Record<string, unknown>) : null;
+  if (!error) return data ? normalizeClub(data as Record<string, unknown>) : null;
+  if (!isMissingDirectoryColumn(error)) throw error;
+
+  const fallback = await db.from("clubs").select(LEGACY_CLUB_COLUMNS).eq("id", id).maybeSingle();
+  if (fallback.error) throw fallback.error;
+  return fallback.data ? normalizeClub(fallback.data as Record<string, unknown>) : null;
 }
 
 export async function listClubMembers(clubId: string): Promise<ClubMemberRow[]> {
@@ -177,7 +202,6 @@ export async function createClub(input: CreateClubInput): Promise<ClubRow> {
       console.warn("[clubs] profile image upload failed", imageError);
     }
   }
-
 
   return club;
 }

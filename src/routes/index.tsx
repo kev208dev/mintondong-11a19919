@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   CalendarDays,
   ChevronRight,
+  GraduationCap,
   Megaphone,
   Search,
   Trophy,
@@ -63,11 +64,31 @@ function HomePage() {
         </p>
       </section>
 
+      <Link
+        to="/clubs/find"
+        className="flex min-w-0 items-center gap-3 rounded-2xl border border-primary/20 bg-card p-3.5 card-soft active:bg-accent"
+      >
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          <GraduationCap className="size-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block break-keep text-xs font-extrabold text-foreground">
+            배드민턴 클럽과 레슨을 찾고 신청해보세요.
+          </span>
+          <span className="mt-0.5 block text-[11px] text-muted-foreground">
+            코치 · 일정 · 수업 시간 · 가격 확인
+          </span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-primary" />
+      </Link>
+
       <section className="brand-gradient rounded-2xl p-4 text-primary-foreground">
         <p className="text-[11px] font-semibold opacity-75">오늘 운동 요약</p>
         <p className="mt-0.5 truncate text-[15px] font-extrabold">{club.club.name}</p>
         <p className="text-[11px] opacity-80">
-          {scheduleUnset ? "정기 운동 일정이 아직 없어요" : `${club.sessionLabel} · ${club.sessionTime}`}
+          {scheduleUnset
+            ? "정기 운동 일정이 아직 없어요"
+            : `${club.sessionLabel} · ${club.sessionTime}`}
         </p>
         <dl className="mt-3 grid grid-cols-4 gap-1.5 text-center">
           {[
@@ -195,7 +216,7 @@ function HomePage() {
         to="/clubs/find"
         className="flex h-11 items-center justify-center rounded-2xl bg-secondary text-xs font-bold text-secondary-foreground active:bg-accent"
       >
-        <Search className="mr-1.5 size-4" /> 동호회 찾기
+        <Search className="mr-1.5 size-4" /> 동호회와 레슨 찾기
       </Link>
     </div>
   );
