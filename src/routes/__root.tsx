@@ -1,8 +1,9 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -14,6 +15,7 @@ import { Toaster } from "../components/ui/sonner";
 import { AppShell } from "../components/app/AppShell";
 import { AuthProvider, useAuth } from "../lib/auth/AuthProvider";
 import { NEXT_STORAGE_KEY } from "../lib/auth/providers";
+import { clubKeys, listMyClubs } from "../lib/clubs/api";
 
 function NotFoundComponent() {
   return (
@@ -138,28 +140,76 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-/** 소셜 로그인은 앱 origin 으로 돌아온다: 아이디 온보딩 또는 원래 목적지로 보낸다. */
+function isOnboardingSubflow(pathname: string) {
+  return (
+    pathname.startsWith("/onboarding") ||
+    pathname === "/clubs/find" ||
+    pathname === "/clubs/new" ||
+    pathname.startsWith("/clubs/")
+  );
+}
+
+function isLegalPage(pathname: string) {
+  return (
+    pathname === "/terms" ||
+    pathname === "/privacy" ||
+    pathname === "/refund-policy" ||
+    pathname === "/business-info"
+  );
+}
+
+/** 로그인 직후 계정 설정과 첫 동호회 연결을 순서대로 안내한다. */
 function PostAuthRedirect() {
   const { user, profile, loading, profileLoading } = useAuth();
   const router = useRouter();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const clubs = useQuery({
+    queryKey: clubKeys.mine(user?.id ?? null),
+    queryFn: () => listMyClubs(user?.id ?? null),
+    enabled: !!user && !!profile?.username && !loading && !profileLoading,
+    staleTime: 15_000,
+  });
+
   useEffect(() => {
     if (loading || profileLoading || !user) return;
-    const path = window.location.pathname;
-    if (path.startsWith("/onboarding") || path.startsWith("/auth/reset-password")) return;
+    if (pathname.startsWith("/auth/reset-password")) return;
 
-    // 아이디가 없는 계정(소셜 최초 로그인)은 아이디 만들기로 안내한다.
+    // 소셜 최초 로그인은 먼저 아이디를 만든다.
     if (!profile?.username) {
-      void router.navigate({ to: "/onboarding/account", replace: true });
+      if (!pathname.startsWith("/onboarding/account")) {
+        void router.navigate({ to: "/onboarding/account", replace: true });
+      }
       return;
     }
 
+    if (clubs.isLoading || clubs.isError || !clubs.data) return;
+
+    // 활성 동호회가 하나도 없으면 가입/생성 온보딩을 먼저 보여준다.
+    if (clubs.data.length === 0) {
+      if (!isOnboardingSubflow(pathname) && !isLegalPage(pathname)) {
+        void router.navigate({ to: "/onboarding", replace: true });
+      }
+      return;
+    }
+
+    // 첫 동호회 연결까지 끝난 뒤 원래 목적지가 있으면 이어서 이동한다.
     const next = sessionStorage.getItem(NEXT_STORAGE_KEY);
     if (!next) return;
     sessionStorage.removeItem(NEXT_STORAGE_KEY);
-    if (next.startsWith("/") && !next.startsWith("//") && next !== path) {
+    if (next.startsWith("/") && !next.startsWith("//") && next !== pathname) {
       void router.navigate({ to: next });
     }
-  }, [user, profile, loading, profileLoading, router]);
+  }, [
+    user,
+    profile,
+    loading,
+    profileLoading,
+    clubs.isLoading,
+    clubs.isError,
+    clubs.data,
+    pathname,
+    router,
+  ]);
   return null;
 }
 
