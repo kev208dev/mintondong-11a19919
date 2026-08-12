@@ -42,6 +42,7 @@ function SignUpPage() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [idNote, setIdNote] = useState<string | null>(null);
+  const [emailNote, setEmailNote] = useState<string | null>(null);
 
   const checkId = async () => {
     const message = validateUsername(username);
@@ -59,6 +60,7 @@ function SignUpPage() {
 
   const submit = async () => {
     if (busy) return;
+    setEmailNote(null);
     const problem =
       validateUsername(username) ||
       validatePassword(password) ||
@@ -80,11 +82,17 @@ function SignUpPage() {
       toast.success("민턴동에 가입했어요!");
       void navigate({ to: safeNextPath(next), replace: true });
     } catch (error) {
-      toast.error(
-        error instanceof Error && error.message && error.message.length < 100
+      const message =
+        error instanceof Error && error.message && error.message.length < 120
           ? error.message
-          : "회원가입에 실패했어요. 잠시 후 다시 시도해 주세요.",
-      );
+          : "회원가입에 실패했어요. 잠시 후 다시 시도해 주세요.";
+
+      if (message.startsWith("이 이메일로는 새 계정을 만들 수 없어요.")) {
+        setEmailNote(message);
+        toast.error("복구 이메일을 확인해 주세요.");
+      } else {
+        toast.error(message);
+      }
     } finally {
       setBusy(false);
     }
@@ -141,8 +149,15 @@ function SignUpPage() {
           autoComplete="email"
           placeholder="복구 이메일"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          aria-invalid={Boolean(emailNote)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setEmailNote(null);
+          }}
         />
+        {emailNote ? (
+          <p className="px-1 text-[11px] font-semibold text-destructive">{emailNote}</p>
+        ) : null}
         <Button
           className="h-12 w-full rounded-2xl font-bold"
           disabled={busy}
