@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { checkUsernameAvailable, signUpWithUsername } from "@/lib/auth/account.functions";
+import { NEXT_STORAGE_KEY } from "@/lib/auth/providers";
 import {
   safeNextPath,
   validateDisplayName,
@@ -79,8 +80,12 @@ function SignUpPage() {
       const { error } = await supabase.auth.setSession(tokens);
       if (error) throw error;
       await refreshProfile();
+
+      const intended = safeNextPath(next);
+      if (intended !== "/") sessionStorage.setItem(NEXT_STORAGE_KEY, intended);
+
       toast.success("민턴동에 가입했어요!");
-      void navigate({ to: safeNextPath(next), replace: true });
+      void navigate({ to: "/onboarding", replace: true });
     } catch (error) {
       const message =
         error instanceof Error && error.message && error.message.length < 120
