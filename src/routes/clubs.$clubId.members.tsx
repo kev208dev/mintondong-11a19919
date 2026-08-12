@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Users } from "lucide-react";
-import { clubKeys, listClubMembers } from "@/lib/clubs/api";
+import { Lock, Users } from "lucide-react";
+import { useAuth } from "@/lib/auth/AuthProvider";
+import { clubKeys, getMyMembership, listClubMembers } from "@/lib/clubs/api";
 
 export const Route = createFileRoute("/clubs/$clubId/members")({
   component: ClubDetailMembers,
@@ -15,18 +16,38 @@ const ROLE_LABEL: Record<string, string> = {
 
 function ClubDetailMembers() {
   const { clubId } = Route.useParams();
+  const { user } = useAuth();
+  const membership = useQuery({
+    queryKey: clubKeys.membership(clubId, user?.id ?? null),
+    queryFn: () => getMyMembership(clubId, user?.id ?? null),
+    enabled: !!user,
+  });
+  const canSeeMembers = membership.data?.status === "active";
   const { data, isLoading } = useQuery({
     queryKey: clubKeys.members(clubId),
     queryFn: () => listClubMembers(clubId),
+    enabled: canSeeMembers,
   });
 
-  if (isLoading) {
+  if (membership.isLoading || (canSeeMembers && isLoading)) {
     return (
       <ul className="space-y-2">
         {[0, 1, 2].map((i) => (
           <li key={i} className="h-14 animate-pulse rounded-2xl bg-secondary" />
         ))}
       </ul>
+    );
+  }
+
+  if (!canSeeMembers) {
+    return (
+      <div className="rounded-2xl bg-secondary/60 p-8 text-center">
+        <Lock className="mx-auto size-5 text-muted-foreground" />
+        <p className="mt-2 text-sm font-bold text-foreground">멤버 정보는 비공개예요</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          가입이 완료된 클럽 회원만 멤버 명단을 확인할 수 있어요.
+        </p>
+      </div>
     );
   }
 
