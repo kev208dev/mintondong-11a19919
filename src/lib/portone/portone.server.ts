@@ -1,12 +1,17 @@
 import { randomUUID } from "node:crypto";
+import { PaymentClient, Webhook } from "@portone/server-sdk";
+import type { Payment as PortOneSdkPayment } from "@portone/server-sdk/payment";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { Webhook } from "@portone/server-sdk";
 import { adminClient } from "@/lib/auth/account.server";
 import {
+  cancellationDecision,
+  executeCancellationDecision,
   isSellableLesson,
   mapPortOneStatus,
+  PAYMENT_REVIEW_MESSAGE,
   paymentFactsMatch,
   PORTONE_PAYMENT_ID,
+  verificationReviewStatus,
 } from "./payment-core";
 
 type Row = Record<string, unknown>;
@@ -128,6 +133,17 @@ export async function preparePayment(input: {
   const storeId = expectedStoreId();
   const channelKey = expectedChannelKey();
   if (!portOneEnabled() || !storeId || !channelKey) throw new Error("PORTONE_NOT_CONFIGURED");
+  const { data: reviewOrder, error: reviewError } = await db()
+    .from("payments")
+    .select("id")
+    .eq("provider", "PORTONE")
+    .eq("user_id", input.userId)
+    .eq("coach_id", product.lessonId)
+    .eq("failure_code", "PORTONE_VERIFICATION_MISMATCH")
+    .limit(1)
+    .maybeSingle();
+  if (reviewError) throw reviewError;
+  if (reviewOrder) throw new Error("PAYMENT_REVIEW_REQUIRED");
   const paymentId = `md_${Date.now().toString(36)}_${randomUUID().replaceAll("-", "")}`;
   const name = orderName(product);
   const { error } = await db().from("payments").insert({
@@ -168,27 +184,51 @@ export async function preparePayment(input: {
 
 type PortOnePayment = {
   status: string;
-  id?: string;
-  transactionId?: string;
-  storeId?: string;
-  channel?: { key?: string; pgProvider?: string };
-  amount?: { total?: number; paid?: number; cancelled?: number };
-  currency?: string;
-  orderName?: string;
-  paidAt?: string;
-  statusChangedAt?: string;
-  receiptUrl?: string;
-  code?: string;
-  message?: string;
+  id: string;
+  transactionId: string;
+  storeId: string;
+  channel: { key: string | undefined; pgProvider: string } | undefined;
+  amount: { total: number; paid: number; cancelled: number };
+  currency: string;
+  orderName: string;
+  paidAt: string | undefined;
+  statusChangedAt: string;
+  receiptUrl: string | undefined;
+  failureCode: string | undefined;
+  failureMessage: string | undefined;
 };
 
 async function getPortOnePayment(paymentId: string): Promise<PortOnePayment> {
-  const response = await fetch(`https://api.portone.io/payments/${encodeURIComponent(paymentId)}`, {
-    headers: { Authorization: `PortOne ${secret()}` },
-  });
-  const body = (await response.json().catch(() => ({}))) as PortOnePayment;
-  if (!response.ok) throw new Error(`PORTONE_LOOKUP_FAILED:${response.status}`);
-  return body;
+  const payment = await PaymentClient({ secret: secret() }).getPayment({ paymentId });
+  return normalizePortOnePayment(payment);
+}
+
+function normalizePortOnePayment(payment: PortOneSdkPayment): PortOnePayment {
+  if (!("id" in payment) || !("amount" in payment)) {
+    throw new Error("PORTONE_UNRECOGNIZED_PAYMENT_STATUS");
+  }
+  const failure = payment.status === "FAILED" ? payment.failure : undefined;
+  return {
+    status: String(payment.status),
+    id: payment.id,
+    transactionId: payment.transactionId,
+    storeId: payment.storeId,
+    channel: payment.channel
+      ? { key: payment.channel.key, pgProvider: payment.channel.pgProvider }
+      : undefined,
+    amount: {
+      total: payment.amount.total,
+      paid: payment.amount.paid,
+      cancelled: payment.amount.cancelled,
+    },
+    currency: payment.currency,
+    orderName: payment.orderName,
+    paidAt: "paidAt" in payment ? payment.paidAt : undefined,
+    statusChangedAt: payment.statusChangedAt,
+    receiptUrl: "receiptUrl" in payment ? payment.receiptUrl : undefined,
+    failureCode: failure?.pgCode,
+    failureMessage: failure?.pgMessage ?? failure?.reason,
+  };
 }
 
 async function internalPayment(paymentId: string) {
@@ -203,16 +243,8 @@ async function internalPayment(paymentId: string) {
   return (data as Row | null) ?? null;
 }
 
-export async function synchronizePayment(paymentId: string, userId?: string) {
-  if (!PORTONE_PAYMENT_ID.test(paymentId)) throw new Error("INVALID_PAYMENT_ID");
-  const internal = await internalPayment(paymentId);
-  if (!internal || internal["provider"] !== "PORTONE") throw new Error("ORDER_NOT_FOUND");
-  if (userId && internal["user_id"] !== userId) throw new Error("ORDER_FORBIDDEN");
-  const remote = await getPortOnePayment(paymentId);
-  const total = Number(remote.amount?.total ?? -1);
-  const paid = Number(remote.amount?.paid ?? 0);
-  const cancelled = Number(remote.amount?.cancelled ?? 0);
-  const verified = paymentFactsMatch({
+function factsMatch(paymentId: string, internal: Row, remote: PortOnePayment) {
+  return paymentFactsMatch({
     paymentId,
     internalAmount: Number(internal["amount"]),
     internalOrderName: String(internal["order_name"]),
@@ -221,8 +253,8 @@ export async function synchronizePayment(paymentId: string, userId?: string) {
     remote: {
       status: remote.status,
       id: remote.id,
-      total,
-      paid,
+      total: remote.amount.total,
+      paid: remote.amount.paid,
       currency: remote.currency,
       orderName: remote.orderName,
       storeId: remote.storeId,
@@ -230,16 +262,31 @@ export async function synchronizePayment(paymentId: string, userId?: string) {
       pgProvider: remote.channel?.pgProvider,
     },
   });
-  if (!verified) {
-    await db()
-      .from("payments")
-      .update({
-        status: "FAILED",
-        failure_code: "PORTONE_VERIFICATION_MISMATCH",
-        failure_message: "PortOne 결제 검증 정보가 내부 주문과 일치하지 않습니다.",
-        verified_at: new Date().toISOString(),
-      })
-      .eq("id", internal["id"]);
+}
+
+async function markVerificationReview(internal: Row, remoteStatus: string) {
+  const { error } = await db()
+    .from("payments")
+    .update({
+      status: verificationReviewStatus(internal["status"]),
+      portone_status: remoteStatus,
+      failure_code: "PORTONE_VERIFICATION_MISMATCH",
+      failure_message: PAYMENT_REVIEW_MESSAGE,
+      verified_at: new Date().toISOString(),
+    })
+    .eq("id", internal["id"]);
+  if (error) throw error;
+}
+
+export async function synchronizePayment(paymentId: string, userId?: string) {
+  if (!PORTONE_PAYMENT_ID.test(paymentId)) throw new Error("INVALID_PAYMENT_ID");
+  const internal = await internalPayment(paymentId);
+  if (!internal || internal["provider"] !== "PORTONE") throw new Error("ORDER_NOT_FOUND");
+  if (userId && internal["user_id"] !== userId) throw new Error("ORDER_FORBIDDEN");
+  const remote = await getPortOnePayment(paymentId);
+  const { total, paid, cancelled } = remote.amount;
+  if (!factsMatch(paymentId, internal, remote)) {
+    await markVerificationReview(internal, remote.status);
     throw new Error("PAYMENT_VERIFICATION_MISMATCH");
   }
   const status = mapPortOneStatus(remote.status, paid, cancelled);
@@ -252,8 +299,8 @@ export async function synchronizePayment(paymentId: string, userId?: string) {
     receipt_url: remote.receiptUrl ?? null,
     cancelled_amount: cancelled,
     verified_at: new Date().toISOString(),
-    failure_code: remote.status === "FAILED" ? (remote.code ?? "PORTONE_FAILED") : null,
-    failure_message: remote.status === "FAILED" ? (remote.message ?? "결제 실패") : null,
+    failure_code: remote.status === "FAILED" ? (remote.failureCode ?? "PORTONE_FAILED") : null,
+    failure_message: remote.status === "FAILED" ? (remote.failureMessage ?? "결제 실패") : null,
   };
   if (status === "PAID" && remote.paidAt) update["paid_at"] = remote.paidAt;
   if (status === "CANCELLED")
@@ -265,39 +312,47 @@ export async function synchronizePayment(paymentId: string, userId?: string) {
 
 export async function cancelPayment(input: { paymentId: string; userId: string; reason: string }) {
   const internal = await internalPayment(input.paymentId);
-  if (!internal || internal["user_id"] !== input.userId) throw new Error("ORDER_NOT_FOUND");
+  if (!internal || internal["provider"] !== "PORTONE" || internal["user_id"] !== input.userId) {
+    throw new Error("ORDER_NOT_FOUND");
+  }
   const before = await getPortOnePayment(input.paymentId);
-  const total = Number(before.amount?.total ?? -1);
-  const cancelled = Number(before.amount?.cancelled ?? 0);
-  if (total !== Number(internal["amount"])) throw new Error("PAYMENT_VERIFICATION_MISMATCH");
-  const cancellable = total - cancelled;
-  if (cancellable <= 0) return synchronizePayment(input.paymentId, input.userId);
+  const decision = cancellationDecision({
+    factsMatch: factsMatch(input.paymentId, internal, before),
+    remoteStatus: before.status,
+    total: before.amount.total,
+    cancelled: before.amount.cancelled,
+  });
+  if (decision.kind === "REJECT" && decision.code === "PAYMENT_VERIFICATION_MISMATCH") {
+    await markVerificationReview(internal, before.status);
+  }
   const key = `cancel_${input.paymentId}_${String(internal["id"]).replaceAll("-", "")}`.slice(
     0,
     128,
   );
-  await db()
-    .from("payments")
-    .update({ cancel_idempotency_key: key, cancel_requested_at: new Date().toISOString() })
-    .eq("id", internal["id"]);
-  const response = await fetch(
-    `https://api.portone.io/payments/${encodeURIComponent(input.paymentId)}/cancel`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `PortOne ${secret()}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": `"${key}"`,
+  await executeCancellationDecision(decision, async (cancellable) => {
+    await db()
+      .from("payments")
+      .update({ cancel_idempotency_key: key, cancel_requested_at: new Date().toISOString() })
+      .eq("id", internal["id"]);
+    const response = await fetch(
+      `https://api.portone.io/payments/${encodeURIComponent(input.paymentId)}/cancel`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `PortOne ${secret()}`,
+          "Content-Type": "application/json",
+          "Idempotency-Key": `"${key}"`,
+        },
+        body: JSON.stringify({
+          reason: input.reason,
+          amount: cancellable,
+          currentCancellableAmount: cancellable,
+          requester: "CUSTOMER",
+        }),
       },
-      body: JSON.stringify({
-        reason: input.reason,
-        amount: cancellable,
-        currentCancellableAmount: cancellable,
-        requester: "CUSTOMER",
-      }),
-    },
-  );
-  if (!response.ok) throw new Error(`PORTONE_CANCEL_FAILED:${response.status}`);
+    );
+    if (!response.ok) throw new Error(`PORTONE_CANCEL_FAILED:${response.status}`);
+  });
   return synchronizePayment(input.paymentId, input.userId);
 }
 

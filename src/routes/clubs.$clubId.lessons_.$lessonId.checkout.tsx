@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AlertCircle, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
@@ -15,6 +15,7 @@ import {
   getCheckoutLesson,
   preparePortOnePayment,
 } from "@/lib/portone/payments.functions";
+import { checkoutPaymentAccess, PAYMENT_REVIEW_MESSAGE } from "@/lib/portone/payment-core";
 
 export const Route = createFileRoute("/clubs/$clubId/lessons_/$lessonId/checkout")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -36,13 +37,13 @@ export const Route = createFileRoute("/clubs/$clubId/lessons_/$lessonId/checkout
 function PortOneCheckoutPage() {
   const { clubId, lessonId } = Route.useParams();
   const { paymentId: redirectedPaymentId } = Route.useSearch();
-  const navigate = useNavigate();
   const { user, profile, loading } = useAuth();
   const prepare = useServerFn(preparePortOnePayment);
   const complete = useServerFn(completePortOnePayment);
   const [name, setName] = useState(profile?.display_name ?? "");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reviewRequired, setReviewRequired] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
   const completedRedirect = useRef(false);
   const product = useQuery({
@@ -51,14 +52,8 @@ function PortOneCheckoutPage() {
   });
 
   useEffect(() => {
-    if (!loading && !user) {
-      void navigate({
-        to: "/auth",
-        search: { next: `/clubs/${clubId}/lessons/${lessonId}/checkout` },
-        replace: true,
-      });
-    }
-  }, [clubId, lessonId, loading, navigate, user]);
+    if (!name && profile?.display_name) setName(profile.display_name);
+  }, [name, profile?.display_name]);
 
   useEffect(() => {
     if (!redirectedPaymentId || !user || completedRedirect.current) return;
@@ -74,14 +69,20 @@ function PortOneCheckoutPage() {
               : `현재 결제 상태는 ${state.portoneStatus}입니다.`,
         });
       })
-      .catch(() => setResult({ ok: false, message: "결제 결과를 확인하지 못했습니다." }))
+      .catch((error) => {
+        if (isPaymentReviewError(error)) {
+          setReviewRequired(true);
+          setResult({ ok: false, message: PAYMENT_REVIEW_MESSAGE });
+          return;
+        }
+        setResult({ ok: false, message: "결제 결과를 확인하지 못했습니다." });
+      })
       .finally(() => setBusy(false));
   }, [complete, redirectedPaymentId, user]);
 
-  if (loading || product.isLoading) {
+  if (product.isLoading) {
     return <Loader2 className="mx-auto mt-16 size-8 animate-spin text-primary" />;
   }
-  if (!user) return null;
   if (!product.data || product.error) {
     return (
       <section className="rounded-3xl border border-border bg-card p-6 text-center">
@@ -108,9 +109,17 @@ function PortOneCheckoutPage() {
   const storeId = import.meta.env["VITE_PORTONE_STORE_ID"]?.trim();
   const channelKey = import.meta.env["VITE_PORTONE_CHANNEL_KEY"]?.trim();
   const integrationReady = enabled && Boolean(storeId && channelKey);
+  const access = checkoutPaymentAccess({
+    authenticated: Boolean(user),
+    integrationReady,
+    refundPolicyReady: isRefundPolicyReady,
+  });
+  const checkoutPath = `/clubs/${clubId}/lessons/${lessonId}/checkout${
+    redirectedPaymentId ? `?paymentId=${encodeURIComponent(redirectedPaymentId)}` : ""
+  }`;
 
   async function pay() {
-    if (!integrationReady || !storeId || !channelKey || !isRefundPolicyReady) return;
+    if (access !== "READY" || !user || !storeId || !channelKey || reviewRequired) return;
     setBusy(true);
     setResult(null);
     try {
@@ -144,10 +153,13 @@ function PortOneCheckoutPage() {
       });
     } catch (error) {
       const code = error instanceof Error ? error.message : "";
+      const needsReview = isPaymentReviewError(error);
+      if (needsReview) setReviewRequired(true);
       setResult({
         ok: false,
-        message:
-          code === "PORTONE_PAYMENT_MIGRATION_REQUIRED"
+        message: needsReview
+          ? PAYMENT_REVIEW_MESSAGE
+          : code === "PORTONE_PAYMENT_MIGRATION_REQUIRED"
             ? "결제 DB 준비가 필요합니다. 운영자에게 문의해 주세요."
             : "결제를 준비하거나 검증하지 못했습니다. 다시 시도해 주세요.",
       });
@@ -189,31 +201,33 @@ function PortOneCheckoutPage() {
           </Link>
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="buyer-name">구매자 이름</Label>
-            <Input
-              id="buyer-name"
-              className="mt-1"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={50}
-              autoComplete="name"
-            />
+        {user ? (
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="buyer-name">구매자 이름</Label>
+              <Input
+                id="buyer-name"
+                className="mt-1"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={50}
+                autoComplete="name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="buyer-phone">휴대전화</Label>
+              <Input
+                id="buyer-phone"
+                className="mt-1"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="010-0000-0000"
+                inputMode="tel"
+                autoComplete="tel"
+              />
+            </div>
           </div>
-          <div>
-            <Label htmlFor="buyer-phone">휴대전화</Label>
-            <Input
-              id="buyer-phone"
-              className="mt-1"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="010-0000-0000"
-              inputMode="tel"
-              autoComplete="tel"
-            />
-          </div>
-        </div>
+        ) : null}
 
         {!integrationReady ? (
           <Notice text="결제 연동 설정이 필요합니다. PortOne 상점 ID, KG이니시스 채널 키와 활성화 설정을 확인해 주세요." />
@@ -229,22 +243,41 @@ function PortOneCheckoutPage() {
             {result.message}
           </div>
         ) : null}
-        <Button
-          className="h-12 w-full rounded-2xl font-extrabold"
-          disabled={
-            !integrationReady ||
-            !isRefundPolicyReady ||
-            busy ||
-            !name.trim() ||
-            !/^01[016789]-?\d{3,4}-?\d{4}$/.test(phone)
-          }
-          onClick={() => void pay()}
-        >
-          {busy ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-          {won(lesson.priceWon)} 결제하기
-        </Button>
+        {loading ? (
+          <Button className="h-12 w-full rounded-2xl font-extrabold" disabled>
+            <Loader2 className="mr-2 size-4 animate-spin" /> 로그인 상태 확인 중
+          </Button>
+        ) : !user ? (
+          <Button asChild className="h-12 w-full rounded-2xl font-extrabold">
+            <Link to="/auth" search={{ next: checkoutPath }}>
+              로그인 후 결제하기
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            className="h-12 w-full rounded-2xl font-extrabold"
+            disabled={
+              access !== "READY" ||
+              reviewRequired ||
+              busy ||
+              !name.trim() ||
+              !/^01[016789]-?\d{3,4}-?\d{4}$/.test(phone)
+            }
+            onClick={() => void pay()}
+          >
+            {busy ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+            {reviewRequired ? "결제 확인 필요" : `${won(lesson.priceWon)} 결제하기`}
+          </Button>
+        )}
       </div>
     </section>
+  );
+}
+
+function isPaymentReviewError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return (
+    message.includes("PAYMENT_VERIFICATION_MISMATCH") || message.includes("PAYMENT_REVIEW_REQUIRED")
   );
 }
 

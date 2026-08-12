@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "test:portone": "node --test --experimental-strip-types tests/portone-payment-core.test.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

@@ -54,11 +54,12 @@
 2. 외부 Supabase 프로젝트 `tkumfwiomcxkdbzljyss`의 SQL Editor에서 검토한 SQL을 적용합니다.
 3. `clubs`·`club_members`의 추가 컬럼, RLS 활성화, 정책과 table privilege를 확인합니다. `anon`은 `clubs`의 `is_public = true` 행만 조회할 수 있어야 하며 `club_members`에는 어떤 table privilege도 없어야 합니다.
 4. `db/portone-payments.sql`을 검토하고 SQL Editor에서 적용합니다. 이 파일은 기존 테이블/행을 삭제하지 않고 `payments`에 주문 검증 필드를 추가하며 PortOne 주문의 `booking_id`만 nullable로 허용합니다. 저장소 배포만으로 실행되지 않습니다.
-5. `payments_portone_payment_id_unique`와 제약조건, `anon`/`authenticated`의 `payments` table privilege 회수, `service_role` 전용 쓰기를 확인합니다.
-6. 운영 계정으로 실제 공개 클럽을 생성합니다.
-7. 해당 클럽에 실제 코치와 실제 수업 시간·가격(`coaches.price`, 원 단위)을 등록합니다.
-8. 로그아웃 상태의 390px 모바일 화면에서 `/clubs/find`를 열어 공개 클럽만 보이는지 확인합니다.
-9. 공개 클럽의 레슨 탭에서 실제 가격이 `30,000원 / 50분` 형식으로 정확히 표시되는지 확인합니다.
+5. `supabase/migrations/20260812051103_portone_payments_hardening.sql`을 검토하고 적용합니다. 기존 `club scoped payments` client policy를 제거하고 `payments`를 service-role-only로 재확인하는 권한 migration이며, 저장소 작업에서는 운영 DB에 실행하지 않았습니다.
+6. `payments_portone_payment_id_unique`와 제약조건, `anon`/`authenticated`의 `payments` table privilege 회수, `service_role` 전용 쓰기를 확인합니다.
+7. 운영 계정으로 실제 공개 클럽을 생성합니다.
+8. 해당 클럽에 실제 코치와 실제 수업 시간·가격(`coaches.price`, 원 단위)을 등록합니다.
+9. 로그아웃 상태의 390px 모바일 화면에서 `/clubs/find`와 상품 checkout을 열어 실제 상품·가격·취소 정책이 로그인 없이 보이는지 확인합니다.
+10. 로그인 후에만 checkout의 PortOne 결제 호출이 가능한지 확인합니다.
 
 공개 클럽이어도 회원 명단은 공개되지 않습니다. DB에서 `anon`의 `club_members` 권한을 회수하고, RLS 정책도 `authenticated` 역할의 본인 멤버십·같은 클럽 active 회원·클럽 owner에게만 로스터 조회를 허용합니다. 따라서 UI 숨김 여부와 관계없이 이름, `user_id`, 역할, 레벨은 비로그인 API 요청으로 읽을 수 없습니다.
 
@@ -109,6 +110,8 @@
 4. 결제창 성공 결과나 webhook payload만으로 PAID 처리하지 않습니다. 서버가 `GET /payments/{paymentId}`를 호출해 ID·금액·통화·상점·채널·KG이니시스를 대조한 뒤 상태를 반영합니다.
 5. 중복 완료 요청과 webhook은 같은 고유 주문을 다시 동기화하므로 멱등적으로 처리됩니다.
 6. 취소는 브라우저 금액을 받지 않습니다. 서버가 단건조회로 취소 가능 전액을 계산하고 quoted `Idempotency-Key`로 취소 API를 호출한 뒤 다시 조회합니다.
+
+검증 정보가 일치하지 않으면 실제 PortOne 결제가 완료되었을 가능성을 배제할 수 없으므로 주문을 `FAILED`로 확정하지 않습니다. 내부 상태는 `PENDING` review로 두고 `PORTONE_VERIFICATION_MISMATCH`를 기록하며, 고객에게 다시 결제하지 말고 고객센터에 문의하도록 안내합니다. 이 review가 해소되기 전에는 같은 사용자·레슨의 신규 주문도 서버에서 차단합니다.
 
 `settlement_account`, `club_members`, `lesson_bookings`, 예약자 목록, 다른 사용자 주문은 공개 상품이나 checkout 응답에 포함되지 않습니다.
 
