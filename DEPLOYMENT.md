@@ -4,7 +4,7 @@
 
 - Repository: kev208dev/mintondong-11a19919
 - Production branch: main
-- Worker name: mintondong
+- Worker name: mintondong-11a19919
 - Hosting: Cloudflare Workers
 
 GitHub Pages는 정적 파일만 호스팅하므로 사용하지 않습니다. 민턴동은 TanStack Start
@@ -35,13 +35,21 @@ Wrangler로 production Worker를 배포합니다.
 
 ## 환경변수
 
-브라우저 공개 build 변수:
+첫 배포에 반드시 필요한 브라우저 공개 build 변수:
 
 - VITE_SUPABASE_URL
 - VITE_SUPABASE_PUBLISHABLE_KEY
+- VITE_PORTONE_ENABLED=false
+
+`VITE_PORTONE_ENABLED=false`인 동안 PortOne Store/Channel과 서버 secret이 없어도 회원가입,
+클럽 생성, 레슨 관리와 공개 레슨 확인이 가능합니다. 결제를 성공으로 가장하는 fallback은
+없으며 결제 호출은 비활성 상태로 유지됩니다.
+
+PortOne 활성화 및 PG 심사 전에 추가할 브라우저 공개 build 변수:
+
 - VITE_PORTONE_STORE_ID
 - VITE_PORTONE_CHANNEL_KEY
-- VITE_PORTONE_ENABLED
+- VITE_PORTONE_ENABLED=true
 - VITE_BUSINESS_NAME
 - VITE_BUSINESS_REPRESENTATIVE_NAME
 - VITE_BUSINESS_REGISTRATION_NUMBER
@@ -53,11 +61,22 @@ Wrangler로 production Worker를 배포합니다.
 - VITE_REFUND_CANCELLATION_DEADLINE
 - VITE_REFUND_EXPECTED_PROCESSING_PERIOD
 
-Workers runtime secret:
+첫 배포에 반드시 필요한 Workers runtime secret:
 
 - SUPABASE_SERVICE_ROLE_KEY
+
+`VITE_PORTONE_ENABLED=true`로 실제 결제를 활성화하기 전에 추가해야 하는 Workers runtime
+secret:
+
 - PORTONE_API_SECRET
 - PORTONE_WEBHOOK_SECRET
+
+PortOne API secret이 없으면 결제 단건조회·완료·취소가 실패하도록 구현되어 있습니다.
+Webhook secret이 없을 때도 webhook payload의 상태나 금액을 신뢰하지 않고 paymentId로
+PortOne API를 재조회합니다. API secret도 없다면 결제를 완료 처리하지 않습니다.
+
+선택적인 기존 Toss 테스트 secret:
+
 - TOSS_SECRET_KEY와 ORDER_SIGNING_SECRET은 기존 Toss 테스트 기능을 사용할 때만 필요
 
 secret에는 VITE_ 접두사를 붙이지 않습니다. wrangler.jsonc, GitHub 또는 Cloudflare
@@ -70,16 +89,20 @@ Settings → Variables and Secrets에서 Secret 형식으로 등록합니다.
 
 ## GitHub 자동 배포 연결
 
-1. Cloudflare Dashboard에서 Workers & Pages → Create → Import a repository로 이동합니다.
-2. Cloudflare Workers and Pages GitHub App에
-   kev208dev/mintondong-11a19919 저장소 접근을 허용합니다.
-3. production branch를 main으로 지정합니다.
-4. Build command는 npm run build, Deploy command는 npx wrangler deploy로 둡니다.
-5. 공개 VITE_ build variables와 위 runtime secrets를 각각 등록합니다.
-6. 저장 후 main push가 자동 build와 deployment를 만드는지 확인합니다.
+Cloudflare Git 연결은 다음 값으로 설정되어 있습니다.
 
-첫 배포 URL은 Cloudflare 계정 subdomain을 추측하지 않고 Dashboard에서 확인합니다.
-형식은 https://mintondong.&lt;account-subdomain&gt;.workers.dev 입니다.
+- Repository: kev208dev/mintondong-11a19919
+- Production branch: main
+- Build command: npm run build
+- Deploy command: npx wrangler deploy
+
+Cloudflare Dashboard의 Workers Builds 설정에서 위 세 공개 필수 변수와
+`SUPABASE_SERVICE_ROLE_KEY` secret을 등록합니다. 이후 main에 새 commit이 push되면 자동
+build와 deployment가 시작됩니다.
+
+첫 배포 예상 URL은 다음과 같으며 실제 배포 완료 후 Dashboard와 브라우저에서 확인합니다.
+
+    https://mintondong-11a19919.kev208dev.workers.dev
 
 ## Custom domain과 PortOne
 

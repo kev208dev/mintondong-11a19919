@@ -1,10 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "mintondong",
+  "name": "mintondong-11a19919",
   "main": "@tanstack/react-start/server-entry",
   "compatibility_date": "2026-08-11",
   "compatibility_flags": ["nodejs_compat"],
   "secrets": {
-    "required": ["SUPABASE_SERVICE_ROLE_KEY", "PORTONE_API_SECRET", "PORTONE_WEBHOOK_SECRET"],
+    "required": ["SUPABASE_SERVICE_ROLE_KEY"],
   },
 }
