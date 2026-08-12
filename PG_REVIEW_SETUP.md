@@ -57,6 +57,8 @@
 
 공개 클럽이어도 회원 명단은 공개되지 않습니다. DB에서 `anon`의 `club_members` 권한을 회수하고, RLS 정책도 `authenticated` 역할의 본인 멤버십·같은 클럽 active 회원·클럽 owner에게만 로스터 조회를 허용합니다. 따라서 UI 숨김 여부와 관계없이 이름, `user_id`, 역할, 레벨은 비로그인 API 요청으로 읽을 수 없습니다.
 
+`club-directory.sql`은 스키마/RLS/RPC와 Storage bucket/policy까지 하나의 PostgreSQL transaction으로 적용합니다. 어느 단계에서든 실패하면 전체가 rollback되며, `IF EXISTS`, `IF NOT EXISTS`, policy drop/create, bucket upsert를 사용하므로 원인을 수정한 뒤 SQL 전체를 다시 실행할 수 있습니다. authenticated 사용자는 `club_members`를 직접 INSERT/UPDATE/DELETE할 수 없고, 클럽 생성·가입·owner의 role/status 변경은 입력과 변경 컬럼을 검증하는 전용 RPC만 사용합니다.
+
 마이그레이션 전의 `clubs`에는 `is_public`이 없어 공개/비공개를 구분할 수 없습니다. 클라이언트의 `searchPublicClubs()`와 `getClub()` fallback은 service role을 사용하지 않고 기존 DB RLS가 허용한 클럽만 읽습니다. 반면 공개 레슨 서버 함수는 service role을 사용하므로 `is_public`을 확인할 수 없는 마이그레이션 전에는 안전하게 빈 목록을 반환합니다. 이 fail-closed 동작은 비공개 클럽이나 상품을 공개로 추측하는 위험을 피하기 위한 것입니다.
 
 ## 4. 공개 레슨 데이터

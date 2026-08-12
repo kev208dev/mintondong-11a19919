@@ -4,8 +4,9 @@
 -- 설계 메모
 --  * 기존 컬럼/데이터/기능(경기·기록·출석·레슨)은 삭제하지 않습니다. 컬럼 추가 + 정책 재작성만 합니다.
 --  * 지역은 기존 clubs.location 을 canonical 로 사용합니다. (region 중복 컬럼은 추가하지 않음)
---  * role/status 권한 상승은 RLS(WITH CHECK)만으로는 games/wins 수정 기능과 충돌하므로
---    "변경 감지 트리거"로 막고, RLS 는 행 접근 범위만 담당합니다.
+--  * 현재 앱의 Supabase club_members 쓰기는 아래 3개 RPC(생성/가입/상태 변경)뿐입니다.
+--    경기 전적(games/wins)과 회원 편집은 local demo store에만 있어 직접 UPDATE를 열지 않습니다.
+--  * RLS로 행 접근을 제한하고, SECURITY DEFINER RPC도 guard trigger로 컬럼 무결성을 검증합니다.
 
 begin;
 
@@ -53,46 +54,90 @@ create or replace function public.club_members_guard()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 declare
+  uid uuid := auth.uid();
   club_owner uuid;
   is_owner boolean;
+  club_public boolean;
+  expected_status text;
 begin
-  select owner_id into club_owner from public.clubs where id = new.club_id;
-  is_owner := (club_owner is not null and club_owner = auth.uid());
+  select owner_id, is_public into club_owner, club_public
+    from public.clubs
+   where id = new.club_id;
+  is_owner := (club_owner is not null and club_owner = uid);
 
-  -- owner 역할 무결성: clubs.owner_id 본인만
+  -- owner 역할은 clubs.owner_id 본인의 active 행에만 존재한다.
   if new.role = 'owner' and (new.user_id is null or new.user_id <> club_owner) then
     raise exception 'owner role is reserved for the club owner';
   end if;
+  if new.role = 'owner' and new.status <> 'active' then
+    raise exception 'club owner membership must stay active';
+  end if;
 
   if tg_op = 'INSERT' then
-    -- 동호회 소유자는 자유롭게 로스터를 추가할 수 있다 (게스트 포함)
-    if is_owner then
+    -- SQL Editor/service_role의 보정 작업은 허용하되, 일반 API에는 직접 INSERT 권한이 없다.
+    if uid is null then
       return new;
     end if;
-    -- 일반 사용자의 가입 신청: 본인 / member / pending 만
-    if new.user_id is distinct from auth.uid() then
-      raise exception 'cannot add other users to a club';
+
+    -- create_club_with_owner가 만드는 owner 행
+    if is_owner and new.user_id = uid and new.role = 'owner' and new.status = 'active'
+       and new.is_guest = false and new.invited_by is null then
+      return new;
     end if;
-    if new.role <> 'member' or new.status <> 'pending' then
-      raise exception 'join requests must be role=member, status=pending';
+
+    -- request_club_join이 만드는 본인 행. 공개 클럽은 active, 비공개는 pending이다.
+    expected_status := case when club_public then 'active' else 'pending' end;
+    if new.user_id = uid and new.role = 'member' and new.status = expected_status
+       and new.is_guest = false and new.invited_by is null then
+      return new;
     end if;
+
+    raise exception 'club membership inserts must use an approved RPC';
+  end if;
+
+  -- 관계·식별·생성 메타데이터는 owner/RPC/service_role도 UPDATE로 바꿀 수 없다.
+  if new.id is distinct from old.id
+     or new.club_id is distinct from old.club_id
+     or new.user_id is distinct from old.user_id
+     or new.is_guest is distinct from old.is_guest
+     or new.invited_by is distinct from old.invited_by
+     or new.created_at is distinct from old.created_at
+     or new.joined_at is distinct from old.joined_at then
+    raise exception 'membership identity and relationship fields are immutable';
+  end if;
+
+  -- 기존 owner 행의 역할/상태도 강등하거나 비활성화할 수 없다.
+  if (old.role = 'owner' or old.user_id = club_owner)
+     and (new.role <> 'owner' or new.status <> 'active') then
+    raise exception 'club owner membership cannot be demoted or deactivated';
+  end if;
+
+  -- SQL Editor/service_role의 운영 보정은 위 불변 필드와 owner 무결성을 지켜 통과한다.
+  if uid is null then
     return new;
   end if;
 
-  -- UPDATE: role/status 변경은 동호회 소유자만 가능
-  if (new.role is distinct from old.role or new.status is distinct from old.status)
-     and not is_owner then
-    raise exception 'only the club owner can change member role or status';
+  -- 현재 외부 write path는 owner 전용 set_club_member_state(role/status)뿐이다.
+  if not is_owner then
+    raise exception 'direct member updates are not allowed';
   end if;
-  -- 소속 이동도 소유자만
-  if new.club_id is distinct from old.club_id and not is_owner then
-    raise exception 'only the club owner can move members between clubs';
+  if new.name is distinct from old.name
+     or new.level is distinct from old.level
+     or new.gender is distinct from old.gender
+     or new.games is distinct from old.games
+     or new.wins is distinct from old.wins then
+    raise exception 'only role and status can be changed by the member state RPC';
   end if;
+
+  -- updated_at은 기존 DB trigger가 관리하므로 비교하지 않는다.
   return new;
 end $$;
+
+revoke all on function public.club_members_guard() from public;
+revoke execute on function public.club_members_guard() from anon, authenticated, service_role;
 
 drop trigger if exists trg_club_members_guard on public.club_members;
 create trigger trg_club_members_guard
@@ -110,7 +155,7 @@ create or replace function public.sync_club_member_count()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 begin
   if tg_op in ('INSERT', 'UPDATE') and new.club_id is not null then
@@ -133,6 +178,9 @@ begin
   return null;
 end $$;
 
+revoke all on function public.sync_club_member_count() from public;
+revoke execute on function public.sync_club_member_count() from anon, authenticated, service_role;
+
 drop trigger if exists trg_sync_club_member_count on public.club_members;
 create trigger trg_sync_club_member_count
 after insert or delete or update of club_id, status on public.club_members
@@ -144,7 +192,7 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
   select exists (
     select 1 from public.clubs c
@@ -158,12 +206,14 @@ as $$
 $$;
 
 revoke all on function public.is_club_member(uuid) from public;
-revoke execute on function public.is_club_member(uuid) from anon;
-grant execute on function public.is_club_member(uuid) to authenticated, service_role;
+revoke execute on function public.is_club_member(uuid) from anon, authenticated, service_role;
+grant execute on function public.is_club_member(uuid) to authenticated;
 
 -- 5) 권한 & RLS ------------------------------------------------------------
 grant select, insert, update, delete on public.clubs to authenticated;
-grant select, insert, update, delete on public.club_members to authenticated;
+-- 생성/가입/상태 변경은 검증된 SECURITY DEFINER RPC만 사용한다.
+revoke all privileges on table public.club_members from authenticated;
+grant select on public.club_members to authenticated;
 -- 공개 클럽 탐색에 필요한 SELECT 만 anon 에 다시 부여한다.
 revoke all privileges on table public.clubs from anon;
 grant select on public.clubs to anon;
@@ -230,34 +280,16 @@ for select to authenticated using (
   or public.is_club_member(club_id)
 );
 
--- 본인 가입 신청 + 소유자 로스터 추가 (세부 규칙은 guard 트리거가 검증)
-create policy "club_members insert" on public.club_members
-for insert to authenticated with check (
-  user_id = auth.uid()
-  or exists (select 1 from public.clubs c where c.id = club_id and c.owner_id = auth.uid())
-);
-
--- 멤버는 자기 행(이름/레벨) 및 활동 멤버는 로스터 기록(games/wins) 수정 가능,
--- role/status 변경은 guard 트리거가 소유자에게만 허용한다.
-create policy "club_members update" on public.club_members
-for update to authenticated using (
-  user_id = auth.uid() or public.is_club_member(club_id)
-) with check (
-  user_id = auth.uid() or public.is_club_member(club_id)
-);
-
-create policy "club_members delete" on public.club_members
-for delete to authenticated using (
-  user_id = auth.uid()
-  or exists (select 1 from public.clubs c where c.id = club_id and c.owner_id = auth.uid())
-);
+-- authenticated에는 직접 INSERT/UPDATE/DELETE table privilege와 write policy를 주지 않는다.
+-- 자기 name/level/gender 및 games/wins의 Supabase write path는 현재 없으며, 필요해질 때
+-- 허용 필드만 받는 전용 RPC를 추가한다. 기존 경기/기록 UI는 local demo store를 사용한다.
 
 -- 6) 원자적 동호회 생성 / 가입 RPC ------------------------------------------
 create or replace function public.generate_club_invite_code()
 returns text
 language plpgsql
-security definer
-set search_path = public
+security invoker
+set search_path = public, pg_temp
 as $$
 declare
   alphabet text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -274,6 +306,9 @@ begin
   return code;
 end $$;
 
+revoke all on function public.generate_club_invite_code() from public;
+revoke execute on function public.generate_club_invite_code() from anon, authenticated, service_role;
+
 create or replace function public.create_club_with_owner(
   p_name text,
   p_location text default null,
@@ -284,7 +319,7 @@ create or replace function public.create_club_with_owner(
 returns public.clubs
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 declare
   uid uuid := auth.uid();
@@ -322,13 +357,15 @@ begin
   return club;
 end $$;
 
+revoke all on function public.create_club_with_owner(text, text, text, boolean, text) from public;
+revoke execute on function public.create_club_with_owner(text, text, text, boolean, text) from anon, authenticated, service_role;
 grant execute on function public.create_club_with_owner(text, text, text, boolean, text) to authenticated;
 
 create or replace function public.request_club_join(p_club_id uuid)
 returns public.club_members
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 declare
   uid uuid := auth.uid();
@@ -362,6 +399,8 @@ begin
   return member;
 end $$;
 
+revoke all on function public.request_club_join(uuid) from public;
+revoke execute on function public.request_club_join(uuid) from anon, authenticated, service_role;
 grant execute on function public.request_club_join(uuid) to authenticated;
 
 -- 소유자용 멤버 관리 RPC (승인 / 역할 변경)
@@ -373,7 +412,7 @@ create or replace function public.set_club_member_state(
 returns public.club_members
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 declare
   member public.club_members;
@@ -406,9 +445,9 @@ begin
   return member;
 end $$;
 
+revoke all on function public.set_club_member_state(uuid, text, text) from public;
+revoke execute on function public.set_club_member_state(uuid, text, text) from anon, authenticated, service_role;
 grant execute on function public.set_club_member_state(uuid, text, text) to authenticated;
-
-commit;
 
 -- 7) 동호회 이미지 스토리지 ------------------------------------------------
 -- 경로 규칙: clubs/<club_id>/<파일명>
@@ -421,7 +460,7 @@ returns boolean
 language plpgsql
 stable
 security definer
-set search_path = public, storage
+set search_path = public, storage, pg_temp
 as $$
 declare
   parts text[] := string_to_array(_path, '/');
@@ -447,6 +486,8 @@ begin
   );
 end $$;
 
+revoke all on function public.can_manage_club_images(text) from public;
+revoke execute on function public.can_manage_club_images(text) from anon, authenticated, service_role;
 grant execute on function public.can_manage_club_images(text) to authenticated;
 
 drop policy if exists "club images public read" on storage.objects;
@@ -469,3 +510,6 @@ drop policy if exists "club images manager delete" on storage.objects;
 create policy "club images manager delete" on storage.objects
 for delete to authenticated
 using (bucket_id = 'club-images' and public.can_manage_club_images(name));
+
+-- Storage bucket과 정책도 PostgreSQL transaction 안에서 처리되므로 전 단계가 함께 commit/rollback된다.
+commit;
