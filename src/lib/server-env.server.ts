@@ -1,8 +1,14 @@
+import { env as cloudflareEnv } from "cloudflare:workers";
+
 /**
- * Node/local과 Cloudflare Workers(nodejs_compat, 2025-04-01 이후)에서 공통으로 쓰는
- * 서버 전용 환경변수 접근점. 호출 시점에 읽으며 브라우저 코드에서 import하지 않는다.
+ * Cloudflare Workers에서는 런타임 binding을 우선 읽고,
+ * 로컬/Node 환경에서는 process.env로 fallback한다.
+ * 이 파일은 서버 전용으로만 import한다.
  */
 export function serverEnv(name: string): string | undefined {
+  const binding = cloudflareEnv[name];
+  if (typeof binding === "string" && binding.trim()) return binding.trim();
+
   return process.env[name]?.trim() || undefined;
 }
 
