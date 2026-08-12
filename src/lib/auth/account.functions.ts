@@ -21,11 +21,15 @@ export const checkUsernameAvailable = createServerFn({ method: "POST" })
     const { anonAuthClient, clientKey, rateLimit } = await import("./account.server");
     const headers = getRequest().headers;
     if (!rateLimit(clientKey(headers, "username-check"), 60, 60_000)) {
-      return { available: false };
+      throw new Error("아이디 확인 요청이 너무 많아요. 잠시 후 다시 시도해 주세요.");
     }
-    const { data: available } = await anonAuthClient().rpc("is_username_available", {
+    const { data: available, error } = await anonAuthClient().rpc("is_username_available", {
       p_username: normalizeUsername(data.username),
     });
+    if (error) {
+      console.error("[auth] username availability check failed", error);
+      throw new Error("아이디 중복 확인 서버에 문제가 있어요. 잠시 후 다시 시도해 주세요.");
+    }
     return { available: available === true };
   });
 
@@ -59,7 +63,13 @@ export const signUpWithUsername = createServerFn({ method: "POST" })
       throw new Error("회원가입 서버 설정이 완료되지 않았어요. 잠시 후 다시 시도해 주세요.");
     }
 
-    const { data: available } = await admin.rpc("is_username_available", { p_username: username });
+    const { data: available, error: availabilityError } = await admin.rpc("is_username_available", {
+      p_username: username,
+    });
+    if (availabilityError) {
+      console.error("[auth] signup username availability check failed", availabilityError);
+      throw new Error("아이디 중복 확인 서버에 문제가 있어요. 잠시 후 다시 시도해 주세요.");
+    }
     if (available !== true) throw new Error("이미 사용 중인 아이디예요.");
 
     const created = await admin.auth.admin.createUser({
@@ -124,7 +134,13 @@ export const signInWithUsername = createServerFn({ method: "POST" })
       throw new Error("로그인 서버 설정이 완료되지 않았어요. 잠시 후 다시 시도해 주세요.");
     }
 
-    const { data: email } = await admin.rpc("auth_email_for_username", { p_username: username });
+    const { data: email, error: lookupError } = await admin.rpc("auth_email_for_username", {
+      p_username: username,
+    });
+    if (lookupError) {
+      console.error("[auth] username login lookup failed", lookupError);
+      throw new Error("로그인 서버에 문제가 있어요. 잠시 후 다시 시도해 주세요.");
+    }
     if (!email || typeof email !== "string") throw new Error(GENERIC_LOGIN_ERROR);
 
     const signIn = await anonAuthClient().auth.signInWithPassword({
