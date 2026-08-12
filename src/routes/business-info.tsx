@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Building2 } from "lucide-react";
-import { businessConfig, businessValue } from "@/config/business";
+import { businessConfig, businessValue, isGeneralCustomerServicePhone } from "@/config/business";
 
 export const Route = createFileRoute("/business-info")({
   head: () => ({
@@ -54,6 +54,12 @@ function BusinessInfoPage() {
       {!businessConfig.ecommerceRegistrationNumber ? (
         <p className="border-t border-border px-5 py-4 text-[11px] leading-relaxed text-muted-foreground">
           통신판매업 신고번호는 신고 완료 후 표시됩니다.
+        </p>
+      ) : null}
+      {!isGeneralCustomerServicePhone(businessConfig.customerServicePhone) ? (
+        <p className="border-t border-amber-300 bg-amber-50 px-5 py-4 text-[11px] leading-relaxed text-amber-900">
+          PG 심사 제출 전 사업자 명의의 일반전화 또는 전국대표번호를 고객센터 번호로 등록해야
+          합니다. 휴대전화 번호만으로는 심사 준비 완료로 보지 않습니다.
         </p>
       ) : null}
     </article>

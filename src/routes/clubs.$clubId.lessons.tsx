@@ -77,7 +77,7 @@ function ClubDetailLessons() {
             .join("·");
           const validProduct = lesson.priceWon > 0 && lesson.durationMin > 0;
           const available = Boolean(lessons.data.club?.lessonsEnabled && validProduct);
-          const next = `/clubs/${clubId}/lessons`;
+          const checkoutPath = `/clubs/${clubId}/lessons/${lesson.id}/checkout`;
 
           return (
             <li
@@ -152,7 +152,9 @@ function ClubDetailLessons() {
               {available ? (
                 user ? (
                   <Link
-                    to="/lessons"
+                    to="/clubs/$clubId/lessons/$lessonId/checkout"
+                    params={{ clubId, lessonId: lesson.id }}
+                    search={{ paymentId: undefined }}
                     className="mt-3 flex h-11 items-center justify-center rounded-xl bg-primary text-xs font-extrabold text-primary-foreground"
                   >
                     로그인 계정으로 신청하기
@@ -160,7 +162,7 @@ function ClubDetailLessons() {
                 ) : (
                   <Link
                     to="/auth"
-                    search={{ next }}
+                    search={{ next: checkoutPath }}
                     className="mt-3 flex h-11 items-center justify-center rounded-xl bg-primary text-xs font-extrabold text-primary-foreground"
                   >
                     로그인 후 신청하기

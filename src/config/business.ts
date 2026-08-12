@@ -37,3 +37,10 @@ export const UNSET_BUSINESS_VALUE = "운영자 입력 필요";
 export function businessValue(value: string | null | undefined): string {
   return value ?? UNSET_BUSINESS_VALUE;
 }
+
+/** PG 심사용 일반전화: 휴대전화(010)는 고객센터 일반전화 준비 완료로 보지 않는다. */
+export function isGeneralCustomerServicePhone(value: string | null | undefined): boolean {
+  if (!value) return false;
+  const digits = value.replace(/\D/g, "");
+  return /^(02\d{7,8}|0(?:3[1-3]|4[1-4]|5[1-5]|6[1-4])\d{7,8}|1[568]\d{6})$/.test(digits);
+}

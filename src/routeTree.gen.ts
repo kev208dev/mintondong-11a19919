@@ -38,12 +38,14 @@ import { Route as ClubsClubIdRouteImport } from './routes/clubs.$clubId'
 import { Route as ClubsFindRouteImport } from './routes/clubs.find'
 import { Route as ClubsNewRouteImport } from './routes/clubs.new'
 import { Route as OnboardingAccountRouteImport } from './routes/onboarding.account'
+import { Route as ApiPortoneWebhookRouteImport } from './routes/api.portone.webhook'
 import { Route as ClubsClubIdIndexRouteImport } from './routes/clubs.$clubId.index'
 import { Route as ClubsClubIdLessonsRouteImport } from './routes/clubs.$clubId.lessons'
 import { Route as ClubsClubIdMembersRouteImport } from './routes/clubs.$clubId.members'
 import { Route as ClubsClubIdScheduleRouteImport } from './routes/clubs.$clubId.schedule'
 import { Route as PaymentsTossFailRouteImport } from './routes/payments.toss.fail'
 import { Route as PaymentsTossSuccessRouteImport } from './routes/payments.toss.success'
+import { Route as ClubsClubIdLessonsLessonIdCheckoutRouteImport } from './routes/clubs.$clubId.lessons_.$lessonId.checkout'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -190,6 +192,11 @@ const OnboardingAccountRoute = OnboardingAccountRouteImport.update({
   path: '/onboarding/account',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPortoneWebhookRoute = ApiPortoneWebhookRouteImport.update({
+  id: '/api/portone/webhook',
+  path: '/api/portone/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClubsClubIdIndexRoute = ClubsClubIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -220,6 +227,12 @@ const PaymentsTossSuccessRoute = PaymentsTossSuccessRouteImport.update({
   path: '/payments/toss/success',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClubsClubIdLessonsLessonIdCheckoutRoute =
+  ClubsClubIdLessonsLessonIdCheckoutRouteImport.update({
+    id: '/lessons_/$lessonId/checkout',
+    path: '/lessons/$lessonId/checkout',
+    getParentRoute: () => ClubsClubIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -251,12 +264,14 @@ export interface FileRoutesByFullPath {
   '/onboarding/account': typeof OnboardingAccountRoute
   '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
+  '/api/portone/webhook': typeof ApiPortoneWebhookRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
   '/clubs/$clubId/schedule': typeof ClubsClubIdScheduleRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
   '/clubs/$clubId/': typeof ClubsClubIdIndexRoute
+  '/clubs/$clubId/lessons/$lessonId/checkout': typeof ClubsClubIdLessonsLessonIdCheckoutRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -285,12 +300,14 @@ export interface FileRoutesByTo {
   '/onboarding/account': typeof OnboardingAccountRoute
   '/auth': typeof AuthIndexRoute
   '/club': typeof ClubIndexRoute
+  '/api/portone/webhook': typeof ApiPortoneWebhookRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
   '/clubs/$clubId/schedule': typeof ClubsClubIdScheduleRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
   '/clubs/$clubId': typeof ClubsClubIdIndexRoute
+  '/clubs/$clubId/lessons/$lessonId/checkout': typeof ClubsClubIdLessonsLessonIdCheckoutRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -323,12 +340,14 @@ export interface FileRoutesById {
   '/onboarding/account': typeof OnboardingAccountRoute
   '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
+  '/api/portone/webhook': typeof ApiPortoneWebhookRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
   '/clubs/$clubId/schedule': typeof ClubsClubIdScheduleRoute
   '/payments/toss/fail': typeof PaymentsTossFailRoute
   '/payments/toss/success': typeof PaymentsTossSuccessRoute
   '/clubs/$clubId/': typeof ClubsClubIdIndexRoute
+  '/clubs/$clubId/lessons_/$lessonId/checkout': typeof ClubsClubIdLessonsLessonIdCheckoutRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -362,12 +381,14 @@ export interface FileRouteTypes {
     | '/onboarding/account'
     | '/auth/'
     | '/club/'
+    | '/api/portone/webhook'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
     | '/clubs/$clubId/schedule'
     | '/payments/toss/fail'
     | '/payments/toss/success'
     | '/clubs/$clubId/'
+    | '/clubs/$clubId/lessons/$lessonId/checkout'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -396,12 +417,14 @@ export interface FileRouteTypes {
     | '/onboarding/account'
     | '/auth'
     | '/club'
+    | '/api/portone/webhook'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
     | '/clubs/$clubId/schedule'
     | '/payments/toss/fail'
     | '/payments/toss/success'
     | '/clubs/$clubId'
+    | '/clubs/$clubId/lessons/$lessonId/checkout'
   id:
     | '__root__'
     | '/'
@@ -433,12 +456,14 @@ export interface FileRouteTypes {
     | '/onboarding/account'
     | '/auth/'
     | '/club/'
+    | '/api/portone/webhook'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
     | '/clubs/$clubId/schedule'
     | '/payments/toss/fail'
     | '/payments/toss/success'
     | '/clubs/$clubId/'
+    | '/clubs/$clubId/lessons_/$lessonId/checkout'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -458,6 +483,7 @@ export interface RootRouteChildren {
   ClubsFindRoute: typeof ClubsFindRoute
   ClubsNewRoute: typeof ClubsNewRoute
   OnboardingAccountRoute: typeof OnboardingAccountRoute
+  ApiPortoneWebhookRoute: typeof ApiPortoneWebhookRoute
   PaymentsTossFailRoute: typeof PaymentsTossFailRoute
   PaymentsTossSuccessRoute: typeof PaymentsTossSuccessRoute
 }
@@ -667,6 +693,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/portone/webhook': {
+      id: '/api/portone/webhook'
+      path: '/api/portone/webhook'
+      fullPath: '/api/portone/webhook'
+      preLoaderRoute: typeof ApiPortoneWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clubs/$clubId/': {
       id: '/clubs/$clubId/'
       path: '/'
@@ -708,6 +741,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/payments/toss/success'
       preLoaderRoute: typeof PaymentsTossSuccessRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/clubs/$clubId/lessons_/$lessonId/checkout': {
+      id: '/clubs/$clubId/lessons_/$lessonId/checkout'
+      path: '/lessons/$lessonId/checkout'
+      fullPath: '/clubs/$clubId/lessons/$lessonId/checkout'
+      preLoaderRoute: typeof ClubsClubIdLessonsLessonIdCheckoutRouteImport
+      parentRoute: typeof ClubsClubIdRoute
     }
   }
 }
@@ -759,6 +799,7 @@ interface ClubsClubIdRouteChildren {
   ClubsClubIdMembersRoute: typeof ClubsClubIdMembersRoute
   ClubsClubIdScheduleRoute: typeof ClubsClubIdScheduleRoute
   ClubsClubIdIndexRoute: typeof ClubsClubIdIndexRoute
+  ClubsClubIdLessonsLessonIdCheckoutRoute: typeof ClubsClubIdLessonsLessonIdCheckoutRoute
 }
 
 const ClubsClubIdRouteChildren: ClubsClubIdRouteChildren = {
@@ -766,6 +807,8 @@ const ClubsClubIdRouteChildren: ClubsClubIdRouteChildren = {
   ClubsClubIdMembersRoute: ClubsClubIdMembersRoute,
   ClubsClubIdScheduleRoute: ClubsClubIdScheduleRoute,
   ClubsClubIdIndexRoute: ClubsClubIdIndexRoute,
+  ClubsClubIdLessonsLessonIdCheckoutRoute:
+    ClubsClubIdLessonsLessonIdCheckoutRoute,
 }
 
 const ClubsClubIdRouteWithChildren = ClubsClubIdRoute._addFileChildren(
@@ -789,6 +832,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClubsFindRoute: ClubsFindRoute,
   ClubsNewRoute: ClubsNewRoute,
   OnboardingAccountRoute: OnboardingAccountRoute,
+  ApiPortoneWebhookRoute: ApiPortoneWebhookRoute,
   PaymentsTossFailRoute: PaymentsTossFailRoute,
   PaymentsTossSuccessRoute: PaymentsTossSuccessRoute,
 }

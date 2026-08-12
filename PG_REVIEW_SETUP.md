@@ -1,25 +1,27 @@
 # PortOne / KG이니시스 PG 입점 심사 운영 체크리스트
 
-이 문서는 **사이트 심사 준비용**입니다. 현재 코드에는 PortOne 실결제가 없으며 기존 Toss 테스트 코드와 의존성은 그대로 유지됩니다.
+이 문서는 **사이트 심사 및 PortOne V2/KG이니시스 활성화 준비용**입니다. PortOne 결제창·서버 검증·웹훅·취소 구조가 추가되었고 기존 Toss 테스트 코드와 의존성은 그대로 유지됩니다. 환경값과 DB migration이 준비되지 않으면 결제는 fail-closed 상태로 비활성화됩니다.
 
 ## 1. 배포 전에 반드시 입력할 사업자 정보
 
 배포 환경변수에 아래 실제 값을 입력하세요. 이 값들은 공개 Footer와 `/business-info`, 법적 문서에 표시되므로 비밀값이 아닙니다. 확인되지 않은 값이나 예시 번호를 운영 환경에 넣지 마세요.
 
-| 환경변수                             | 표시 내용                        | 필수 여부   |
-| ------------------------------------ | -------------------------------- | ----------- |
-| `VITE_BUSINESS_NAME`                 | 상호명                           | 필수        |
-| `VITE_BUSINESS_REPRESENTATIVE_NAME`  | 대표자 및 개인정보 보호 담당자   | 필수        |
-| `VITE_BUSINESS_REGISTRATION_NUMBER`  | 사업자등록번호                   | 필수        |
-| `VITE_BUSINESS_ADDRESS`              | 사업장 주소                      | 필수        |
-| `VITE_CUSTOMER_SERVICE_PHONE`        | 고객센터 전화                    | 필수        |
-| `VITE_CUSTOMER_SERVICE_EMAIL`        | 고객센터 및 개인정보 문의 이메일 | 필수        |
-| `VITE_ECOMMERCE_REGISTRATION_NUMBER` | 통신판매업 신고번호              | 신고한 경우 |
-| `VITE_POLICY_EFFECTIVE_DATE`         | 약관·개인정보처리방침 시행일     | 필수        |
+| 환경변수                             | 표시 내용                         | 필수 여부   |
+| ------------------------------------ | --------------------------------- | ----------- |
+| `VITE_BUSINESS_NAME`                 | 상호명                            | 필수        |
+| `VITE_BUSINESS_REPRESENTATIVE_NAME`  | 대표자 및 개인정보 보호 담당자    | 필수        |
+| `VITE_BUSINESS_REGISTRATION_NUMBER`  | 사업자등록번호                    | 필수        |
+| `VITE_BUSINESS_ADDRESS`              | 사업장 주소                       | 필수        |
+| `VITE_CUSTOMER_SERVICE_PHONE`        | 사업자 명의 일반전화/전국대표번호 | 필수        |
+| `VITE_CUSTOMER_SERVICE_EMAIL`        | 고객센터 및 개인정보 문의 이메일  | 필수        |
+| `VITE_ECOMMERCE_REGISTRATION_NUMBER` | 통신판매업 신고번호               | 신고한 경우 |
+| `VITE_POLICY_EFFECTIVE_DATE`         | 약관·개인정보처리방침 시행일      | 필수        |
 
 값을 입력하지 않으면 가짜 정보 대신 `운영자 입력 필요`가 표시됩니다. 이 상태로 PG 심사를 신청하지 마세요.
 
-취소 시한과 예상 환불 기간이 사업적으로 확정되면 `src/config/refund-policy.ts`의 `cancellationDeadline`, `expectedRefundPeriod`를 실제 정책으로 변경하세요. 변경한 조건은 반드시 레슨 신청·결제 화면에도 동일하게 표시해야 합니다.
+`010` 휴대전화만 입력하면 `/business-info`에 PG 심사 미준비 경고가 표시됩니다. 사업자 명의 일반전화 또는 전국대표번호를 입력하세요.
+
+취소 시한과 예상 환불 기간이 사업적으로 확정되면 `VITE_REFUND_CANCELLATION_DEADLINE`, `VITE_REFUND_EXPECTED_PROCESSING_PERIOD`에 실제 정책 문구를 입력하세요. 둘 중 하나라도 없으면 checkout에서 결제를 시작할 수 없습니다.
 
 ## 2. 공개/인증 라우트
 
@@ -32,6 +34,7 @@
 - `/privacy`
 - `/refund-policy`
 - `/business-info`
+- `/clubs/:clubId/lessons/:lessonId/checkout`의 상품·정책 확인 화면(결제 실행은 로그인 필요)
 
 기존 인증 유지:
 
@@ -39,7 +42,7 @@
 - `/me`
 - `/club/*`, `/games`, `/records` 등 회원 활동·운영 화면
 
-비로그인 사용자가 공개 레슨의 신청 버튼을 누르면 `/auth?next=/clubs/:clubId/lessons`로 이동합니다. 로그인 뒤 공개 레슨 원래 경로로 돌아옵니다.
+비로그인 사용자가 공개 레슨의 신청 버튼을 누르면 checkout을 복귀 경로로 보존해 `/auth`로 이동합니다. 로그인 뒤 실제 Supabase 상품 checkout으로 돌아옵니다.
 
 공개 클럽 페이지는 클럽명·소개·지역·상품 정보만 노출합니다. 회원 이름과 멤버 명단은 로그인한 해당 클럽의 활성 회원에게만 표시됩니다.
 
@@ -50,10 +53,12 @@
 1. `db/club-directory.sql`을 검토합니다. 기존 테이블/데이터를 삭제하지 않는 additive migration이며, 공개 범위와 권한이 운영 정책과 일치하는지 확인합니다.
 2. 외부 Supabase 프로젝트 `tkumfwiomcxkdbzljyss`의 SQL Editor에서 검토한 SQL을 적용합니다.
 3. `clubs`·`club_members`의 추가 컬럼, RLS 활성화, 정책과 table privilege를 확인합니다. `anon`은 `clubs`의 `is_public = true` 행만 조회할 수 있어야 하며 `club_members`에는 어떤 table privilege도 없어야 합니다.
-4. 운영 계정으로 실제 공개 클럽을 생성합니다.
-5. 해당 클럽에 실제 코치와 실제 수업 시간·가격(`coaches.price`, 원 단위)을 등록합니다.
-6. 로그아웃 상태의 390px 모바일 화면에서 `/clubs/find`를 열어 공개 클럽만 보이는지 확인합니다.
-7. 공개 클럽의 레슨 탭에서 실제 가격이 `30,000원 / 50분` 형식으로 정확히 표시되는지 확인합니다.
+4. `db/portone-payments.sql`을 검토하고 SQL Editor에서 적용합니다. 이 파일은 기존 테이블/행을 삭제하지 않고 `payments`에 주문 검증 필드를 추가하며 PortOne 주문의 `booking_id`만 nullable로 허용합니다. 저장소 배포만으로 실행되지 않습니다.
+5. `payments_portone_payment_id_unique`와 제약조건, `anon`/`authenticated`의 `payments` table privilege 회수, `service_role` 전용 쓰기를 확인합니다.
+6. 운영 계정으로 실제 공개 클럽을 생성합니다.
+7. 해당 클럽에 실제 코치와 실제 수업 시간·가격(`coaches.price`, 원 단위)을 등록합니다.
+8. 로그아웃 상태의 390px 모바일 화면에서 `/clubs/find`를 열어 공개 클럽만 보이는지 확인합니다.
+9. 공개 클럽의 레슨 탭에서 실제 가격이 `30,000원 / 50분` 형식으로 정확히 표시되는지 확인합니다.
 
 공개 클럽이어도 회원 명단은 공개되지 않습니다. DB에서 `anon`의 `club_members` 권한을 회수하고, RLS 정책도 `authenticated` 역할의 본인 멤버십·같은 클럽 active 회원·클럽 owner에게만 로스터 조회를 허용합니다. 따라서 UI 숨김 여부와 관계없이 이름, `user_id`, 역할, 레벨은 비로그인 API 요청으로 읽을 수 없습니다.
 
@@ -62,6 +67,8 @@
 마이그레이션 전의 `clubs`에는 `is_public`이 없어 공개/비공개를 구분할 수 없습니다. 클라이언트의 `searchPublicClubs()`와 `getClub()` fallback은 service role을 사용하지 않고 기존 DB RLS가 허용한 클럽만 읽습니다. 반면 공개 레슨 서버 함수는 service role을 사용하므로 `is_public`을 확인할 수 없는 마이그레이션 전에는 안전하게 빈 목록을 반환합니다. 이 fail-closed 동작은 비공개 클럽이나 상품을 공개로 추측하는 위험을 피하기 위한 것입니다.
 
 ## 4. 공개 레슨 데이터
+
+2026-08-12 확인 시 운영 Supabase의 `clubs`와 `coaches`는 모두 0건입니다. 따라서 현재 심사자가 볼 실제 상품도 없으며, 코드나 DB migration은 demo 상품·가격을 만들지 않습니다. 아래 절차로 운영자가 검증된 실제 상품을 등록해야 합니다.
 
 공개 레슨 페이지는 외부 Supabase `mintondong` 프로젝트의 다음 실제 데이터를 사용합니다.
 
@@ -79,14 +86,40 @@
 - 공개 URL에서 로그아웃 상태로 상품 카드와 `가격원 / 수업시간분` 표시가 보이는지
 - 허위 상품, 허위 가격, 정산계좌 또는 예약자 정보가 노출되지 않는지
 
-## 5. 결제 관련 범위
+## 5. PortOne 환경변수와 결제 생명주기
+
+브라우저 공개값:
+
+- `VITE_PORTONE_STORE_ID`: PortOne V2 상점 ID
+- `VITE_PORTONE_CHANNEL_KEY`: KG이니시스 결제 채널 키
+- `VITE_PORTONE_ENABLED=true`: DB·정책·계약·채널 검증 뒤 마지막에 활성화
+
+서버 secret:
+
+- `PORTONE_API_SECRET`: 결제 단건조회 및 취소 API 인증
+- `PORTONE_WEBHOOK_SECRET`: Standard Webhooks 서명 검증 secret
+
+서버 secret에는 절대 `VITE_` 접두사를 붙이지 말고 브라우저 환경에 주입하지 마세요. PortOne 콘솔에서 KG이니시스 V2 채널을 만들고 상점 ID/채널 키를 등록하며, webhook URL은 `https://<운영도메인>/api/portone/webhook`으로 설정합니다. webhook secret 미설정 시 payload 자체의 상태·금액은 신뢰하지 않고 내부 주문 존재를 확인한 후 단건조회하지만, 운영 활성화 전에는 반드시 secret도 설정하세요.
+
+결제 흐름은 다음과 같습니다.
+
+1. 서버가 인증 사용자를 확인하고 `clubs.is_public=true`, `lessons_enabled=true`, 실제 `coaches.price/duration_min > 0`을 다시 조회합니다.
+2. 서버가 ASCII 고유 `paymentId`를 만들고 실제 원화 금액으로 내부 PENDING 주문을 저장합니다.
+3. 브라우저는 서버 응답으로만 `PortOne.requestPayment`를 호출합니다.
+4. 결제창 성공 결과나 webhook payload만으로 PAID 처리하지 않습니다. 서버가 `GET /payments/{paymentId}`를 호출해 ID·금액·통화·상점·채널·KG이니시스를 대조한 뒤 상태를 반영합니다.
+5. 중복 완료 요청과 webhook은 같은 고유 주문을 다시 동기화하므로 멱등적으로 처리됩니다.
+6. 취소는 브라우저 금액을 받지 않습니다. 서버가 단건조회로 취소 가능 전액을 계산하고 quoted `Idempotency-Key`로 취소 API를 호출한 뒤 다시 조회합니다.
+
+`settlement_account`, `club_members`, `lesson_bookings`, 예약자 목록, 다른 사용자 주문은 공개 상품이나 checkout 응답에 포함되지 않습니다.
+
+## 6. 기존 Toss 영향
 
 - `@tosspayments/tosspayments-sdk`, Toss 성공/실패 라우트와 서버 함수는 유지됩니다.
 - 현재 Toss 기능은 테스트/준비 상태이며 운영 결제대행사로 개인정보처리방침에 확정 기재하지 않았습니다.
-- PortOne SDK, 키, 결제 요청, webhook은 이번 작업에 추가하지 않았습니다.
-- PortOne/KG이니시스 계약이 확정된 뒤 이용약관·개인정보처리방침·환불 정책의 결제대행사 및 처리 내용을 실제 계약과 일치하도록 갱신하세요.
+- PortOne은 additive하게 추가되었으며 Toss 파일·라우트·의존성은 삭제하거나 변경하지 않았습니다.
+- 계약 확정 뒤 이용약관·개인정보처리방침의 실제 수탁자, 위탁 범위와 보유기간을 계약서와 일치하도록 갱신하세요.
 
-## 6. 제출 전 수동 점검
+## 7. 제출 전 수동 점검
 
 1. 위 사업자 환경변수를 운영 배포에 입력하고 재배포합니다.
 2. 실사업자 서류와 Footer·사업자 정보 페이지의 값이 한 글자까지 일치하는지 확인합니다.
@@ -94,5 +127,7 @@
 4. 공개 클럽의 회원 명단이 로그아웃 상태에서 UI와 Supabase Data API 양쪽 모두 노출되지 않는지 확인합니다.
 5. 모바일 390px 로그아웃 창에서 홈 → 동호회와 레슨 찾기 → 레슨 버튼 경로를 점검합니다.
 6. 상품 신청 전에 가격·시간·장소·취소 조건이 확인 가능한지 점검합니다.
-7. 실제 환불 기준과 처리 기간을 확정해 `src/config/refund-policy.ts`에 반영합니다.
-8. PortOne/KG이니시스 실연동 전 키 관리, 서버 결제 검증, webhook, 중복 처리 방지와 환불 API 설계를 별도 작업으로 진행합니다.
+7. 실제 환불 기준과 처리 기간을 두 환불 환경변수에 반영합니다.
+8. `db/portone-payments.sql`을 별도 검수·적용하고 PortOne/KG이니시스 운영 채널과 webhook을 설정합니다.
+9. 테스트 결제로 PAID, 중복 완료, 중복 webhook, 취소 후 CANCELLED 상태와 관리자 콘솔 금액을 대조합니다.
+10. 상호·대표자·사업자등록번호·주소·일반전화·통신판매업 신고번호가 서류와 일치하는지 최종 확인한 뒤 `VITE_PORTONE_ENABLED=true`로 배포합니다.

@@ -5,8 +5,17 @@ export type RefundPolicyConfig = {
   expectedRefundPeriod: string | null;
 };
 
-/** 확정되지 않은 시한·환불률·처리기간은 null로 두며 페이지에서 임의 숫자를 만들지 않습니다. */
+function publicEnv(name: string): string | null {
+  const value = import.meta.env[name];
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+/** 확정되지 않은 시한·환불률·처리기간은 비워 두며 페이지에서 임의 숫자를 만들지 않습니다. */
 export const refundPolicyConfig: RefundPolicyConfig = {
-  cancellationDeadline: null,
-  expectedRefundPeriod: null,
+  cancellationDeadline: publicEnv("VITE_REFUND_CANCELLATION_DEADLINE"),
+  expectedRefundPeriod: publicEnv("VITE_REFUND_EXPECTED_PROCESSING_PERIOD"),
 };
+
+export const isRefundPolicyReady = Boolean(
+  refundPolicyConfig.cancellationDeadline && refundPolicyConfig.expectedRefundPeriod,
+);
