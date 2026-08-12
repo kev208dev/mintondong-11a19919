@@ -61,14 +61,26 @@ export const getPublicLessonCatalog = createServerFn({ method: "GET" })
     const clubRow = clubResult.data as Record<string, unknown>;
     // 예상 밖의 null/누락도 비공개로 취급한다.
     if (clubRow["is_public"] !== true) return { club: null, lessons: [] };
+    const publicClub = {
+      id: String(clubRow["id"]),
+      name: String(clubRow["name"] ?? ""),
+      location: (clubRow["location"] as string | null) ?? null,
+      lessonsEnabled: clubRow["lessons_enabled"] === true,
+    };
+    if (!publicClub.lessonsEnabled) return { club: publicClub, lessons: [] };
 
     const { data: coachData, error: coachError } = await db
       .from("coaches")
       .select(
-        "id, club_id, name, intro, specialties, level_label, duration_min, price, weekdays, start_hour, end_hour",
+        "id, club_id, name, intro, specialties, level_label, duration_min, price, weekdays, start_hour, end_hour, is_active",
       )
       .eq("club_id", clubId)
+      .eq("is_active", true)
+      .gt("price", 0)
+      .gt("duration_min", 0)
       .order("created_at", { ascending: true });
+    // is_active migration 전에는 판매중/중지 여부를 판별할 수 없으므로 공개하지 않는다.
+    if (missingColumn(coachError)) return { club: publicClub, lessons: [] };
     if (coachError) throw coachError;
 
     const lessons = ((coachData ?? []) as Record<string, unknown>[]).map((row) => ({
@@ -90,12 +102,7 @@ export const getPublicLessonCatalog = createServerFn({ method: "GET" })
     }));
 
     return {
-      club: {
-        id: String(clubRow["id"]),
-        name: String(clubRow["name"] ?? ""),
-        location: (clubRow["location"] as string | null) ?? null,
-        lessonsEnabled: Boolean(clubRow["lessons_enabled"]),
-      },
+      club: publicClub,
       lessons,
     };
   });

@@ -6,9 +6,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 export const getTossServerStatus = createServerFn({ method: "GET" }).handler(async () => {
-  const { readSecretKey } = await import("./toss.server");
+  const { isOrderSigningReady, readSecretKey } = await import("./toss.server");
   const secret = readSecretKey();
-  const signingReady = Boolean(process.env["ORDER_SIGNING_SECRET"]);
+  const signingReady = isOrderSigningReady();
   return secret.ok
     ? { ok: signingReady as boolean, reason: signingReady ? null : "MISSING_SIGNING_SECRET" }
     : { ok: false, reason: secret.reason };
@@ -19,7 +19,11 @@ export const createOrderToken = createServerFn({ method: "POST" })
   .inputValidator((d) =>
     z
       .object({
-        orderId: z.string().min(6).max(64).regex(/^[A-Za-z0-9_-]+$/),
+        orderId: z
+          .string()
+          .min(6)
+          .max(64)
+          .regex(/^[A-Za-z0-9_-]+$/),
         bookingId: z.string().min(1).max(64),
         clubId: z.string().min(1).max(64),
         amount: z.number().int().positive().max(10_000_000),
@@ -49,7 +53,11 @@ export const confirmTossPayment = createServerFn({ method: "POST" })
     const { readSecretKey, tossConfirm, verifyOrderToken } = await import("./toss.server");
     const secret = readSecretKey();
     if (!secret.ok) {
-      return { ok: false as const, code: secret.reason, message: "결제 승인 키 설정이 필요합니다." };
+      return {
+        ok: false as const,
+        code: secret.reason,
+        message: "결제 승인 키 설정이 필요합니다.",
+      };
     }
 
     let claims;
@@ -64,7 +72,11 @@ export const confirmTossPayment = createServerFn({ method: "POST" })
     }
     // 서명된 주문 정보와 리다이렉트 파라미터가 완전히 일치해야만 승인한다.
     if (claims.orderId !== data.orderId || claims.amount !== data.amount) {
-      return { ok: false as const, code: "ORDER_MISMATCH", message: "주문 금액이 일치하지 않습니다." };
+      return {
+        ok: false as const,
+        code: "ORDER_MISMATCH",
+        message: "주문 금액이 일치하지 않습니다.",
+      };
     }
 
     const result = await tossConfirm({
@@ -96,7 +108,11 @@ export const cancelTossPayment = createServerFn({ method: "POST" })
     const { readSecretKey, tossCancel } = await import("./toss.server");
     const secret = readSecretKey();
     if (!secret.ok) {
-      return { ok: false as const, code: secret.reason, message: "결제 취소 키 설정이 필요합니다." };
+      return {
+        ok: false as const,
+        code: secret.reason,
+        message: "결제 취소 키 설정이 필요합니다.",
+      };
     }
     const result = await tossCancel({
       secretKey: secret.key,

@@ -9,13 +9,11 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { StoreProvider } from "../lib/badminton/store";
 import { Toaster } from "../components/ui/sonner";
 import { AppShell } from "../components/app/AppShell";
 import { AuthProvider, useAuth } from "../lib/auth/AuthProvider";
 import { NEXT_STORAGE_KEY } from "../lib/auth/providers";
-
 
 function NotFoundComponent() {
   return (
@@ -42,9 +40,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -96,12 +91,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "민턴동 – 배드민턴 클럽 관리 앱" },
       {
         property: "og:description",
-        content: "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱.",
+        content:
+          "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "민턴동 – 배드민턴 클럽 관리 앱" },
-      { name: "twitter:description", content: "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱." },
+      {
+        name: "twitter:description",
+        content:
+          "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱.",
+      },
     ],
     links: [
       {
@@ -178,4 +178,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-

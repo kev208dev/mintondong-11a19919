@@ -48,18 +48,20 @@
 
 ## 3. DB 적용 및 상품 등록 순서
 
-현재 운영 Supabase에는 `club-directory.sql`의 디렉터리 컬럼이 아직 없으므로 아래 순서를 지키세요. 저장소 코드를 배포하는 것만으로 DB migration이 실행되지는 않습니다.
+현재 운영 Supabase에는 club-directory와 PortOne 결제 migration이 적용되어 있습니다.
+새 레슨 관리 migration은 저장소에만 있으며 자동 실행되지 않으므로 아래 순서를 지키세요.
 
-1. `db/club-directory.sql`을 검토합니다. 기존 테이블/데이터를 삭제하지 않는 additive migration이며, 공개 범위와 권한이 운영 정책과 일치하는지 확인합니다.
-2. 외부 Supabase 프로젝트 `tkumfwiomcxkdbzljyss`의 SQL Editor에서 검토한 SQL을 적용합니다.
-3. `clubs`·`club_members`의 추가 컬럼, RLS 활성화, 정책과 table privilege를 확인합니다. `anon`은 `clubs`의 `is_public = true` 행만 조회할 수 있어야 하며 `club_members`에는 어떤 table privilege도 없어야 합니다.
-4. `db/portone-payments.sql`을 검토하고 SQL Editor에서 적용합니다. 이 파일은 기존 테이블/행을 삭제하지 않고 `payments`에 주문 검증 필드를 추가하며 PortOne 주문의 `booking_id`만 nullable로 허용합니다. 저장소 배포만으로 실행되지 않습니다.
-5. `supabase/migrations/20260812051103_portone_payments_hardening.sql`을 검토하고 적용합니다. 기존 `club scoped payments` client policy를 제거하고 `payments`를 service-role-only로 재확인하는 권한 migration이며, 저장소 작업에서는 운영 DB에 실행하지 않았습니다.
-6. `payments_portone_payment_id_unique`와 제약조건, `anon`/`authenticated`의 `payments` table privilege 회수, `service_role` 전용 쓰기를 확인합니다.
-7. 운영 계정으로 실제 공개 클럽을 생성합니다.
-8. 해당 클럽에 실제 코치와 실제 수업 시간·가격(`coaches.price`, 원 단위)을 등록합니다.
-9. 로그아웃 상태의 390px 모바일 화면에서 `/clubs/find`와 상품 checkout을 열어 실제 상품·가격·취소 정책이 로그인 없이 보이는지 확인합니다.
-10. 로그인 후에만 checkout의 PortOne 결제 호출이 가능한지 확인합니다.
+1. 이미 적용된 `db/club-directory.sql`의 결과를 확인합니다. `clubs`·`club_members`의 추가 컬럼, RLS 활성화, 정책과 table privilege가 기준이며, `anon`은 `clubs`의 `is_public = true` 행만 조회할 수 있어야 하고 `club_members`에는 어떤 table privilege도 없어야 합니다.
+2. 이미 적용된 `db/portone-payments.sql`과 `supabase/migrations/20260812051103_portone_payments_hardening.sql`의 결과를 확인합니다. `payments_portone_payment_id_unique`와 제약조건, `anon`/`authenticated`의 table privilege 회수, `service_role` 전용 접근을 유지합니다.
+3. 아직 적용하지 않은 `supabase/migrations/20260812055429_coach_lesson_management.sql`을 검토하고 외부 Supabase 프로젝트 `tkumfwiomcxkdbzljyss`의 SQL Editor에서 적용합니다. 이 migration은
+   coaches.is_active와 owner/active admin 최소권한을 추가하며 기존 행을 삭제하지 않습니다.
+4. 적용 후 `coaches.is_active`, check constraint, RLS와 column privilege를 확인합니다. `anon`과 일반 member는 쓰지 못하고 해당 클럽의 active owner/admin만 안전한 상품 필드를 쓸 수 있어야 합니다.
+5. 운영자가 회원가입 → 클럽 생성 → 동호회 관리 → 레슨 관리로 이동합니다.
+6. 실제 코치, 소개, 대상, 요일·시간, 수업시간과 원 단위 가격을 입력하고 판매중으로 저장합니다.
+7. 공개 페이지에서 보기를 눌러 저장한 실제 데이터가 즉시 노출되는지 확인합니다.
+8. 로그아웃 상태의 390px 모바일 화면에서 홈 → 동호회 찾기 → 공개 클럽 → 레슨 →
+    checkout으로 이동해 상품·가격·취소 정책과 사업자정보를 확인합니다.
+9. 로그인 후에만 checkout의 PortOne 결제 호출이 가능한지 확인합니다.
 
 공개 클럽이어도 회원 명단은 공개되지 않습니다. DB에서 `anon`의 `club_members` 권한을 회수하고, RLS 정책도 `authenticated` 역할의 본인 멤버십·같은 클럽 active 회원·클럽 owner에게만 로스터 조회를 허용합니다. 따라서 UI 숨김 여부와 관계없이 이름, `user_id`, 역할, 레벨은 비로그인 API 요청으로 읽을 수 없습니다.
 
@@ -69,7 +71,9 @@
 
 ## 4. 공개 레슨 데이터
 
-2026-08-12 확인 시 운영 Supabase의 `clubs`와 `coaches`는 모두 0건입니다. 따라서 현재 심사자가 볼 실제 상품도 없으며, 코드나 DB migration은 demo 상품·가격을 만들지 않습니다. 아래 절차로 운영자가 검증된 실제 상품을 등록해야 합니다.
+2026-08-12 확인 시 운영 Supabase의 clubs와 coaches는 모두 0건입니다. 따라서 현재 심사자가
+볼 실제 상품도 없습니다. 코드와 migration은 demo 상품, seed, 가짜 가격을 만들지 않습니다.
+첫 클럽 운영자가 레슨 관리 화면에서 입력한 실제 coaches 행만 공개됩니다.
 
 공개 레슨 페이지는 외부 Supabase `mintondong` 프로젝트의 다음 실제 데이터를 사용합니다.
 
@@ -78,11 +82,17 @@
 
 공개 전용 서버 함수는 위 상품 필드만 반환합니다. `settlement_account`, `club_members`, 예약자, `lesson_bookings`, `payments`는 조회하지 않습니다. `is_public = true`인 클럽만 상품을 반환하며, 컬럼이 없거나 값이 true가 아니면 빈 목록을 반환합니다. 공개 조회에는 서버의 `SUPABASE_SERVICE_ROLE_KEY` 설정이 필요하며 키 자체는 브라우저에 노출되지 않습니다.
 
+레슨 관리 migration 적용 후에는 coaches.is_active=true, 가격과 수업시간이 0보다 큰 상품만
+공개 catalog와 checkout에 포함됩니다. migration 전처럼 판매 상태를 확인할 수 없는 경우에는
+기존 행을 공개로 추측하지 않고 빈 목록/결제 불가로 처리합니다. 판매중지는 행을 삭제하지 않고
+is_active=false로 변경하므로 기존 결제와 향후 예약 참조를 보존합니다.
+
 기존 `/lessons`는 `localStorage` 기반 demo store를 계속 사용하며 이번 작업에서 구조를 변경하지 않았습니다. 현재 저장소의 demo seed에는 코치나 가격이 들어 있지 않습니다. 공개 레슨 가격은 demo 값으로 대체하지 않으며 Supabase `coaches.price`에 등록된 값만 원 단위로 표시합니다.
 
 위 DB 적용 순서를 완료한 뒤 다음을 추가로 확인하세요.
 
 - 클럽이 공개 상태이고 `lessons_enabled`가 켜져 있는지
+- 레슨 상품이 판매중 상태인지
 - 코치명, 소개, 장소, 요일·시간, 수업 시간, 실제 원화 가격이 정확한지
 - 공개 URL에서 로그아웃 상태로 상품 카드와 `가격원 / 수업시간분` 표시가 보이는지
 - 허위 상품, 허위 가격, 정산계좌 또는 예약자 정보가 노출되지 않는지

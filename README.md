@@ -1,30 +1,42 @@
-# Mintondong Bridge
+# 민턴동
 
-새 프로젝트로 민턴동 앱을 이관해 주세요. 기존 참조 프로젝트는 같은 워크스페이스의 프로젝트 ID `dd255d9a-3576-4edd-9e31-2af60fb4c099`(published: https://rally-fair-app.lovable.app)입니다. 기존 프로젝트의 UI/브랜딩/라우트/기능을 최대한 동일하게 재현하되, 이 새 프로젝트에서는 Lovable Cloud를 절대 활성화하거나 사용하지 마세요. 백엔드는 사용자가 이미 보유한 외부 Supabase 프로젝트 `mintondong` (project ref: `tkumfwiomcxkdbzljyss`)만 사용해야 합니다. 이 Supabase에는 기존 Lovable Cloud의 14개 public 테이블/RLS/프로필 생성 트리거까지 이미 동일하게 마이그레이션되어 있으므로 DB 스키마를 새로 만들거나 초기화하거나 덮어쓰지 마세요. 기존 코드 구조(TanStack Start + React + Tailwind/shadcn)를 유지하고, 특히 다음을 그대로 옮겨 주세요: 민턴동 로고/브랜딩, 5개 하단 탭(오늘/경기/레슨/기록/모임), /auth, /me 마이페이지, 클럽/역할/권한/출석/경기/레슨/기록/재정 UI, Toss는 준비중 상태 유지. 인증은 외부 Supabase Auth 기준으로 통일하세요. 이메일/비밀번호와 Kakao는 Supabase Auth로 연결하고, Apple/Google도 Lovable 관리형 auth를 쓰지 말고 Supabase Auth 기반으로 전환할 준비를 하되 provider 자격증명이 없으면 UI를 깨뜨리거나 임의의 키를 넣지 마세요. Kakao는 이미 외부 Supabase에서 provider 설정을 완료한 상태입니다. 로그인 성공 후 기존 /me에서 계정/클럽/역할/활동 상태가 보이게 유지하세요. 기존 프로젝트의 실제 데이터는 복사하지 말고, 기존 프로젝트도 수정/삭제하지 마세요. 새 프로젝트에서 외부 Supabase 연결이 계정 승인 때문에 수동 선택이 필요하면 코드 생성은 멈추지 말고, 필요한 정확한 연결 단계만 응답에 남기세요. 완료 후 typecheck/build, 390px 모바일 overflow, 콘솔 오류를 점검하고 변경/남은 수동 작업을 요약해 주세요.
+배드민턴 클럽 운영, 공개 레슨 상품, PortOne V2/KG이니시스 결제를 제공하는
+TanStack Start 애플리케이션입니다.
 
-This project was built with [Lovable](https://lovable.dev).
+소스와 배포의 단일 기준은 GitHub
+kev208dev/mintondong-11a19919 저장소의 main 브랜치입니다. 배포 대상은
+Cloudflare Workers이며 GitHub Pages나 별도 에디터 호스팅은 사용하지 않습니다.
 
-**Live app**: https://mintondong.lovable.app
+## 기술 구성
 
-## Build with Lovable
+- TanStack Start + React + TypeScript
+- Tailwind CSS
+- 외부 Supabase mintondong 프로젝트
+- PortOne V2 / KG이니시스
+- Cloudflare Workers
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/8272dbe0-2072-474a-af0d-03f6ef9eb5fa).
+기존 Toss 테스트 코드는 후속 전환 판단 전까지 유지합니다.
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+## 로컬 실행
 
-## Development
+    git clone https://github.com/kev208dev/mintondong-11a19919.git
+    cd mintondong-11a19919
+    npm install
+    cp .env.example .env
+    npm run dev
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+.env에는 실제 개발 환경값을 입력합니다. secret은 커밋하지 않습니다.
+Cloudflare Worker runtime을 포함한 production build와 preview는 다음과 같이 확인합니다.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+    npm run build
+    npm run preview
 
-## PG 입점 심사 준비
+배포와 환경변수 설정은 [DEPLOYMENT.md](./DEPLOYMENT.md), PG 심사와 실제 상품 등록
+순서는 [PG_REVIEW_SETUP.md](./PG_REVIEW_SETUP.md)를 확인하세요.
 
-공개 사업자 정보, 법적 페이지, 공개 레슨 상품 노출과 배포 전 수동 작업은 [PG_REVIEW_SETUP.md](./PG_REVIEW_SETUP.md)를 확인하세요. 저장소에는 확인되지 않은 사업자 정보나 가짜 레슨·가격을 넣지 않습니다.
+## 데이터 보호
+
+- 외부 운영 Supabase 데이터를 초기화하거나 덮어쓰지 않습니다.
+- 공개 레슨은 공개 클럽의 판매중인 실제 coaches 행만 사용합니다.
+- 정산계좌, 멤버 명단, 예약자, 결제 원장은 공개 상품 응답에 포함하지 않습니다.
+- PortOne 및 Supabase secret은 Workers server bundle에서만 읽습니다.

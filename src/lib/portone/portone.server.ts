@@ -3,6 +3,7 @@ import { PaymentClient, Webhook } from "@portone/server-sdk";
 import type { Payment as PortOneSdkPayment } from "@portone/server-sdk/payment";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { adminClient } from "@/lib/auth/account.server";
+import { requireServerEnv, serverEnv } from "@/lib/server-env.server";
 import {
   cancellationDecision,
   executeCancellationDecision,
@@ -35,31 +36,19 @@ function db(): SupabaseClient {
 }
 
 function secret(): string {
-  const value = process.env["PORTONE_API_SECRET"]?.trim();
-  if (!value) throw new Error("PORTONE_API_SECRET_MISSING");
-  return value;
+  return requireServerEnv("PORTONE_API_SECRET");
 }
 
 function expectedStoreId() {
-  return (
-    process.env["VITE_PORTONE_STORE_ID"]?.trim() ||
-    import.meta.env["VITE_PORTONE_STORE_ID"]?.trim() ||
-    null
-  );
+  return import.meta.env["VITE_PORTONE_STORE_ID"]?.trim() || null;
 }
 
 function expectedChannelKey() {
-  return (
-    process.env["VITE_PORTONE_CHANNEL_KEY"]?.trim() ||
-    import.meta.env["VITE_PORTONE_CHANNEL_KEY"]?.trim() ||
-    null
-  );
+  return import.meta.env["VITE_PORTONE_CHANNEL_KEY"]?.trim() || null;
 }
 
 function portOneEnabled() {
-  return (
-    (process.env["VITE_PORTONE_ENABLED"] || import.meta.env["VITE_PORTONE_ENABLED"]) === "true"
-  );
+  return import.meta.env["VITE_PORTONE_ENABLED"] === "true";
 }
 
 export async function readCheckoutProduct(
@@ -75,7 +64,9 @@ export async function readCheckoutProduct(
   if (clubError) throw clubError;
   const { data: coach, error: coachError } = await client
     .from("coaches")
-    .select("id, club_id, name, intro, weekdays, start_hour, end_hour, duration_min, price")
+    .select(
+      "id, club_id, name, intro, weekdays, start_hour, end_hour, duration_min, price, is_active",
+    )
     .eq("id", lessonId)
     .eq("club_id", clubId)
     .maybeSingle();
@@ -87,6 +78,7 @@ export async function readCheckoutProduct(
     !isSellableLesson({
       isPublic: c["is_public"],
       lessonsEnabled: c["lessons_enabled"],
+      isActive: lesson["is_active"],
       price: lesson["price"],
       durationMin: lesson["duration_min"],
     })
@@ -357,7 +349,7 @@ export async function cancelPayment(input: { paymentId: string; userId: string; 
 }
 
 export async function webhookPaymentId(rawBody: string, headers: Headers) {
-  const webhookSecret = process.env["PORTONE_WEBHOOK_SECRET"]?.trim();
+  const webhookSecret = serverEnv("PORTONE_WEBHOOK_SECRET");
   let payload: unknown;
   if (webhookSecret) {
     payload = await Webhook.verify(webhookSecret, rawBody, Object.fromEntries(headers.entries()));

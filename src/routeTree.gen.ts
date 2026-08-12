@@ -39,6 +39,7 @@ import { Route as ClubsFindRouteImport } from './routes/clubs.find'
 import { Route as ClubsNewRouteImport } from './routes/clubs.new'
 import { Route as OnboardingAccountRouteImport } from './routes/onboarding.account'
 import { Route as ApiPortoneWebhookRouteImport } from './routes/api.portone.webhook'
+import { Route as ClubManageLessonsRouteImport } from './routes/club.manage_.lessons'
 import { Route as ClubsClubIdIndexRouteImport } from './routes/clubs.$clubId.index'
 import { Route as ClubsClubIdLessonsRouteImport } from './routes/clubs.$clubId.lessons'
 import { Route as ClubsClubIdMembersRouteImport } from './routes/clubs.$clubId.members'
@@ -197,6 +198,11 @@ const ApiPortoneWebhookRoute = ApiPortoneWebhookRouteImport.update({
   path: '/api/portone/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClubManageLessonsRoute = ClubManageLessonsRouteImport.update({
+  id: '/manage_/lessons',
+  path: '/manage/lessons',
+  getParentRoute: () => ClubRoute,
+} as any)
 const ClubsClubIdIndexRoute = ClubsClubIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -265,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
+  '/club/manage/lessons': typeof ClubManageLessonsRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
   '/clubs/$clubId/schedule': typeof ClubsClubIdScheduleRoute
@@ -301,6 +308,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthIndexRoute
   '/club': typeof ClubIndexRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
+  '/club/manage/lessons': typeof ClubManageLessonsRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
   '/clubs/$clubId/schedule': typeof ClubsClubIdScheduleRoute
@@ -341,6 +349,7 @@ export interface FileRoutesById {
   '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
+  '/club/manage_/lessons': typeof ClubManageLessonsRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
   '/clubs/$clubId/schedule': typeof ClubsClubIdScheduleRoute
@@ -382,6 +391,7 @@ export interface FileRouteTypes {
     | '/auth/'
     | '/club/'
     | '/api/portone/webhook'
+    | '/club/manage/lessons'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
     | '/clubs/$clubId/schedule'
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/club'
     | '/api/portone/webhook'
+    | '/club/manage/lessons'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
     | '/clubs/$clubId/schedule'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/auth/'
     | '/club/'
     | '/api/portone/webhook'
+    | '/club/manage_/lessons'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
     | '/clubs/$clubId/schedule'
@@ -700,6 +712,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPortoneWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/club/manage_/lessons': {
+      id: '/club/manage_/lessons'
+      path: '/manage/lessons'
+      fullPath: '/club/manage/lessons'
+      preLoaderRoute: typeof ClubManageLessonsRouteImport
+      parentRoute: typeof ClubRoute
+    }
     '/clubs/$clubId/': {
       id: '/clubs/$clubId/'
       path: '/'
@@ -778,6 +797,7 @@ interface ClubRouteChildren {
   ClubRankingRoute: typeof ClubRankingRoute
   ClubScheduleRoute: typeof ClubScheduleRoute
   ClubIndexRoute: typeof ClubIndexRoute
+  ClubManageLessonsRoute: typeof ClubManageLessonsRoute
 }
 
 const ClubRouteChildren: ClubRouteChildren = {
@@ -790,6 +810,7 @@ const ClubRouteChildren: ClubRouteChildren = {
   ClubRankingRoute: ClubRankingRoute,
   ClubScheduleRoute: ClubScheduleRoute,
   ClubIndexRoute: ClubIndexRoute,
+  ClubManageLessonsRoute: ClubManageLessonsRoute,
 }
 
 const ClubRouteWithChildren = ClubRoute._addFileChildren(ClubRouteChildren)

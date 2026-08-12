@@ -4,15 +4,16 @@ import {
   EXTERNAL_SUPABASE_PUBLISHABLE_KEY,
   EXTERNAL_SUPABASE_URL,
 } from "@/integrations/supabase/client";
+import { requireServerEnv, serverEnv } from "@/lib/server-env.server";
 
 function supabaseUrl(): string {
-  return process.env["SUPABASE_URL"] || EXTERNAL_SUPABASE_URL;
+  return serverEnv("SUPABASE_URL") || EXTERNAL_SUPABASE_URL;
 }
 
 function publishableKey(): string {
   return (
-    process.env["SUPABASE_PUBLISHABLE_KEY"] ||
-    process.env["SUPABASE_ANON_KEY"] ||
+    serverEnv("SUPABASE_PUBLISHABLE_KEY") ||
+    serverEnv("SUPABASE_ANON_KEY") ||
     EXTERNAL_SUPABASE_PUBLISHABLE_KEY
   );
 }
@@ -30,10 +31,7 @@ function opaqueKeyFetch(key: string): typeof fetch {
 
 /** service_role 클라이언트 — 절대 클라이언트로 반환/노출하지 않는다. */
 export function adminClient(): SupabaseClient {
-  const key = process.env["SUPABASE_SERVICE_ROLE_KEY"];
-  if (!key) {
-    throw new Error("missing_service_role_key");
-  }
+  const key = requireServerEnv("SUPABASE_SERVICE_ROLE_KEY");
   return createClient(supabaseUrl(), key, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { fetch: opaqueKeyFetch(key) },

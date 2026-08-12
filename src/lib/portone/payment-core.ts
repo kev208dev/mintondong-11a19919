@@ -20,12 +20,14 @@ export function mapPortOneStatus(status: string, paid: number, cancelled: number
 export function isSellableLesson(input: {
   isPublic: unknown;
   lessonsEnabled: unknown;
+  isActive: unknown;
   price: unknown;
   durationMin: unknown;
 }) {
   return (
     input.isPublic === true &&
     input.lessonsEnabled === true &&
+    input.isActive === true &&
     Number.isInteger(Number(input.price)) &&
     Number(input.price) > 0 &&
     Number.isInteger(Number(input.durationMin)) &&

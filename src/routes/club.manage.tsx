@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { NoPermission } from "@/components/app/RequireAuth";
 import {
   Copy,
@@ -144,8 +144,7 @@ function ClubPage() {
         </div>
         <p className="mt-2 text-[11px] font-semibold text-primary">
           멤버 {club.members.length}명
-          {club.guests.length ? ` · 게스트 ${club.guests.length}명` : ""} · 코트{" "}
-          {club.courtCount}면
+          {club.guests.length ? ` · 게스트 ${club.guests.length}명` : ""} · 코트 {club.courtCount}면
         </p>
         {canInvite ? (
           <div className="mt-2 flex items-center gap-2 rounded-2xl bg-secondary px-3 py-2">
@@ -224,7 +223,7 @@ function ClubPage() {
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
             />
-            
+
             <Button
               className="h-12 rounded-2xl font-bold"
               disabled={!code.trim()}
@@ -242,6 +241,24 @@ function ClubPage() {
           </DialogContent>
         </Dialog>
       </section>
+
+      {canLessons || canCoaches ? (
+        <Link
+          to="/club/manage/lessons"
+          search={{ clubId: undefined }}
+          className="mt-2 flex min-w-0 items-center gap-3 rounded-3xl border border-primary/25 bg-primary/5 p-4 active:scale-[0.99]"
+        >
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
+            <GraduationCap className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-extrabold text-foreground">레슨 관리</span>
+            <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
+              실제 코치·가격·판매 상태를 등록하고 공개해요.
+            </span>
+          </span>
+        </Link>
+      ) : null}
 
       {/* 내 클럽 목록 (접이식) */}
       {canViewMembers ? (
@@ -406,10 +423,7 @@ function ClubPage() {
           <AccordionContent className="px-3 pb-3">
             <ul className="space-y-2">
               {[...club.members, ...club.guests].map((m) => (
-                <li
-                  key={m.id}
-                  className="flex items-center gap-3 rounded-2xl bg-secondary p-3"
-                >
+                <li key={m.id} className="flex items-center gap-3 rounded-2xl bg-secondary p-3">
                   <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-background text-sm font-bold">
                     {m.name.slice(0, 1)}
                   </span>
@@ -449,9 +463,7 @@ function ClubPage() {
             <ItemHeader
               icon={<Wallet className="size-4" />}
               title="자금 · 회비"
-              summary={
-                canViewFinance ? `월 회비 ${won(club.finance.monthlyDues)}` : "권한 필요"
-              }
+              summary={canViewFinance ? `월 회비 ${won(club.finance.monthlyDues)}` : "권한 필요"}
             />
           </AccordionTrigger>
           <AccordionContent className="px-3 pb-3">
@@ -572,7 +584,6 @@ function ClubPage() {
           </AccordionItem>
         ) : null}
       </Accordion>
-
     </>
   );
 }

@@ -10,6 +10,7 @@
  * orderId → 금액/상태를 조회해 검증하고, webhook으로 상태를 동기화해야 한다.
  */
 import { createHmac, timingSafeEqual } from "crypto";
+import { serverEnv } from "@/lib/server-env.server";
 import { isTestKey, LIVE_KEY_PREFIX } from "./config";
 
 const TOSS_API = "https://api.tosspayments.com/v1/payments";
@@ -24,7 +25,7 @@ export interface OrderClaims {
 }
 
 function signingSecret(): string {
-  const s = process.env["ORDER_SIGNING_SECRET"];
+  const s = serverEnv("ORDER_SIGNING_SECRET");
   if (!s) throw new Error("ORDER_SIGNING_SECRET_MISSING");
   return s;
 }
@@ -52,18 +53,25 @@ export function verifyOrderToken(token: string): OrderClaims {
   const a = Buffer.from(sig);
   const b = Buffer.from(expected);
   if (a.length !== b.length || !timingSafeEqual(a, b)) throw new Error("ORDER_TOKEN_INVALID");
-  const claims = JSON.parse(Buffer.from(body.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString()) as OrderClaims;
+  const claims = JSON.parse(
+    Buffer.from(body.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString(),
+  ) as OrderClaims;
   if (claims.exp < Date.now()) throw new Error("ORDER_TOKEN_EXPIRED");
   return claims;
 }
 
-export function readSecretKey(): { ok: true; key: string } | { ok: false; reason: "MISSING_SECRET_KEY" | "LIVE_KEY_BLOCKED" } {
-  const key = process.env["TOSS_SECRET_KEY"];
+export function readSecretKey():
+  { ok: true; key: string } | { ok: false; reason: "MISSING_SECRET_KEY" | "LIVE_KEY_BLOCKED" } {
+  const key = serverEnv("TOSS_SECRET_KEY");
   if (!key) return { ok: false, reason: "MISSING_SECRET_KEY" };
   if (key.startsWith(LIVE_KEY_PREFIX) || !isTestKey(key)) {
     return { ok: false, reason: "LIVE_KEY_BLOCKED" };
   }
   return { ok: true, key };
+}
+
+export function isOrderSigningReady() {
+  return Boolean(serverEnv("ORDER_SIGNING_SECRET"));
 }
 
 /** Basic base64(`${secretKey}:`) — 토스 공식 인증 방식 */

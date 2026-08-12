@@ -112,12 +112,26 @@ function ClubDetailLayout() {
       ) : null}
 
       {membership ? (
-        <div className="flex h-11 items-center justify-center rounded-2xl bg-secondary text-xs font-bold text-secondary-foreground">
-          {membership.status === "pending"
-            ? "가입 승인 대기 중"
-            : membership.role === "owner"
-              ? "내가 만든 동호회"
-              : "가입한 동호회"}
+        <div className="grid gap-2">
+          <div className="flex h-11 items-center justify-center rounded-2xl bg-secondary text-xs font-bold text-secondary-foreground">
+            {membership.status === "pending"
+              ? "가입 승인 대기 중"
+              : membership.role === "owner"
+                ? "내가 만든 동호회"
+                : membership.role === "admin"
+                  ? "관리 중인 동호회"
+                  : "가입한 동호회"}
+          </div>
+          {membership.status === "active" &&
+          (membership.role === "owner" || membership.role === "admin") ? (
+            <Link
+              to="/club/manage/lessons"
+              search={{ clubId }}
+              className="flex h-11 items-center justify-center rounded-2xl bg-primary text-xs font-extrabold text-primary-foreground"
+            >
+              레슨 관리
+            </Link>
+          ) : null}
         </div>
       ) : (
         <button
