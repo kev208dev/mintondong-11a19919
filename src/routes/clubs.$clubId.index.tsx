@@ -19,8 +19,8 @@ function ClubDetailHome() {
   });
   const canSeeMembers = membership.data?.status === "active";
   const members = useQuery({
-    queryKey: clubKeys.members(clubId),
-    queryFn: () => listClubMembers(clubId),
+    queryKey: clubKeys.members(clubId, user?.id ?? null),
+    queryFn: () => listClubMembers(clubId, user?.id ?? null),
     enabled: canSeeMembers,
   });
 

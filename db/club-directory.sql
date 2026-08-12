@@ -157,13 +157,18 @@ as $$
   )
 $$;
 
-grant execute on function public.is_club_member(uuid) to anon, authenticated;
+revoke all on function public.is_club_member(uuid) from public;
+revoke execute on function public.is_club_member(uuid) from anon;
+grant execute on function public.is_club_member(uuid) to authenticated, service_role;
 
 -- 5) 권한 & RLS ------------------------------------------------------------
 grant select, insert, update, delete on public.clubs to authenticated;
 grant select, insert, update, delete on public.club_members to authenticated;
+-- 공개 클럽 탐색에 필요한 SELECT 만 anon 에 다시 부여한다.
+revoke all privileges on table public.clubs from anon;
 grant select on public.clubs to anon;
-grant select on public.club_members to anon;
+-- 회원 명단은 공개 클럽에서도 개인정보다. anon 에는 테이블 권한 자체를 주지 않는다.
+revoke all privileges on table public.club_members from anon;
 grant all on public.clubs to service_role;
 grant all on public.club_members to service_role;
 
@@ -176,12 +181,23 @@ drop policy if exists "members can view club" on public.clubs;
 drop policy if exists "owner deletes club" on public.clubs;
 drop policy if exists "owner updates club" on public.clubs;
 drop policy if exists "clubs public read" on public.clubs;
+drop policy if exists "clubs authenticated read" on public.clubs;
+drop policy if exists "clubs read" on public.clubs;
+drop policy if exists "clubs insert own" on public.clubs;
 drop policy if exists "clubs owner insert" on public.clubs;
 drop policy if exists "clubs owner update" on public.clubs;
 drop policy if exists "clubs owner delete" on public.clubs;
 
-create policy "clubs read" on public.clubs
-for select using (is_public or owner_id = auth.uid() or public.is_club_member(id));
+-- 비로그인 사용자는 공개 클럽만, 로그인 사용자는 공개 클럽 또는 자기 클럽만 조회한다.
+create policy "clubs public read" on public.clubs
+for select to anon using (is_public = true);
+
+create policy "clubs authenticated read" on public.clubs
+for select to authenticated using (
+  is_public = true
+  or owner_id = (select auth.uid())
+  or public.is_club_member(id)
+);
 
 create policy "clubs insert own" on public.clubs
 for insert to authenticated with check (owner_id = auth.uid());
@@ -198,15 +214,19 @@ drop policy if exists "join as self or owner adds" on public.club_members;
 drop policy if exists "members view roster" on public.club_members;
 drop policy if exists "update roster" on public.club_members;
 drop policy if exists "club_members read" on public.club_members;
+drop policy if exists "club_members authenticated read" on public.club_members;
+drop policy if exists "club_members insert" on public.club_members;
+drop policy if exists "club_members update" on public.club_members;
+drop policy if exists "club_members delete" on public.club_members;
 drop policy if exists "club_members self join" on public.club_members;
 drop policy if exists "club_members self update" on public.club_members;
 drop policy if exists "club_members self leave" on public.club_members;
 
--- 공개 동호회의 active 멤버는 공개 노출, 그 외에는 멤버/소유자/본인만
-create policy "club_members read" on public.club_members
-for select using (
-  (status = 'active' and exists (select 1 from public.clubs c where c.id = club_id and c.is_public))
-  or user_id = auth.uid()
+-- 공개 여부와 무관하게 로그인한 본인, 해당 클럽의 active 회원, 소유자만 조회한다.
+-- anon 은 이 정책의 대상도 아니며 위에서 테이블 권한도 회수했다.
+create policy "club_members authenticated read" on public.club_members
+for select to authenticated using (
+  user_id = (select auth.uid())
   or public.is_club_member(club_id)
 );
 

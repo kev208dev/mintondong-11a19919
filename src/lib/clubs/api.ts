@@ -45,6 +45,7 @@ const LEGACY_CLUB_COLUMNS =
   "id, name, region:location, owner_id, lessons_enabled, session_label, session_time, created_at";
 
 const MEMBER_COLUMNS = "id, club_id, user_id, name, role, status, joined_at, level";
+const LEGACY_MEMBER_COLUMNS = "id, club_id, user_id, name, created_at, level";
 
 /** RPC 는 원본 컬럼(location)을 반환하므로 UI 형태로 정규화한다. */
 function normalizeClub(row: Record<string, unknown>): ClubRow {
@@ -70,10 +71,27 @@ function isMissingDirectoryColumn(error: { code?: string } | null): boolean {
   return error?.code === "42703" || error?.code === "PGRST204";
 }
 
+/**
+ * club-directory.sql 적용 전에는 모든 기존 멤버십이 승인 완료 상태였고 role 구분이 없었다.
+ * 이 정규화는 현재 로그인 세션의 RLS 범위 안에서 읽은 행에만 적용한다.
+ */
+function normalizeLegacyMember(row: Record<string, unknown>): ClubMemberRow {
+  return {
+    id: String(row["id"]),
+    club_id: String(row["club_id"]),
+    user_id: (row["user_id"] as string | null) ?? null,
+    name: String(row["name"] ?? ""),
+    role: "member",
+    status: "active",
+    joined_at: String(row["created_at"] ?? ""),
+    level: Number(row["level"] ?? 0),
+  };
+}
+
 export const clubKeys = {
   search: (q: string) => ["clubs", "search", q] as const,
   detail: (id: string) => ["clubs", "detail", id] as const,
-  members: (id: string) => ["clubs", "members", id] as const,
+  members: (id: string, userId: string | null) => ["clubs", "members", id, userId] as const,
   membership: (id: string, userId: string | null) => ["clubs", "membership", id, userId] as const,
   mine: (userId: string | null) => ["clubs", "mine", userId] as const,
   publicLessons: (id: string) => ["clubs", "public-lessons", id] as const,
@@ -110,14 +128,28 @@ export async function getClub(id: string): Promise<ClubRow | null> {
   return fallback.data ? normalizeClub(fallback.data as Record<string, unknown>) : null;
 }
 
-export async function listClubMembers(clubId: string): Promise<ClubMemberRow[]> {
+export async function listClubMembers(
+  clubId: string,
+  userId: string | null,
+): Promise<ClubMemberRow[]> {
+  // 공개 화면에서는 쿼리 자체를 만들지 않는다. 최종 권한 판정은 항상 DB RLS가 수행한다.
+  if (!userId) return [];
   const { data, error } = await db
     .from("club_members")
     .select(MEMBER_COLUMNS)
     .eq("club_id", clubId)
     .order("joined_at", { ascending: true });
-  if (error) throw error;
-  return (data ?? []) as unknown as ClubMemberRow[];
+  if (!error) return (data ?? []) as unknown as ClubMemberRow[];
+  if (!isMissingDirectoryColumn(error)) throw error;
+
+  // 마이그레이션 전 컬럼만 사용하며 service_role 우회 없이 기존 RLS를 그대로 따른다.
+  const fallback = await db
+    .from("club_members")
+    .select(LEGACY_MEMBER_COLUMNS)
+    .eq("club_id", clubId)
+    .order("created_at", { ascending: true });
+  if (fallback.error) throw fallback.error;
+  return ((fallback.data ?? []) as Record<string, unknown>[]).map(normalizeLegacyMember);
 }
 
 export async function getMyMembership(clubId: string, userId: string | null) {
@@ -128,8 +160,17 @@ export async function getMyMembership(clubId: string, userId: string | null) {
     .eq("club_id", clubId)
     .eq("user_id", userId)
     .maybeSingle();
-  if (error) throw error;
-  return (data as unknown as ClubMemberRow) ?? null;
+  if (!error) return (data as unknown as ClubMemberRow) ?? null;
+  if (!isMissingDirectoryColumn(error)) throw error;
+
+  const fallback = await db
+    .from("club_members")
+    .select(LEGACY_MEMBER_COLUMNS)
+    .eq("club_id", clubId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (fallback.error) throw fallback.error;
+  return fallback.data ? normalizeLegacyMember(fallback.data as Record<string, unknown>) : null;
 }
 
 export async function listMyClubs(userId: string | null): Promise<ClubRow[]> {
@@ -139,9 +180,21 @@ export async function listMyClubs(userId: string | null): Promise<ClubRow[]> {
     .select(`club_id, clubs!inner(${CLUB_COLUMNS})`)
     .eq("user_id", userId)
     .eq("status", "active");
-  if (error) throw error;
-  return ((data ?? []) as unknown as { clubs: Record<string, unknown> }[])
-    .map((r) => r.clubs)
+  if (!error) {
+    return ((data ?? []) as unknown as { clubs: Record<string, unknown> }[])
+      .map((r) => r.clubs)
+      .filter(Boolean)
+      .map(normalizeClub);
+  }
+  if (!isMissingDirectoryColumn(error)) throw error;
+
+  const fallback = await db
+    .from("club_members")
+    .select(`club_id, clubs!inner(${LEGACY_CLUB_COLUMNS})`)
+    .eq("user_id", userId);
+  if (fallback.error) throw fallback.error;
+  return ((fallback.data ?? []) as unknown as { clubs: Record<string, unknown> }[])
+    .map((row) => row.clubs)
     .filter(Boolean)
     .map(normalizeClub);
 }

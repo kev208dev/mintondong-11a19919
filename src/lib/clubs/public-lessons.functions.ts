@@ -45,24 +45,22 @@ export const getPublicLessonCatalog = createServerFn({ method: "GET" })
     }
     const db = adminClient() as unknown as SupabaseClient;
 
-    let clubResult = await db
+    const clubResult = await db
       .from("clubs")
       .select("id, name, location, lessons_enabled, is_public")
       .eq("id", clubId)
       .maybeSingle();
+    // 마이그레이션 전에는 공개 여부를 판별할 수 없다. service_role 로 추측해 공개하지 않고
+    // 빈 catalog 를 반환해 개인정보/비공개 상품 노출 가능성을 fail-closed 한다.
     if (missingColumn(clubResult.error)) {
-      clubResult = await db
-        .from("clubs")
-        .select("id, name, location, lessons_enabled")
-        .eq("id", clubId)
-        .maybeSingle();
+      return { club: null, lessons: [] };
     }
     if (clubResult.error) throw clubResult.error;
     if (!clubResult.data) return { club: null, lessons: [] };
 
     const clubRow = clubResult.data as Record<string, unknown>;
-    // is_public 컬럼이 있는 스키마에서는 비공개 클럽 상품을 절대 반환하지 않는다.
-    if (clubRow["is_public"] === false) return { club: null, lessons: [] };
+    // 예상 밖의 null/누락도 비공개로 취급한다.
+    if (clubRow["is_public"] !== true) return { club: null, lessons: [] };
 
     const { data: coachData, error: coachError } = await db
       .from("coaches")
