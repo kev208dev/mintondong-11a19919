@@ -21,11 +21,11 @@ function publicEnvOr(name: string, fallback: string | null): string | null {
 
 /**
  * 공개 페이지에 표시되는 사업자 정보입니다.
- * PG 심사에 필요한 확인된 공개 사업자 정보는 fallback 으로 제공하고,
+ * 확인된 공개 사업자/고객문의 정보는 fallback 으로 제공하고,
  * 배포 환경의 VITE_BUSINESS_* 값이 있으면 그 값을 우선합니다.
  *
- * 휴대전화 번호는 PortOne의 PG/카드사 사이트 필수 노출 전화번호 요건을 충족하지 않으므로
- * customerServicePhone fallback 으로 사용하지 않습니다.
+ * 현재 휴대전화 번호는 실제 고객 문의 연락처로 표시하되,
+ * PortOne PG/카드사 심사용 일반전화 충족 여부는 별도로 검사합니다.
  */
 export const businessConfig: BusinessConfig = {
   serviceName: "민턴동",
@@ -36,7 +36,7 @@ export const businessConfig: BusinessConfig = {
     "VITE_BUSINESS_ADDRESS",
     "서울 양천구 목동중앙서로6길 37 (402호)",
   ),
-  customerServicePhone: publicEnv("VITE_CUSTOMER_SERVICE_PHONE"),
+  customerServicePhone: publicEnvOr("VITE_CUSTOMER_SERVICE_PHONE", "010-5264-1860"),
   customerServiceEmail: publicEnvOr("VITE_CUSTOMER_SERVICE_EMAIL", "kev208dev@gmail.com"),
   ecommerceRegistrationNumber: publicEnv("VITE_ECOMMERCE_REGISTRATION_NUMBER"),
   policyEffectiveDate: publicEnv("VITE_POLICY_EFFECTIVE_DATE"),
