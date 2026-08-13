@@ -149,7 +149,9 @@ PortOne server SDK의 Standard Webhooks 검증에 전달합니다. 배포 후 �
 
 ## 배포 전 순서
 
-1. 미적용 Supabase migration(대회 directory와 manual admin 포함)을 검토하고 적용합니다.
+1. 미적용 Supabase migration(대회 directory, manual admin,
+   `20260813035134_account_deletion.sql` 포함)을 검토하고 적용합니다. 계정 삭제 UI는 migration이
+   없으면 안전하게 실행을 거부합니다.
 2. 실제 클럽과 판매중 레슨을 등록합니다.
 3. npm run build, npm run test:portone, 관련 테스트를 실행합니다.
 4. Workers Builds 변수와 secret을 입력합니다.

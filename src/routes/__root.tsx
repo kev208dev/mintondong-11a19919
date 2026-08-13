@@ -16,6 +16,7 @@ import { AppShell } from "../components/app/AppShell";
 import { AuthProvider, useAuth } from "../lib/auth/AuthProvider";
 import { NEXT_STORAGE_KEY } from "../lib/auth/providers";
 import { clubKeys, listMyClubs } from "../lib/clubs/api";
+import { NativeRuntimeBridge } from "../components/native/NativeRuntimeBridge";
 
 function NotFoundComponent() {
   return (
@@ -156,7 +157,9 @@ function isLegalPage(pathname: string) {
     pathname === "/terms" ||
     pathname === "/privacy" ||
     pathname === "/refund-policy" ||
-    pathname === "/business-info"
+    pathname === "/business-info" ||
+    pathname === "/support" ||
+    pathname === "/account-deletion"
   );
 }
 
@@ -221,6 +224,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <NativeRuntimeBridge />
         <StoreProvider>
           <PostAuthRedirect />
           <AppShell />

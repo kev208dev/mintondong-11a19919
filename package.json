@@ -15,9 +15,22 @@
     "test:portone": "node --test --experimental-strip-types tests/portone-payment-core.test.ts",
     "test:tournaments": "node --test --experimental-strip-types tests/tournament-domain.test.ts",
     "test:tournament-admin": "node --test --experimental-strip-types tests/tournament-admin.test.ts",
+    "test:account-deletion": "node --test --experimental-strip-types tests/account-deletion.test.ts",
+    "mobile:sync": "cap sync",
+    "mobile:ios": "cap sync ios",
+    "mobile:android": "cap sync android",
+    "mobile:open:ios": "cap open ios",
+    "mobile:open:android": "cap open android",
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
     "@hookform/resolvers": "^5.2.2",
     "@portone/browser-sdk": "^0.1.9",
     "@portone/server-sdk": "^0.19.0",
@@ -76,6 +89,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
     "@cloudflare/vite-plugin": "1.51.2",
     "@eslint/js": "^9.32.0",
     "@types/node": "^22.16.5",

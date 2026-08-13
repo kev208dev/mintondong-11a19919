@@ -7,6 +7,8 @@ const LEGAL_LINKS = [
   { to: "/privacy", label: "개인정보처리방침" },
   { to: "/refund-policy", label: "취소·환불" },
   { to: "/business-info", label: "사업자 정보" },
+  { to: "/support", label: "고객지원" },
+  { to: "/account-deletion", label: "계정 삭제" },
 ] as const;
 
 const BUSINESS_ROWS = [

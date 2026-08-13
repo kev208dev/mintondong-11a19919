@@ -243,20 +243,12 @@ test("확정된 공개 Store ID와 KG이니시스 V2 Channel Key를 공통 설�
   assert.doesNotMatch(config, /PORTONE_API_SECRET|PORTONE_WEBHOOK_SECRET/);
 });
 
-test("구매자 이름은 늦게 도착한 profile로 한 번만 초기화하고 사용자 편집을 보존한다", () => {
+test("구매자 이름은 빈 값으로 시작하고 profile이 사용자 입력을 덮어쓰지 않는다", () => {
   const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
   assert.match(checkout, /const \[name, setName\] = useState\(""\)/);
-  assert.match(checkout, /const buyerNameInitialized = useRef\(false\)/);
-  assert.match(
-    checkout,
-    /if \(buyerNameInitialized\.current \|\| !profile\?\.display_name\) return;/,
-  );
-  assert.match(
-    checkout,
-    /buyerNameInitialized\.current = true;\s+setName\(profile\.display_name\)/,
-  );
-  assert.match(checkout, /buyerNameInitialized\.current = true;\s+setName\(e\.target\.value\)/);
-  assert.doesNotMatch(checkout, /\[name, profile\?\.display_name\]/);
+  assert.match(checkout, /onChange=\{\(e\) => setName\(e\.target\.value\)\}/);
+  assert.match(checkout, /autoComplete="off"/);
+  assert.doesNotMatch(checkout, /profile\?\.display_name|buyerNameInitialized/);
 });
 
 test("휴대전화 입력을 숫자 11자리와 자동 하이픈 형식으로 정규화한다", () => {

@@ -29,6 +29,8 @@ function showsPublicFooter(pathname: string) {
     pathname === "/privacy" ||
     pathname === "/refund-policy" ||
     pathname === "/business-info" ||
+    pathname === "/support" ||
+    pathname === "/account-deletion" ||
     pathname.startsWith("/tournaments")
   );
 }
@@ -73,6 +75,8 @@ function usePageTitle(pathname: string) {
     if (pathname.startsWith("/privacy")) return "개인정보처리방침";
     if (pathname.startsWith("/refund-policy")) return "취소 및 환불 정책";
     if (pathname.startsWith("/business-info")) return "사업자 정보";
+    if (pathname.startsWith("/support")) return "고객지원";
+    if (pathname.startsWith("/account-deletion")) return "계정 삭제";
     if (pathname.startsWith("/admin/tournaments")) return "대회 관리";
     if (pathname.startsWith("/records")) return "활동 기록";
     if (pathname.startsWith("/club/attendance")) return "출석 체크";

@@ -14,6 +14,7 @@ Cloudflare Workers이며 GitHub Pages나 별도 에디터 호스팅은 사용하
 - 외부 Supabase mintondong 프로젝트
 - PortOne V2 / KG이니시스
 - Cloudflare Workers
+- Capacitor iOS / Android shell
 
 기존 Toss 테스트 코드는 후속 전환 판단 전까지 유지합니다.
 
@@ -33,6 +34,22 @@ Cloudflare Worker runtime을 포함한 production build와 preview는 다음과 
 
 배포와 환경변수 설정은 [DEPLOYMENT.md](./DEPLOYMENT.md), PG 심사와 실제 상품 등록
 순서는 [PG_REVIEW_SETUP.md](./PG_REVIEW_SETUP.md)를 확인하세요.
+
+## 모바일 Release Candidate
+
+네이티브 앱은 TanStack Start 서버 기능을 정적 SPA로 복제하지 않습니다. Capacitor가 로컬
+부트스트랩/오프라인 화면을 먼저 표시한 뒤 허용된 민턴동 Production origin을 앱 WebView에서
+엽니다. 따라서 Supabase 세션, Cloudflare server functions와 PortOne 서버 검증은 웹과 같은
+코드를 사용합니다.
+
+    npm install
+    npm run mobile:sync
+    npm run mobile:open:ios
+    npm run mobile:open:android
+
+Bundle/Application ID는 `capacitor.config.ts`의 `com.mintondong.app`에서 관리합니다. OAuth
+callback, 네이티브 빌드와 스토어 제출 절차는 [docs/mobile-release.md](./docs/mobile-release.md),
+남은 확인 항목은 [docs/release-checklist.md](./docs/release-checklist.md)를 확인하세요.
 
 ## 데이터 보호
 

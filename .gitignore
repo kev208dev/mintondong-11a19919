@@ -33,3 +33,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Capacitor / iOS
+ios/App/Pods/
+ios/App/Podfile.lock
+ios/DerivedData/
+**/xcuserdata/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
+# Capacitor / Android
+android/.gradle/
+android/.idea/
+android/**/build/
+android/local.properties
+*.jks
+*.keystore
+keystore.properties

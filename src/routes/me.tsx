@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Check, Copy, LogOut, Settings } from "lucide-react";
+import { Check, Copy, LogOut, Settings, UserRoundCog } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -235,6 +235,13 @@ function MePage() {
           <Settings className="mr-2 size-4" /> 대회 관리자 페이지
         </Link>
       ) : null}
+
+      <Link
+        to="/account-deletion"
+        className="flex h-12 items-center justify-center rounded-2xl border border-border bg-card text-sm font-bold text-foreground active:scale-[0.99]"
+      >
+        <UserRoundCog className="mr-2 size-4" /> 계정 설정
+      </Link>
 
       <Button
         variant="secondary"

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountDeletionRouteImport } from './routes/account-deletion'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BusinessInfoRouteImport } from './routes/business-info'
 import { Route as ClubRouteImport } from './routes/club'
@@ -20,6 +21,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TournamentsRouteImport } from './routes/tournaments'
 import { Route as AdminTournamentsRouteImport } from './routes/admin.tournaments'
@@ -55,6 +57,11 @@ import { Route as ClubsClubIdLessonsLessonIdCheckoutRouteImport } from './routes
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountDeletionRoute = AccountDeletionRouteImport.update({
+  id: '/account-deletion',
+  path: '/account-deletion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -105,6 +112,11 @@ const RecordsRoute = RecordsRouteImport.update({
 const RefundPolicyRoute = RefundPolicyRouteImport.update({
   id: '/refund-policy',
   path: '/refund-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -266,6 +278,7 @@ const ClubsClubIdLessonsLessonIdCheckoutRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account-deletion': typeof AccountDeletionRoute
   '/auth': typeof AuthRouteWithChildren
   '/business-info': typeof BusinessInfoRoute
   '/club': typeof ClubRouteWithChildren
@@ -276,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/refund-policy': typeof RefundPolicyRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/tournaments': typeof TournamentsRoute
   '/admin/tournaments': typeof AdminTournamentsRoute
@@ -310,6 +324,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account-deletion': typeof AccountDeletionRoute
   '/business-info': typeof BusinessInfoRoute
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
@@ -318,6 +333,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/refund-policy': typeof RefundPolicyRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/tournaments': typeof TournamentsRoute
   '/admin/tournaments': typeof AdminTournamentsRoute
@@ -352,6 +368,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account-deletion': typeof AccountDeletionRoute
   '/auth': typeof AuthRouteWithChildren
   '/business-info': typeof BusinessInfoRoute
   '/club': typeof ClubRouteWithChildren
@@ -362,6 +379,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/refund-policy': typeof RefundPolicyRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/tournaments': typeof TournamentsRoute
   '/admin/tournaments': typeof AdminTournamentsRoute
@@ -398,6 +416,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account-deletion'
     | '/auth'
     | '/business-info'
     | '/club'
@@ -408,6 +427,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/records'
     | '/refund-policy'
+    | '/support'
     | '/terms'
     | '/tournaments'
     | '/admin/tournaments'
@@ -442,6 +462,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account-deletion'
     | '/business-info'
     | '/games'
     | '/lessons'
@@ -450,6 +471,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/records'
     | '/refund-policy'
+    | '/support'
     | '/terms'
     | '/tournaments'
     | '/admin/tournaments'
@@ -483,6 +505,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/account-deletion'
     | '/auth'
     | '/business-info'
     | '/club'
@@ -493,6 +516,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/records'
     | '/refund-policy'
+    | '/support'
     | '/terms'
     | '/tournaments'
     | '/admin/tournaments'
@@ -528,6 +552,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountDeletionRoute: typeof AccountDeletionRoute
   AuthRoute: typeof AuthRouteWithChildren
   BusinessInfoRoute: typeof BusinessInfoRoute
   ClubRoute: typeof ClubRouteWithChildren
@@ -538,6 +563,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   RecordsRoute: typeof RecordsRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
+  SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   TournamentsRoute: typeof TournamentsRoute
   AdminTournamentsRoute: typeof AdminTournamentsRoute
@@ -558,6 +584,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account-deletion': {
+      id: '/account-deletion'
+      path: '/account-deletion'
+      fullPath: '/account-deletion'
+      preLoaderRoute: typeof AccountDeletionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -628,6 +661,13 @@ declare module '@tanstack/react-router' {
       path: '/refund-policy'
       fullPath: '/refund-policy'
       preLoaderRoute: typeof RefundPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -929,6 +969,7 @@ const ClubsClubIdRouteWithChildren = ClubsClubIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountDeletionRoute: AccountDeletionRoute,
   AuthRoute: AuthRouteWithChildren,
   BusinessInfoRoute: BusinessInfoRoute,
   ClubRoute: ClubRouteWithChildren,
@@ -939,6 +980,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   RecordsRoute: RecordsRoute,
   RefundPolicyRoute: RefundPolicyRoute,
+  SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   TournamentsRoute: TournamentsRoute,
   AdminTournamentsRoute: AdminTournamentsRoute,

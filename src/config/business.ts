@@ -32,14 +32,11 @@ export const businessConfig: BusinessConfig = {
   businessName: publicEnvOr("VITE_BUSINESS_NAME", "다올"),
   representativeName: publicEnvOr("VITE_BUSINESS_REPRESENTATIVE_NAME", "이채호"),
   businessRegistrationNumber: publicEnvOr("VITE_BUSINESS_REGISTRATION_NUMBER", "751-19-02471"),
-  businessAddress: publicEnvOr(
-    "VITE_BUSINESS_ADDRESS",
-    "서울 양천구 목동중앙서로6길 37 (402호)",
-  ),
+  businessAddress: publicEnvOr("VITE_BUSINESS_ADDRESS", "서울 양천구 목동중앙서로6길 37 (402호)"),
   customerServicePhone: publicEnvOr("VITE_CUSTOMER_SERVICE_PHONE", "010-5264-1860"),
   customerServiceEmail: publicEnvOr("VITE_CUSTOMER_SERVICE_EMAIL", "kev208dev@gmail.com"),
   ecommerceRegistrationNumber: publicEnv("VITE_ECOMMERCE_REGISTRATION_NUMBER"),
-  policyEffectiveDate: publicEnv("VITE_POLICY_EFFECTIVE_DATE"),
+  policyEffectiveDate: publicEnvOr("VITE_POLICY_EFFECTIVE_DATE", "2026년 8월 13일"),
 };
 
 export const UNSET_BUSINESS_VALUE = "운영자 입력 필요";

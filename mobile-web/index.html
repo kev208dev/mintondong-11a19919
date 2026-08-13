@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <title>민턴동</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        background: #fff;
+        color: #15251c;
+      }
+      main {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+        text-align: center;
+      }
+      img {
+        width: min(190px, 62vw);
+        height: auto;
+      }
+      .loader {
+        width: 28px;
+        height: 28px;
+        margin: 28px auto 0;
+        border: 3px solid #e5eee8;
+        border-top-color: #21814c;
+        border-radius: 999px;
+        animation: spin 0.8s linear infinite;
+      }
+      h1 {
+        margin: 22px 0 8px;
+        font-size: 20px;
+      }
+      p {
+        margin: 0;
+        color: #66756c;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      button {
+        display: none;
+        width: min(320px, 100%);
+        height: 48px;
+        margin: 22px auto 0;
+        border: 0;
+        border-radius: 16px;
+        background: #21814c;
+        color: #fff;
+        font: inherit;
+        font-weight: 800;
+      }
+      .offline .loader {
+        display: none;
+      }
+      .offline button {
+        display: block;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="screen" aria-live="polite">
+      <section>
+        <img src="mintondong-logo.png" alt="민턴동" />
+        <div class="loader" aria-hidden="true"></div>
+        <h1 id="title">민턴동을 여는 중이에요</h1>
+        <p id="message">잠시만 기다려 주세요.</p>
+        <button id="retry" type="button">다시 시도</button>
+      </section>
+    </main>
+    <script>
+      const PRODUCTION_URL = "https://mintondong-11a19919.kev208dev.workers.dev/";
+      const screen = document.getElementById("screen");
+      const title = document.getElementById("title");
+      const message = document.getElementById("message");
+      const retry = document.getElementById("retry");
+
+      function showOffline() {
+        screen.classList.add("offline");
+        title.textContent = "인터넷 연결을 확인해 주세요";
+        message.textContent = "연결이 복구되면 다시 시도할 수 있어요.";
+      }
+
+      async function openApp() {
+        screen.classList.remove("offline");
+        title.textContent = "민턴동을 여는 중이에요";
+        message.textContent = "잠시만 기다려 주세요.";
+        try {
+          await fetch(PRODUCTION_URL, { method: "HEAD", mode: "no-cors", cache: "no-store" });
+          window.location.replace(PRODUCTION_URL);
+        } catch {
+          showOffline();
+        }
+      }
+
+      retry.addEventListener("click", openApp);
+      window.addEventListener("online", openApp);
+      openApp();
+    </script>
+  </body>
+</html>

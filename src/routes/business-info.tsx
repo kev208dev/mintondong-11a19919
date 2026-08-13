@@ -51,11 +51,6 @@ function BusinessInfoPage() {
           </div>
         ))}
       </dl>
-      {!businessConfig.ecommerceRegistrationNumber ? (
-        <p className="border-t border-border px-5 py-4 text-[11px] leading-relaxed text-muted-foreground">
-          통신판매업 신고번호는 신고 완료 후 표시됩니다.
-        </p>
-      ) : null}
       {!isGeneralCustomerServicePhone(businessConfig.customerServicePhone) ? (
         <p className="border-t border-amber-300 bg-amber-50 px-5 py-4 text-[11px] leading-relaxed text-amber-900">
           PG·카드사 심사용 사이트에는 휴대전화가 아닌 전화번호를 표시해야 합니다. 심사 제출 전에

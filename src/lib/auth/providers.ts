@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { safeNextPath } from "./username";
+import { Capacitor } from "@capacitor/core";
 
 export type SocialProvider = "kakao" | "google" | "apple";
 
@@ -40,17 +41,23 @@ export const NEXT_STORAGE_KEY = "mintondong:next";
 
 /** 모든 소셜 로그인 공통 진입점. next 는 내부 경로만 저장한다. */
 export async function startSocialLogin(provider: SocialProvider, next?: string) {
+  const native = Capacitor.isNativePlatform();
   try {
     sessionStorage.setItem(NEXT_STORAGE_KEY, safeNextPath(next));
   } catch {
     // 저장 실패는 무시 (로그인 후 홈으로 이동)
   }
-  const { error } = await supabase.auth.signInWithOAuth({
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: window.location.origin,
+      redirectTo: native ? "mintondong://auth/callback" : window.location.origin,
+      skipBrowserRedirect: native,
       ...(provider === "apple" ? { scopes: "name email" } : {}),
     },
   });
   if (error) throw error;
+  if (native && data.url) {
+    const { Browser } = await import("@capacitor/browser");
+    await Browser.open({ url: data.url, presentationStyle: "popover" });
+  }
 }
