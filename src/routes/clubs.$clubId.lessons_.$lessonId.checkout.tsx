@@ -1,7 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertCircle, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  CreditCard,
+  Loader2,
+  ShieldCheck,
+  Smartphone,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +25,13 @@ import {
   getCheckoutLesson,
   preparePortOnePayment,
 } from "@/lib/portone/payments.functions";
-import { checkoutPaymentAccess, PAYMENT_REVIEW_MESSAGE } from "@/lib/portone/payment-core";
+import {
+  checkoutPaymentAccess,
+  paymentFailureMessage,
+  PAYMENT_REVIEW_MESSAGE,
+  toPortOnePayMethod,
+  type CheckoutPaymentMethod,
+} from "@/lib/portone/payment-core";
 
 export const Route = createFileRoute("/clubs/$clubId/lessons_/$lessonId/checkout")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -44,6 +58,7 @@ function PortOneCheckoutPage() {
   const complete = useServerFn(completePortOnePayment);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>("CARD");
   const [busy, setBusy] = useState(false);
   const [reviewRequired, setReviewRequired] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
@@ -80,7 +95,7 @@ function PortOneCheckoutPage() {
           setResult({ ok: false, message: PAYMENT_REVIEW_MESSAGE });
           return;
         }
-        setResult({ ok: false, message: "결제 결과를 확인하지 못했습니다." });
+        setResult({ ok: false, message: paymentFailureMessage("PAYMENT_FAILED") });
       })
       .finally(() => setBusy(false));
   }, [complete, redirectedPaymentId, user]);
@@ -138,12 +153,12 @@ function PortOneCheckoutPage() {
         orderName: order.orderName,
         totalAmount: order.amount,
         currency: "CURRENCY_KRW",
-        payMethod: "CARD",
+        payMethod: toPortOnePayMethod(paymentMethod),
         customer: order.customer,
         redirectUrl,
       });
       if (response?.code) {
-        setResult({ ok: false, message: response.message ?? "결제가 취소되었거나 실패했습니다." });
+        setResult({ ok: false, message: paymentFailureMessage(response.code, response.message) });
         return;
       }
       const verified = await complete({ data: { paymentId: order.paymentId } });
@@ -166,7 +181,7 @@ function PortOneCheckoutPage() {
             ? "결제 DB 준비가 필요합니다. 운영자에게 문의해 주세요."
             : code === "PORTONE_SERVER_NOT_CONFIGURED"
               ? "결제 서버 설정이 필요합니다. 운영자에게 문의해 주세요."
-              : "결제를 준비하거나 검증하지 못했습니다. 다시 시도해 주세요.",
+              : paymentFailureMessage(code),
       });
     } finally {
       setBusy(false);
@@ -176,13 +191,32 @@ function PortOneCheckoutPage() {
   return (
     <section className="min-w-0 overflow-hidden rounded-3xl border border-border bg-card">
       <header className="brand-header p-5">
-        <ShieldCheck className="size-6 text-primary" />
-        <h1 className="mt-2 text-xl font-extrabold">레슨 결제 확인</h1>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <Link
+          to="/clubs/$clubId/lessons"
+          params={{ clubId }}
+          aria-label="레슨으로 돌아가기"
+          className="mb-3 inline-flex size-9 items-center justify-center rounded-full text-muted-foreground active:bg-accent"
+        >
+          <ArrowLeft className="size-5" />
+        </Link>
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="size-6 text-primary" />
+          <h1 className="text-xl font-extrabold">결제하기</h1>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
           결제 전 상품과 환불 조건을 확인해 주세요.
         </p>
       </header>
-      <div className="space-y-5 p-5">
+      <div className="space-y-5 p-5 pb-36">
+        <div>
+          <p className="text-xs font-bold text-muted-foreground">배드민턴 레슨</p>
+          <h2 className="mt-1 text-lg font-extrabold text-foreground">
+            {lesson.coachName} 코치 레슨
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {lesson.clubName} · {lesson.durationMin}분
+          </p>
+        </div>
         <dl className="space-y-2 rounded-2xl bg-secondary/60 p-4 text-xs">
           <Row label="클럽" value={lesson.clubName} />
           <Row label="코치" value={`${lesson.coachName} 코치`} />
@@ -235,6 +269,24 @@ function PortOneCheckoutPage() {
                 maxLength={13}
               />
             </div>
+
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-extrabold text-foreground">결제 수단</legend>
+              <PaymentMethodOption
+                checked={paymentMethod === "CARD"}
+                icon={<CreditCard className="size-5" />}
+                label="카드"
+                description="신용/체크카드"
+                onClick={() => setPaymentMethod("CARD")}
+              />
+              <PaymentMethodOption
+                checked={paymentMethod === "EASY_PAY"}
+                icon={<Smartphone className="size-5" />}
+                label="간편결제"
+                description="지원되는 간편결제"
+                onClick={() => setPaymentMethod("EASY_PAY")}
+              />
+            </fieldset>
           </div>
         ) : null}
 
@@ -246,40 +298,127 @@ function PortOneCheckoutPage() {
         ) : null}
         {result ? (
           <div
-            className={`rounded-xl p-3 text-xs font-bold ${result.ok ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}
+            role="status"
+            aria-live="polite"
+            className={`rounded-2xl p-5 text-center ${result.ok ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"}`}
           >
-            {result.ok ? <CheckCircle2 className="mr-1 inline size-4" /> : null}
-            {result.message}
+            {result.ok ? <CheckCircle2 className="mx-auto size-10" /> : null}
+            <p className="mt-2 text-base font-extrabold">
+              {result.ok ? "결제가 완료됐어요" : "결제를 완료하지 못했어요"}
+            </p>
+            <p className="mt-1 text-xs font-bold">{result.message}</p>
+            {result.ok ? (
+              <Button asChild variant="outline" className="mt-4 w-full rounded-xl">
+                <Link to="/clubs/$clubId/lessons" params={{ clubId }}>
+                  레슨으로 돌아가기
+                </Link>
+              </Button>
+            ) : null}
           </div>
         ) : null}
-        {loading ? (
-          <Button className="h-12 w-full rounded-2xl font-extrabold" disabled>
-            <Loader2 className="mr-2 size-4 animate-spin" /> 로그인 상태 확인 중
-          </Button>
-        ) : !user ? (
-          <Button asChild className="h-12 w-full rounded-2xl font-extrabold">
-            <Link to="/auth" search={{ next: checkoutPath }}>
-              로그인 후 결제하기
+        {user ? (
+          <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+            결제 진행 시{" "}
+            <Link to="/terms" className="font-bold text-primary underline">
+              이용약관
+            </Link>{" "}
+            및{" "}
+            <Link to="/refund-policy" className="font-bold text-primary underline">
+              환불정책
             </Link>
-          </Button>
-        ) : (
-          <Button
-            className="h-12 w-full rounded-2xl font-extrabold"
-            disabled={
-              access !== "READY" ||
-              reviewRequired ||
-              busy ||
-              !name.trim() ||
-              !isValidKoreanMobilePhone(phone)
-            }
-            onClick={() => void pay()}
-          >
-            {busy ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-            {reviewRequired ? "결제 확인 필요" : `${won(lesson.priceWon)} 결제하기`}
-          </Button>
-        )}
+            에 동의한 것으로 간주합니다.
+          </p>
+        ) : null}
       </div>
+      {!result?.ok ? (
+        <div className="fixed inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom))] z-20 mx-auto w-full max-w-md border-t border-border bg-card/95 p-3 shadow-[0_-4px_16px_rgba(15,23,42,0.08)] backdrop-blur">
+          <div className="mb-2 flex items-center justify-between px-1 text-sm">
+            <span className="font-bold text-muted-foreground">총 결제 금액</span>
+            <strong className="text-base font-extrabold text-primary">
+              {won(lesson.priceWon)}
+            </strong>
+          </div>
+          {loading ? (
+            <Button className="h-12 w-full rounded-2xl font-extrabold" disabled>
+              <Loader2 className="mr-2 size-4 animate-spin" /> 로그인 상태 확인 중
+            </Button>
+          ) : !user ? (
+            <Button asChild className="h-12 w-full rounded-2xl font-extrabold">
+              <Link to="/auth" search={{ next: checkoutPath }}>
+                로그인 후 결제하기
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              className="h-12 w-full rounded-2xl font-extrabold"
+              disabled={
+                access !== "READY" ||
+                reviewRequired ||
+                busy ||
+                !name.trim() ||
+                !isValidKoreanMobilePhone(phone)
+              }
+              onClick={() => void pay()}
+            >
+              {busy ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+              {busy
+                ? "결제 진행 중..."
+                : reviewRequired
+                  ? "결제 확인 필요"
+                  : result
+                    ? "다시 결제하기"
+                    : `${won(lesson.priceWon)} 결제하기`}
+            </Button>
+          )}
+          {busy ? (
+            <p
+              className="mt-2 text-center text-[11px] font-bold text-muted-foreground"
+              role="status"
+            >
+              결제창으로 이동 중… 안전한 결제를 위해 결제 화면으로 이동합니다.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+function PaymentMethodOption({
+  checked,
+  icon,
+  label,
+  description,
+  onClick,
+}: {
+  checked: boolean;
+  icon: React.ReactNode;
+  label: string;
+  description: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={checked}
+      onClick={onClick}
+      className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+        checked ? "border-primary bg-primary/5" : "border-border bg-card active:bg-accent"
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`grid size-5 place-items-center rounded-full border ${checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50"}`}
+      >
+        {checked ? <span className="size-2 rounded-full bg-current" /> : null}
+      </span>
+      <span className="text-primary">{icon}</span>
+      <span className="min-w-0">
+        <span className="block text-sm font-extrabold text-foreground">{label}</span>
+        <span className="block text-xs text-muted-foreground">{description}</span>
+      </span>
+    </button>
   );
 }
 

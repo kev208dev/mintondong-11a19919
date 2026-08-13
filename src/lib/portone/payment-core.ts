@@ -8,6 +8,25 @@ export function createPortOnePaymentId(uuid: string): string {
   return `md_${uuid.replaceAll("-", "").slice(0, 32)}`;
 }
 
+export type CheckoutPaymentMethod = "CARD" | "EASY_PAY";
+
+export function toPortOnePayMethod(method: CheckoutPaymentMethod): CheckoutPaymentMethod {
+  return method;
+}
+
+export function paymentFailureMessage(code?: string, detail?: string): string {
+  const normalized = code?.toUpperCase();
+  if (normalized === "USER_CANCEL" || normalized === "PAYMENT_CANCELLED") {
+    return "결제를 취소했습니다.";
+  }
+  if (normalized === "NETWORK_ERROR" || normalized === "TIMEOUT") {
+    return "네트워크 상태를 확인한 뒤 다시 시도해 주세요.";
+  }
+  // PG 원문은 사용자 화면에 노출하지 않는다. detail은 서버 로그/디버깅용으로만 받는다.
+  void detail;
+  return "결제를 완료하지 못했습니다. 다시 시도해 주세요.";
+}
+
 export type InternalPaymentStatus = "PENDING" | "PAID" | "CANCELLED" | "REFUNDED" | "FAILED";
 
 export const PAYMENT_REVIEW_MESSAGE =

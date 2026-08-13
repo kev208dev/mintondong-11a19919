@@ -8,7 +8,9 @@ import {
 import {
   cancellationDecision,
   createPortOnePaymentId,
+  paymentFailureMessage,
   PORTONE_PAYMENT_ID,
+  toPortOnePayMethod,
   checkoutPaymentAccess,
   executeCancellationDecision,
   PAYMENT_REVIEW_MESSAGE,
@@ -26,6 +28,26 @@ test("신규 PortOne paymentId는 KG이니시스 oid 제한을 만족한다", ()
   assert.match(first, PORTONE_PAYMENT_ID);
   assert.notEqual(first, second);
   assert.equal(createPortOnePaymentId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa").length, 35);
+});
+
+test("결제수단은 PortOne CARD/EASY_PAY로 매핑되고 실패 원문은 숨긴다", () => {
+  assert.equal(toPortOnePayMethod("CARD"), "CARD");
+  assert.equal(toPortOnePayMethod("EASY_PAY"), "EASY_PAY");
+  assert.equal(paymentFailureMessage("USER_CANCEL", "PG 내부 원문"), "결제를 취소했습니다.");
+  assert.equal(
+    paymentFailureMessage("PAYMENT_FAILED", "PG 내부 원문"),
+    "결제를 완료하지 못했습니다. 다시 시도해 주세요.",
+  );
+});
+
+test("모바일 checkout은 결제수단·중복 탭·sticky CTA를 사용한다", () => {
+  const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
+  assert.match(checkout, /useState<CheckoutPaymentMethod>\("CARD"\)/);
+  assert.match(checkout, /toPortOnePayMethod\(paymentMethod\)/);
+  assert.match(checkout, /busy \|\|/);
+  assert.match(checkout, /bottom-\[calc\(56px\+env\(safe-area-inset-bottom\)\)\]/);
+  assert.match(checkout, /결제창으로 이동 중/);
+  assert.match(checkout, /다시 결제하기/);
 });
 
 const verifiedPayment = {
