@@ -53,7 +53,7 @@ export const Route = createFileRoute("/clubs/$clubId/lessons_/$lessonId/checkout
 function PortOneCheckoutPage() {
   const { clubId, lessonId } = Route.useParams();
   const { paymentId: redirectedPaymentId } = Route.useSearch();
-  const { user, profile, loading } = useAuth();
+  const { user, loading } = useAuth();
   const prepare = useServerFn(preparePortOnePayment);
   const complete = useServerFn(completePortOnePayment);
   const [name, setName] = useState("");
@@ -62,18 +62,11 @@ function PortOneCheckoutPage() {
   const [busy, setBusy] = useState(false);
   const [reviewRequired, setReviewRequired] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
-  const buyerNameInitialized = useRef(false);
   const completedRedirect = useRef(false);
   const product = useQuery({
     queryKey: ["portone-checkout", clubId, lessonId],
     queryFn: () => getCheckoutLesson({ data: { clubId, lessonId } }),
   });
-
-  useEffect(() => {
-    if (buyerNameInitialized.current || !profile?.display_name) return;
-    buyerNameInitialized.current = true;
-    setName(profile.display_name);
-  }, [profile?.display_name]);
 
   useEffect(() => {
     if (!redirectedPaymentId || !user || completedRedirect.current) return;
@@ -248,12 +241,10 @@ function PortOneCheckoutPage() {
                 id="buyer-name"
                 className="mt-1"
                 value={name}
-                onChange={(e) => {
-                  buyerNameInitialized.current = true;
-                  setName(e.target.value);
-                }}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="실명을 입력해 주세요"
                 maxLength={50}
-                autoComplete="name"
+                autoComplete="off"
               />
             </div>
             <div>
