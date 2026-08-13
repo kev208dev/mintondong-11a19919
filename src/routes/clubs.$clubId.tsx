@@ -3,7 +3,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Lock, MapPin, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { clubKeys, getClub, getMyMembership, joinClub } from "@/lib/clubs/api";
+import {
+  clubKeys,
+  clubMutationErrorMessage,
+  getClub,
+  getMyMembership,
+  joinClub,
+} from "@/lib/clubs/api";
 import { ClubAvatar } from "./clubs.find";
 
 export const Route = createFileRoute("/clubs/$clubId")({
@@ -20,7 +26,7 @@ const TABS = [
 function ClubDetailLayout() {
   const { clubId } = Route.useParams();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const queryClient = useQueryClient();
 
   const clubQuery = useQuery({ queryKey: clubKeys.detail(clubId), queryFn: () => getClub(clubId) });
@@ -33,20 +39,44 @@ function ClubDetailLayout() {
   const join = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("unauthenticated");
-      await joinClub(clubId);
+      return joinClub(clubId);
     },
 
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["clubs"] });
+    onSuccess: async (nextMembership) => {
+      queryClient.setQueryData(clubKeys.membership(clubId, user?.id ?? null), nextMembership);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: clubKeys.mine(user?.id ?? null) }),
+        queryClient.invalidateQueries({ queryKey: clubKeys.detail(clubId) }),
+        queryClient.invalidateQueries({ queryKey: clubKeys.members(clubId, user?.id ?? null) }),
+      ]);
       toast.success(
-        clubQuery.data?.is_public ? "가입 완료!" : "가입 신청을 보냈어요. 승인을 기다려주세요.",
+        nextMembership.status === "active"
+          ? "가입 완료!"
+          : "가입 신청을 보냈어요. 승인을 기다려주세요.",
       );
     },
-    onError: () => toast.error("가입에 실패했어요."),
+    onError: (error) => {
+      console.error("[clubs] join failed", error);
+      toast.error(clubMutationErrorMessage("join", error));
+    },
   });
 
   if (clubQuery.isLoading) {
     return <div className="h-48 animate-pulse rounded-2xl bg-secondary" />;
+  }
+  if (clubQuery.isError) {
+    return (
+      <div className="py-12 text-center">
+        <p className="text-sm font-bold text-foreground">동호회 정보를 불러오지 못했어요.</p>
+        <button
+          type="button"
+          onClick={() => void clubQuery.refetch()}
+          className="mt-3 h-10 rounded-xl bg-secondary px-4 text-xs font-bold text-secondary-foreground"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
   }
   const club = clubQuery.data;
   if (!club) {
@@ -111,7 +141,25 @@ function ClubDetailLayout() {
         </p>
       ) : null}
 
-      {membership ? (
+      {user && membershipQuery.isLoading ? (
+        <div
+          className="flex h-11 items-center justify-center rounded-2xl bg-secondary text-xs font-bold text-muted-foreground"
+          aria-label="가입 상태 확인 중"
+        >
+          <Loader2 className="mr-1.5 size-4 animate-spin" /> 가입 상태 확인 중
+        </div>
+      ) : user && membershipQuery.isError ? (
+        <div className="rounded-2xl bg-secondary p-3 text-center">
+          <p className="text-xs font-bold text-muted-foreground">가입 상태를 확인하지 못했어요.</p>
+          <button
+            type="button"
+            onClick={() => void membershipQuery.refetch()}
+            className="mt-2 h-9 rounded-xl bg-card px-3 text-xs font-bold text-foreground"
+          >
+            다시 시도
+          </button>
+        </div>
+      ) : membership ? (
         <div className="grid gap-2">
           <div className="flex h-11 items-center justify-center rounded-2xl bg-secondary text-xs font-bold text-secondary-foreground">
             {membership.status === "pending"
@@ -133,15 +181,25 @@ function ClubDetailLayout() {
             </Link>
           ) : null}
         </div>
-      ) : (
+      ) : loading ? (
+        <div className="h-11 animate-pulse rounded-2xl bg-secondary" />
+      ) : user ? (
         <button
           type="button"
           disabled={join.isPending}
-          onClick={() => (user ? join.mutate() : toast.error("로그인이 필요해요."))}
+          onClick={() => join.mutate()}
           className="flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-extrabold text-primary-foreground disabled:opacity-60"
         >
           {join.isPending ? <Loader2 className="size-4 animate-spin" /> : "가입하기"}
         </button>
+      ) : (
+        <Link
+          to="/auth"
+          search={{ next: `/clubs/${clubId}` }}
+          className="flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-extrabold text-primary-foreground"
+        >
+          로그인 후 가입하기
+        </Link>
       )}
 
       <nav className="-mx-4 border-b border-border px-4">

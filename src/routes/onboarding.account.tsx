@@ -28,7 +28,7 @@ export const Route = createFileRoute("/onboarding/account")({
 
 function OnboardingAccountPage() {
   const navigate = useNavigate();
-  const { user, profile, loading, profileLoading, refreshProfile } = useAuth();
+  const { user, profile, loading, profileLoading, profileStatus, refreshProfile } = useAuth();
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -40,10 +40,10 @@ function OnboardingAccountPage() {
       void navigate({ to: "/auth", search: { next: "/" }, replace: true });
       return;
     }
-    if (!profileLoading && profile?.username) {
+    if (!profileLoading && profileStatus === "ready" && profile?.username) {
       void navigate({ to: "/onboarding", replace: true });
     }
-  }, [loading, profileLoading, user, profile, navigate]);
+  }, [loading, profileLoading, profileStatus, user, profile, navigate]);
 
   useEffect(() => {
     if (!displayName && profile?.display_name) setDisplayName(profile.display_name);
@@ -80,6 +80,27 @@ function OnboardingAccountPage() {
       setBusy(false);
     }
   };
+
+  if (loading || profileLoading || profileStatus === "loading") {
+    return (
+      <div className="h-44 animate-pulse rounded-3xl bg-secondary" aria-label="계정 확인 중" />
+    );
+  }
+
+  if (profileStatus === "error") {
+    return (
+      <section className="rounded-3xl border border-border bg-card p-5 text-center">
+        <p className="text-sm font-extrabold text-foreground">계정 정보를 불러오지 못했어요.</p>
+        <Button
+          className="mt-4 h-11 rounded-xl"
+          variant="secondary"
+          onClick={() => void refreshProfile()}
+        >
+          다시 시도
+        </Button>
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-3xl border border-border bg-card p-5">

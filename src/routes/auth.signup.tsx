@@ -3,7 +3,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { checkUsernameAvailable, signUpWithUsername } from "@/lib/auth/account.functions";
 import { NEXT_STORAGE_KEY } from "@/lib/auth/providers";
@@ -35,7 +34,7 @@ export const Route = createFileRoute("/auth/signup")({
 function SignUpPage() {
   const { next } = useSearch({ from: "/auth" });
   const navigate = useNavigate();
-  const { refreshProfile } = useAuth();
+  const { establishSession } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
@@ -77,9 +76,7 @@ function SignUpPage() {
       const tokens = await signUpWithUsername({
         data: { username, password, displayName, email },
       });
-      const { error } = await supabase.auth.setSession(tokens);
-      if (error) throw error;
-      await refreshProfile();
+      await establishSession(tokens);
 
       const intended = safeNextPath(next);
       if (intended !== "/") sessionStorage.setItem(NEXT_STORAGE_KEY, intended);
@@ -163,11 +160,7 @@ function SignUpPage() {
         {emailNote ? (
           <p className="px-1 text-[11px] font-semibold text-destructive">{emailNote}</p>
         ) : null}
-        <Button
-          className="h-12 w-full rounded-2xl font-bold"
-          disabled={busy}
-          onClick={submit}
-        >
+        <Button className="h-12 w-full rounded-2xl font-bold" disabled={busy} onClick={submit}>
           {busy ? "가입 중..." : "가입하기"}
         </Button>
       </div>

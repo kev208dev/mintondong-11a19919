@@ -16,6 +16,7 @@
     "test:tournaments": "node --test --experimental-strip-types tests/tournament-domain.test.ts",
     "test:tournament-admin": "node --test --experimental-strip-types tests/tournament-admin.test.ts",
     "test:account-deletion": "node --test --experimental-strip-types tests/account-deletion.test.ts",
+    "test:onboarding": "node --test --experimental-strip-types tests/onboarding-clubs.test.ts",
     "mobile:sync": "cap sync",
     "mobile:ios": "cap sync ios",
     "mobile:android": "cap sync android",

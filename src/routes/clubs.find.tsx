@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { GraduationCap, MapPin, Search, Users } from "lucide-react";
+import { GraduationCap, MapPin, RotateCw, Search, Users } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { clubKeys, searchPublicClubs, type ClubRow } from "@/lib/clubs/api";
@@ -40,7 +40,7 @@ export function ClubAvatar({ club, size = 44 }: { club: ClubRow; size?: number }
 
 function FindClubPage() {
   const [q, setQ] = useState("");
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: clubKeys.search(q.trim()),
     queryFn: () => searchPublicClubs(q),
   });
@@ -71,9 +71,17 @@ function FindClubPage() {
           ))}
         </ul>
       ) : error ? (
-        <p className="px-1 py-6 text-center text-xs text-muted-foreground">
-          동호회 목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.
-        </p>
+        <div className="px-1 py-6 text-center">
+          <p className="text-xs text-muted-foreground">동호회 목록을 불러오지 못했어요.</p>
+          <button
+            type="button"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+            className="mt-3 inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-secondary px-4 text-xs font-bold text-secondary-foreground disabled:opacity-60"
+          >
+            <RotateCw className={`size-3.5 ${isFetching ? "animate-spin" : ""}`} /> 다시 시도
+          </button>
+        </div>
       ) : (data?.length ?? 0) === 0 ? (
         <p className="px-1 py-8 text-center text-xs text-muted-foreground">
           {q.trim() ? "검색 결과가 없어요." : "아직 공개된 동호회가 없어요."}

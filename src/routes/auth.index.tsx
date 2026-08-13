@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { signInWithUsername } from "@/lib/auth/account.functions";
 import { SOCIAL_PROVIDERS, isProviderEnabled, startSocialLogin } from "@/lib/auth/providers";
@@ -29,7 +28,7 @@ export const Route = createFileRoute("/auth/")({
 function LoginPage() {
   const { next } = useSearch({ from: "/auth" });
   const navigate = useNavigate();
-  const { user, loading, refreshProfile } = useAuth();
+  const { user, loading, establishSession } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState<"password" | "kakao" | "google" | "apple" | null>(null);
@@ -43,9 +42,7 @@ function LoginPage() {
     setBusy("password");
     try {
       const tokens = await signInWithUsername({ data: { username, password } });
-      const { error } = await supabase.auth.setSession(tokens);
-      if (error) throw error;
-      await refreshProfile();
+      await establishSession(tokens);
       toast.success("로그인했어요.");
       void navigate({ to: safeNextPath(next), replace: true });
     } catch (error) {
@@ -85,7 +82,10 @@ function LoginPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <label className="block pt-1 text-[11px] font-bold text-muted-foreground" htmlFor="login-pw">
+        <label
+          className="block pt-1 text-[11px] font-bold text-muted-foreground"
+          htmlFor="login-pw"
+        >
           비밀번호
         </label>
         <Input

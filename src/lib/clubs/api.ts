@@ -1,5 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { validateCreateClubInput } from "./club-core";
+
+export { clubMutationErrorMessage, validateCreateClubInput } from "./club-core";
 
 /**
  * 외부 Supabase(mintondong) 의 clubs / club_members 를 직접 사용한다.
@@ -228,9 +231,11 @@ export type CreateClubInput = {
  * 이미지 업로드는 club_id 기반 경로가 필요하므로 생성 후 수행하고 실패해도 생성은 유지한다.
  */
 export async function createClub(input: CreateClubInput): Promise<ClubRow> {
+  const problem = validateCreateClubInput(input);
+  if (problem) throw new Error(problem);
   const { data, error } = await db.rpc("create_club_with_owner", {
     p_name: input.name.trim(),
-    p_location: input.region.trim() || null,
+    p_location: input.region.trim(),
     p_description: input.description.trim() || null,
     p_is_public: input.isPublic,
     p_profile_image_url: null,
@@ -267,7 +272,18 @@ export async function joinClub(clubId: string): Promise<ClubMemberRow> {
   const { data, error } = await db.rpc("request_club_join", { p_club_id: clubId });
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
-  return row as unknown as ClubMemberRow;
+  if (!row) throw new Error("club join returned no membership");
+  const record = row as Record<string, unknown>;
+  return {
+    id: String(record["id"]),
+    club_id: String(record["club_id"]),
+    user_id: (record["user_id"] as string | null) ?? null,
+    name: String(record["name"] ?? ""),
+    role: record["role"] === "owner" || record["role"] === "admin" ? record["role"] : "member",
+    status: record["status"] === "pending" ? "pending" : "active",
+    joined_at: String(record["joined_at"] ?? record["created_at"] ?? ""),
+    level: Number(record["level"] ?? 0),
+  };
 }
 
 /** 동호회 소유자용 멤버 관리 (승인 / 역할 변경) */

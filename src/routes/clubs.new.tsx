@@ -1,12 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ImagePlus, Loader2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { createClub } from "@/lib/clubs/api";
+import {
+  clubKeys,
+  clubMutationErrorMessage,
+  createClub,
+  validateCreateClubInput,
+} from "@/lib/clubs/api";
 
 export const Route = createFileRoute("/clubs/new")({
   head: () => ({
@@ -23,7 +28,7 @@ export const Route = createFileRoute("/clubs/new")({
 function NewClubPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, loading, profileLoading, profileStatus, refreshProfile } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
@@ -34,30 +39,63 @@ function NewClubPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    if (!loading && !user) {
+      void navigate({ to: "/auth", search: { next: "/clubs/new" }, replace: true });
+    }
+  }, [loading, user, navigate]);
+
   const submit = async () => {
+    if (loading || profileLoading) return;
     if (!user) {
       toast.error("로그인이 필요해요.");
       void navigate({ to: "/auth", search: { next: "/clubs/new" } });
       return;
     }
-    if (!name.trim()) {
-      toast.error("동호회 이름을 입력해 주세요.");
+    const problem = validateCreateClubInput({ name, region });
+    if (problem) {
+      toast.error(problem);
       return;
     }
     setSaving(true);
     try {
       const club = await createClub({ name, region, description, isPublic, imageFile: file });
-      await queryClient.invalidateQueries({ queryKey: ["clubs"] });
+      queryClient.setQueryData(clubKeys.detail(club.id), club);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: clubKeys.mine(user.id) }),
+        queryClient.invalidateQueries({ queryKey: clubKeys.membership(club.id, user.id) }),
+        queryClient.invalidateQueries({ queryKey: clubKeys.members(club.id, user.id) }),
+      ]);
       toast.success("동호회를 만들었어요.");
-      void navigate({ to: "/clubs/$clubId", params: { clubId: club.id } });
+      void navigate({ to: "/clubs/$clubId", params: { clubId: club.id }, replace: true });
     } catch (error) {
       console.error("[clubs] create failed", error);
-      toast.error("동호회 생성에 실패했어요. 잠시 후 다시 시도해 주세요.");
+      toast.error(clubMutationErrorMessage("create", error));
     } finally {
       setSaving(false);
     }
   };
 
+  if (profileStatus === "error") {
+    return (
+      <section className="rounded-3xl border border-border bg-card p-5 text-center">
+        <p className="text-sm font-extrabold text-foreground">계정 정보를 확인하지 못했어요.</p>
+        <button
+          type="button"
+          onClick={() => void refreshProfile()}
+          className="mt-4 h-11 rounded-xl bg-secondary px-4 text-xs font-bold text-secondary-foreground"
+        >
+          다시 시도
+        </button>
+      </section>
+    );
+  }
+
+  if (loading || profileLoading || profileStatus !== "ready" || !user) {
+    return (
+      <div className="h-52 animate-pulse rounded-3xl bg-secondary" aria-label="계정 확인 중" />
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -93,7 +131,7 @@ function NewClubPage() {
 
       <div className="space-y-1.5">
         <label htmlFor="club-name" className="text-xs font-bold text-foreground">
-          동호회 이름
+          동호회 이름 <span className="text-destructive">*</span>
         </label>
         <Input
           id="club-name"
@@ -106,7 +144,7 @@ function NewClubPage() {
 
       <div className="space-y-1.5">
         <label htmlFor="club-region" className="text-xs font-bold text-foreground">
-          지역
+          지역 <span className="text-destructive">*</span>
         </label>
         <Input
           id="club-region"
@@ -157,7 +195,7 @@ function NewClubPage() {
 
       <button
         type="button"
-        disabled={saving}
+        disabled={saving || !name.trim() || !region.trim()}
         onClick={() => void submit()}
         className="flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-extrabold text-primary-foreground disabled:opacity-60"
       >
