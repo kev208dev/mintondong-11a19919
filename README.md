@@ -40,3 +40,32 @@ Cloudflare Worker runtime을 포함한 production build와 preview는 다음과 
 - 공개 레슨은 공개 클럽의 판매중인 실제 coaches 행만 사용합니다.
 - 정산계좌, 멤버 명단, 예약자, 결제 원장은 공개 상품 응답에 포함하지 않습니다.
 - PortOne 및 Supabase secret은 Workers server bundle에서만 읽습니다.
+
+## Tournament Data Sources
+
+대회 화면은 `tournaments`의 canonical 데이터와 `tournament_sources`의 출처를 서버 read
+model로 읽습니다. 브라우저가 Facecock/CourtX를 직접 호출하거나 source DOM을 해석하지
+않습니다. 목록 parser, normalizer, 고신뢰 deduplicator와 source adapter는
+`src/lib/tournaments`에 분리되어 있습니다. 대회 상태는 한국 날짜 기준으로 대회/접수
+날짜에서 계산하며 DB에 오래된 상태값을 저장하지 않습니다.
+
+Facecock과 CourtX의 공개 페이지는 기술적으로 HTML 응답을 제공하지만, 확인한 이용약관에는
+정보의 복제·제3자 제공 또는 사전 동의 없는 복제·배포 제한이 있습니다. 그래서 collector는
+기본 비활성입니다. 운영자가 수집·표시에 필요한 허가와 최신 robots/약관을 확인한 source만
+Worker runtime variable `TOURNAMENT_FACECOCK_ENABLED=true` 또는
+`TOURNAMENT_COURTX_ENABLED=true`로 활성화해야 합니다. CAPTCHA, 로그인, rate limit은
+우회하지 않습니다.
+
+## Tournament Sync
+
+먼저 `supabase/migrations/20260812235109_tournament_directory.sql`을 검토·적용하고 Worker
+Secret `TOURNAMENT_SYNC_SECRET`을 등록합니다. 활성화된 source는 다음 서버 전용 endpoint로
+동기화합니다.
+
+    curl -X POST https://<production-domain>/api/tournaments/sync \
+      -H "Authorization: Bearer <TOURNAMENT_SYNC_SECRET>"
+
+동기화는 source별 목록을 한 번만 요청하고 timeout과 응답 크기를 제한합니다. 한 source의
+실패는 다른 source를 중단시키지 않으며 결과와 건수만 `tournament_sync_runs`에 기록합니다.
+secret과 외부 HTML 본문은 로그에 남기지 않습니다. Cloudflare Cron을 연결할 때도 같은
+보호 endpoint 또는 server-only 호출 구조를 사용해야 합니다.

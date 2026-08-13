@@ -16,6 +16,7 @@ import { Route as ClubRouteImport } from './routes/club'
 import { Route as GamesRouteImport } from './routes/games'
 import { Route as LessonsRouteImport } from './routes/lessons'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RecordsRouteImport } from './routes/records'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
@@ -38,7 +39,9 @@ import { Route as ClubsClubIdRouteImport } from './routes/clubs.$clubId'
 import { Route as ClubsFindRouteImport } from './routes/clubs.find'
 import { Route as ClubsNewRouteImport } from './routes/clubs.new'
 import { Route as OnboardingAccountRouteImport } from './routes/onboarding.account'
+import { Route as TournamentsTournamentIdRouteImport } from './routes/tournaments_.$tournamentId'
 import { Route as ApiPortoneWebhookRouteImport } from './routes/api.portone.webhook'
+import { Route as ApiTournamentsSyncRouteImport } from './routes/api.tournaments.sync'
 import { Route as ClubManageLessonsRouteImport } from './routes/club.manage_.lessons'
 import { Route as ClubsClubIdIndexRouteImport } from './routes/clubs.$clubId.index'
 import { Route as ClubsClubIdLessonsRouteImport } from './routes/clubs.$clubId.lessons'
@@ -81,6 +84,11 @@ const LessonsRoute = LessonsRouteImport.update({
 const MeRoute = MeRouteImport.update({
   id: '/me',
   path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -189,13 +197,23 @@ const ClubsNewRoute = ClubsNewRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingAccountRoute = OnboardingAccountRouteImport.update({
-  id: '/onboarding/account',
-  path: '/onboarding/account',
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const TournamentsTournamentIdRoute = TournamentsTournamentIdRouteImport.update({
+  id: '/tournaments_/$tournamentId',
+  path: '/tournaments/$tournamentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPortoneWebhookRoute = ApiPortoneWebhookRouteImport.update({
   id: '/api/portone/webhook',
   path: '/api/portone/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTournamentsSyncRoute = ApiTournamentsSyncRouteImport.update({
+  id: '/api/tournaments/sync',
+  path: '/api/tournaments/sync',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClubManageLessonsRoute = ClubManageLessonsRouteImport.update({
@@ -248,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/refund-policy': typeof RefundPolicyRoute
@@ -268,9 +287,11 @@ export interface FileRoutesByFullPath {
   '/clubs/find': typeof ClubsFindRoute
   '/clubs/new': typeof ClubsNewRoute
   '/onboarding/account': typeof OnboardingAccountRoute
+  '/tournaments/$tournamentId': typeof TournamentsTournamentIdRoute
   '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
+  '/api/tournaments/sync': typeof ApiTournamentsSyncRoute
   '/club/manage/lessons': typeof ClubManageLessonsRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
@@ -286,6 +307,7 @@ export interface FileRoutesByTo {
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/refund-policy': typeof RefundPolicyRoute
@@ -305,9 +327,11 @@ export interface FileRoutesByTo {
   '/clubs/find': typeof ClubsFindRoute
   '/clubs/new': typeof ClubsNewRoute
   '/onboarding/account': typeof OnboardingAccountRoute
+  '/tournaments/$tournamentId': typeof TournamentsTournamentIdRoute
   '/auth': typeof AuthIndexRoute
   '/club': typeof ClubIndexRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
+  '/api/tournaments/sync': typeof ApiTournamentsSyncRoute
   '/club/manage/lessons': typeof ClubManageLessonsRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
@@ -326,6 +350,7 @@ export interface FileRoutesById {
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/refund-policy': typeof RefundPolicyRoute
@@ -346,9 +371,11 @@ export interface FileRoutesById {
   '/clubs/find': typeof ClubsFindRoute
   '/clubs/new': typeof ClubsNewRoute
   '/onboarding/account': typeof OnboardingAccountRoute
+  '/tournaments_/$tournamentId': typeof TournamentsTournamentIdRoute
   '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
+  '/api/tournaments/sync': typeof ApiTournamentsSyncRoute
   '/club/manage_/lessons': typeof ClubManageLessonsRoute
   '/clubs/$clubId/lessons': typeof ClubsClubIdLessonsRoute
   '/clubs/$clubId/members': typeof ClubsClubIdMembersRoute
@@ -368,6 +395,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/lessons'
     | '/me'
+    | '/onboarding'
     | '/privacy'
     | '/records'
     | '/refund-policy'
@@ -388,9 +416,11 @@ export interface FileRouteTypes {
     | '/clubs/find'
     | '/clubs/new'
     | '/onboarding/account'
+    | '/tournaments/$tournamentId'
     | '/auth/'
     | '/club/'
     | '/api/portone/webhook'
+    | '/api/tournaments/sync'
     | '/club/manage/lessons'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
@@ -406,6 +436,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/lessons'
     | '/me'
+    | '/onboarding'
     | '/privacy'
     | '/records'
     | '/refund-policy'
@@ -425,9 +456,11 @@ export interface FileRouteTypes {
     | '/clubs/find'
     | '/clubs/new'
     | '/onboarding/account'
+    | '/tournaments/$tournamentId'
     | '/auth'
     | '/club'
     | '/api/portone/webhook'
+    | '/api/tournaments/sync'
     | '/club/manage/lessons'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
@@ -445,6 +478,7 @@ export interface FileRouteTypes {
     | '/games'
     | '/lessons'
     | '/me'
+    | '/onboarding'
     | '/privacy'
     | '/records'
     | '/refund-policy'
@@ -465,9 +499,11 @@ export interface FileRouteTypes {
     | '/clubs/find'
     | '/clubs/new'
     | '/onboarding/account'
+    | '/tournaments_/$tournamentId'
     | '/auth/'
     | '/club/'
     | '/api/portone/webhook'
+    | '/api/tournaments/sync'
     | '/club/manage_/lessons'
     | '/clubs/$clubId/lessons'
     | '/clubs/$clubId/members'
@@ -486,6 +522,7 @@ export interface RootRouteChildren {
   GamesRoute: typeof GamesRoute
   LessonsRoute: typeof LessonsRoute
   MeRoute: typeof MeRoute
+  OnboardingRoute: typeof OnboardingRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
   RecordsRoute: typeof RecordsRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
@@ -494,8 +531,9 @@ export interface RootRouteChildren {
   ClubsClubIdRoute: typeof ClubsClubIdRouteWithChildren
   ClubsFindRoute: typeof ClubsFindRoute
   ClubsNewRoute: typeof ClubsNewRoute
-  OnboardingAccountRoute: typeof OnboardingAccountRoute
+  TournamentsTournamentIdRoute: typeof TournamentsTournamentIdRoute
   ApiPortoneWebhookRoute: typeof ApiPortoneWebhookRoute
+  ApiTournamentsSyncRoute: typeof ApiTournamentsSyncRoute
   PaymentsTossFailRoute: typeof PaymentsTossFailRoute
   PaymentsTossSuccessRoute: typeof PaymentsTossSuccessRoute
 }
@@ -549,6 +587,13 @@ declare module '@tanstack/react-router' {
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -700,9 +745,16 @@ declare module '@tanstack/react-router' {
     }
     '/onboarding/account': {
       id: '/onboarding/account'
-      path: '/onboarding/account'
+      path: '/account'
       fullPath: '/onboarding/account'
       preLoaderRoute: typeof OnboardingAccountRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/tournaments_/$tournamentId': {
+      id: '/tournaments_/$tournamentId'
+      path: '/tournaments/$tournamentId'
+      fullPath: '/tournaments/$tournamentId'
+      preLoaderRoute: typeof TournamentsTournamentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/portone/webhook': {
@@ -710,6 +762,13 @@ declare module '@tanstack/react-router' {
       path: '/api/portone/webhook'
       fullPath: '/api/portone/webhook'
       preLoaderRoute: typeof ApiPortoneWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tournaments/sync': {
+      id: '/api/tournaments/sync'
+      path: '/api/tournaments/sync'
+      fullPath: '/api/tournaments/sync'
+      preLoaderRoute: typeof ApiTournamentsSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/club/manage_/lessons': {
@@ -815,6 +874,18 @@ const ClubRouteChildren: ClubRouteChildren = {
 
 const ClubRouteWithChildren = ClubRoute._addFileChildren(ClubRouteChildren)
 
+interface OnboardingRouteChildren {
+  OnboardingAccountRoute: typeof OnboardingAccountRoute
+}
+
+const OnboardingRouteChildren: OnboardingRouteChildren = {
+  OnboardingAccountRoute: OnboardingAccountRoute,
+}
+
+const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
+  OnboardingRouteChildren,
+)
+
 interface ClubsClubIdRouteChildren {
   ClubsClubIdLessonsRoute: typeof ClubsClubIdLessonsRoute
   ClubsClubIdMembersRoute: typeof ClubsClubIdMembersRoute
@@ -844,6 +915,7 @@ const rootRouteChildren: RootRouteChildren = {
   GamesRoute: GamesRoute,
   LessonsRoute: LessonsRoute,
   MeRoute: MeRoute,
+  OnboardingRoute: OnboardingRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
   RecordsRoute: RecordsRoute,
   RefundPolicyRoute: RefundPolicyRoute,
@@ -852,8 +924,9 @@ const rootRouteChildren: RootRouteChildren = {
   ClubsClubIdRoute: ClubsClubIdRouteWithChildren,
   ClubsFindRoute: ClubsFindRoute,
   ClubsNewRoute: ClubsNewRoute,
-  OnboardingAccountRoute: OnboardingAccountRoute,
+  TournamentsTournamentIdRoute: TournamentsTournamentIdRoute,
   ApiPortoneWebhookRoute: ApiPortoneWebhookRoute,
+  ApiTournamentsSyncRoute: ApiTournamentsSyncRoute,
   PaymentsTossFailRoute: PaymentsTossFailRoute,
   PaymentsTossSuccessRoute: PaymentsTossSuccessRoute,
 }

@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "test:lessons": "node --test --experimental-strip-types tests/lesson-management.test.ts",
     "test:portone": "node --test --experimental-strip-types tests/portone-payment-core.test.ts",
+    "test:tournaments": "node --test --experimental-strip-types tests/tournament-domain.test.ts",
     "format": "prettier --write ."
   },
   "dependencies": {
@@ -52,6 +53,7 @@
     "@tanstack/react-start": "^1.168.32",
     "@tanstack/router-plugin": "^1.168.23",
     "@tosspayments/tosspayments-sdk": "^2.7.1",
+    "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

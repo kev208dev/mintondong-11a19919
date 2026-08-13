@@ -7,10 +7,10 @@ import {
   MapPin,
   Megaphone,
   Search,
-  Trophy,
   UserCheck,
   Zap,
 } from "lucide-react";
+import { HomeTournamentSection } from "@/components/tournaments/HomeTournamentSection";
 import { useStore, useTodayPlayers } from "@/lib/badminton/store";
 import { won } from "@/lib/badminton/lessons";
 import { clubKeys, searchPublicClubs } from "@/lib/clubs/api";
@@ -269,19 +269,10 @@ function HomePage() {
               </span>
             </span>
           </li>
-          <li className="flex items-center gap-2.5 px-3.5 py-3">
-            <Trophy className="size-4 shrink-0 text-primary" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-xs font-bold text-foreground">
-                참가 예정 대회가 없어요
-              </span>
-              <span className="block truncate text-[11px] text-muted-foreground">
-                대회 소식은 대회 탭에서 확인할 수 있어요.
-              </span>
-            </span>
-          </li>
         </ul>
       </section>
+
+      <HomeTournamentSection />
 
       <section>
         <SectionHeader title="최근 공지" to="/club/notices" />

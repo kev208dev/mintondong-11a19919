@@ -28,7 +28,8 @@ function showsPublicFooter(pathname: string) {
     pathname === "/terms" ||
     pathname === "/privacy" ||
     pathname === "/refund-policy" ||
-    pathname === "/business-info"
+    pathname === "/business-info" ||
+    pathname.startsWith("/tournaments")
   );
 }
 
