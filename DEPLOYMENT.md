@@ -39,7 +39,7 @@ Wrangler로 production Worker를 배포합니다.
 
 - VITE_SUPABASE_URL
 - VITE_SUPABASE_PUBLISHABLE_KEY
-- VITE_PORTONE_ENABLED=false
+- VITE_PORTONE_ENABLED=false (결제 준비 전)
 
 `VITE_PORTONE_ENABLED=false`인 동안 PortOne Store/Channel과 서버 secret이 없어도 회원가입,
 클럽 생성, 레슨 관리와 공개 레슨 확인이 가능합니다. 결제를 성공으로 가장하는 fallback은
@@ -47,7 +47,7 @@ Wrangler로 production Worker를 배포합니다.
 
 PortOne 활성화 및 PG 심사 전에 추가할 브라우저 공개 build 변수:
 
-- VITE_PORTONE_STORE_ID
+- VITE_PORTONE_STORE_ID=store-81345dbd-4a7e-49ce-b68f-f1c9465294c2
 - VITE_PORTONE_CHANNEL_KEY=channel-key-f8da7be3-4a42-4e83-a7a9-f5926b6fec7d
 - VITE_PORTONE_ENABLED=true
 - VITE_BUSINESS_NAME
@@ -70,10 +70,13 @@ PortOne 활성화 및 PG 심사 전에 추가할 브라우저 공개 build 변�
 `wrangler.jsonc`의 `secrets.required`로 검증하지 않습니다. 값이 없으면 service-role이
 필요한 서버 함수가 `SUPABASE_SERVICE_ROLE_KEY_MISSING`으로 안전하게 실패합니다.
 
-`VITE_PORTONE_ENABLED=true`로 실제 결제를 활성화하기 전에 추가해야 하는 Workers runtime
-secret:
+`VITE_PORTONE_ENABLED=true`로 테스트 결제를 활성화하기 전에 반드시 추가해야 하는 Workers
+runtime secret:
 
 - PORTONE_API_SECRET
+
+Standard Webhooks 서명 검증을 위한 다음 secret은 운영 실결제 전에 추가합니다.
+
 - PORTONE_WEBHOOK_SECRET
 
 PortOne API secret이 없으면 결제 단건조회·완료·취소가 실패하도록 구현되어 있습니다.
@@ -94,7 +97,10 @@ Settings → Variables and Secrets에서 Secret 형식으로 등록합니다.
 공개 VITE_ 값은 Workers Builds의 build variables에 입력해야 Vite client bundle에
 반영됩니다. server secret은 Worker runtime variables에만 등록합니다.
 
-현재 KG이니시스 V2 테스트 채널은 `INIpayTest` MID에 연결된 위 Channel Key를 사용합니다.
+현재 KG이니시스 V2 테스트 채널은 위 Store ID와 `INIpayTest` MID에 연결된 Channel Key를
+사용합니다. 두 값은 브라우저 공개 식별값이며 코드의 안전한 fallback에도 동일하게
+기록되어 있습니다. `VITE_PORTONE_ENABLED`는 fallback하지 않으므로 Workers Builds에서
+반드시 `true`로 설정합니다.
 웹결제 signkey, INIAPI Key/IV, INILite Key, hashKey는 PortOne 채널 내부 PG 자격정보이므로
 민턴동 환경변수, Worker 설정 또는 저장소에 복사하지 않습니다. Store ID는 PortOne 콘솔에서
 확인한 실제 값만 입력하며 Channel Key나 MID로 추측하지 않습니다.

@@ -189,3 +189,15 @@ test("환불 정책 기본값이 존재하여 결제 준비 조건을 충족한�
   assert.match(policy, /승인 후 3영업일 이내/);
   assert.match(policy, /export const isRefundPolicyReady = Boolean/);
 });
+
+test("확정된 공개 Store ID와 KG이니시스 V2 Channel Key를 공통 설정으로 사용한다", () => {
+  const config = readFileSync("src/config/portone.ts", "utf8");
+  const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
+  const server = readFileSync("src/lib/portone/portone.server.ts", "utf8");
+  assert.match(config, /store-81345dbd-4a7e-49ce-b68f-f1c9465294c2/);
+  assert.match(config, /channel-key-f8da7be3-4a42-4e83-a7a9-f5926b6fec7d/);
+  assert.match(config, /VITE_PORTONE_ENABLED/);
+  assert.match(checkout, /portOnePublicConfig/);
+  assert.match(server, /portOnePublicConfig/);
+  assert.doesNotMatch(config, /PORTONE_API_SECRET|PORTONE_WEBHOOK_SECRET/);
+});

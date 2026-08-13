@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { refundPolicyConfig, isRefundPolicyReady } from "@/config/refund-policy";
+import { portOnePublicConfig } from "@/config/portone";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { won } from "@/lib/badminton/lessons";
 import { WEEKDAY_LABEL } from "@/lib/badminton/types";
@@ -105,9 +106,7 @@ function PortOneCheckoutPage() {
     .map((day) => WEEKDAY_LABEL[day])
     .filter(Boolean)
     .join("·");
-  const enabled = import.meta.env["VITE_PORTONE_ENABLED"] === "true";
-  const storeId = import.meta.env["VITE_PORTONE_STORE_ID"]?.trim();
-  const channelKey = import.meta.env["VITE_PORTONE_CHANNEL_KEY"]?.trim();
+  const { enabled, storeId, channelKey } = portOnePublicConfig;
   const integrationReady = enabled && Boolean(storeId && channelKey);
   const access = checkoutPaymentAccess({
     authenticated: Boolean(user),

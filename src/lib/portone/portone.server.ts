@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { PaymentClient, Webhook } from "@portone/server-sdk";
 import type { Payment as PortOneSdkPayment } from "@portone/server-sdk/payment";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { portOnePublicConfig } from "@/config/portone";
 import { adminClient } from "@/lib/auth/account.server";
 import { requireServerEnv, serverEnv } from "@/lib/server-env.server";
 import {
@@ -45,15 +46,15 @@ function secret(): string {
 }
 
 function expectedStoreId() {
-  return import.meta.env["VITE_PORTONE_STORE_ID"]?.trim() || null;
+  return portOnePublicConfig.storeId;
 }
 
 function expectedChannelKey() {
-  return import.meta.env["VITE_PORTONE_CHANNEL_KEY"]?.trim() || null;
+  return portOnePublicConfig.channelKey;
 }
 
 function portOneEnabled() {
-  return import.meta.env["VITE_PORTONE_ENABLED"] === "true";
+  return portOnePublicConfig.enabled;
 }
 
 export async function readCheckoutProduct(

@@ -101,7 +101,7 @@ is_active=false로 변경하므로 기존 결제와 향후 예약 참조를 보�
 
 브라우저 공개값:
 
-- `VITE_PORTONE_STORE_ID`: PortOne V2 상점 ID
+- `VITE_PORTONE_STORE_ID=store-81345dbd-4a7e-49ce-b68f-f1c9465294c2`: PortOne V2 상점 ID
 - `VITE_PORTONE_CHANNEL_KEY=channel-key-f8da7be3-4a42-4e83-a7a9-f5926b6fec7d`: KG이니시스 V2 테스트 채널 키
 - `VITE_PORTONE_ENABLED=true`: DB·정책·계약·채널 검증 뒤 마지막에 활성화
 
@@ -110,7 +110,7 @@ is_active=false로 변경하므로 기존 결제와 향후 예약 참조를 보�
 - `PORTONE_API_SECRET`: 결제 단건조회 및 취소 API 인증
 - `PORTONE_WEBHOOK_SECRET`: Standard Webhooks 서명 검증 secret
 
-서버 secret에는 절대 `VITE_` 접두사를 붙이지 말고 브라우저 환경에 주입하지 마세요. PortOne 콘솔에서 KG이니시스 V2 채널을 만들고 상점 ID/채널 키를 등록하며, webhook URL은 `https://<운영도메인>/api/portone/webhook`으로 설정합니다. webhook secret 미설정 시 payload 자체의 상태·금액은 신뢰하지 않고 내부 주문 존재를 확인한 후 단건조회하지만, 운영 활성화 전에는 반드시 secret도 설정하세요.
+서버 secret에는 절대 `VITE_` 접두사를 붙이지 말고 브라우저 환경에 주입하지 마세요. PortOne 콘솔에서 KG이니시스 V2 채널을 만들고 상점 ID/채널 키를 등록하며, webhook URL은 `https://<운영도메인>/api/portone/webhook`으로 설정합니다. webhook secret 미설정 시 payload 자체의 상태·금액은 신뢰하지 않고 내부 주문 존재를 확인한 후 단건조회합니다. KG이니시스 테스트 결제 단계에서는 이 fail-safe 구조를 사용할 수 있지만 운영 실결제 전에는 Standard Webhooks secret을 반드시 등록하세요.
 
 KG이니시스 테스트 MID `INIpayTest`의 웹결제 signkey, INIAPI Key/IV, INILite Key,
 hashKey는 PortOne 채널 설정에만 보관합니다. 앱 환경변수나 GitHub에 입력하지 않습니다.
