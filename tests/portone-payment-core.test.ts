@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  formatKoreanMobilePhone,
+  isValidKoreanMobilePhone,
+} from "../src/lib/portone/checkout-input.ts";
+import {
   cancellationDecision,
   checkoutPaymentAccess,
   executeCancellationDecision,
@@ -217,4 +221,21 @@ test("구매자 이름은 늦게 도착한 profile로 한 번만 초기화하고
   );
   assert.match(checkout, /buyerNameInitialized\.current = true;\s+setName\(e\.target\.value\)/);
   assert.doesNotMatch(checkout, /\[name, profile\?\.display_name\]/);
+});
+
+test("휴대전화 입력을 숫자 기준 010-1234-5678 형식으로 정규화한다", () => {
+  assert.equal(formatKoreanMobilePhone("01012345678"), "010-1234-5678");
+  assert.equal(formatKoreanMobilePhone("010-1234-5678"), "010-1234-5678");
+  assert.equal(formatKoreanMobilePhone("010 1234 5678"), "010-1234-5678");
+  assert.equal(formatKoreanMobilePhone("010abc1234가5678"), "010-1234-5678");
+  assert.equal(formatKoreanMobilePhone("010123456789999"), "010-1234-5678");
+  assert.equal(formatKoreanMobilePhone("0101234"), "010-1234");
+  assert.equal(formatKoreanMobilePhone("01012345"), "010-1234-5");
+});
+
+test("휴대전화 validation은 완성된 번호만 통과한다", () => {
+  assert.equal(isValidKoreanMobilePhone(""), false);
+  assert.equal(isValidKoreanMobilePhone("010-1234-567"), false);
+  assert.equal(isValidKoreanMobilePhone("010-1234-5678"), true);
+  assert.equal(isValidKoreanMobilePhone(formatKoreanMobilePhone("01012345678")), true);
 });
