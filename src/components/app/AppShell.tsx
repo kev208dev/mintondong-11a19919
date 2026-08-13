@@ -7,7 +7,11 @@ import { ClubSectionNav, isClubSection } from "./ClubSectionNav";
 import { AccountButton } from "./AccountButton";
 import { ClubSwitcher } from "./ClubSwitcher";
 import { PublicFooter } from "./PublicFooter";
-import { hidesBottomNavigation, isExactBottomTabDestination } from "./app-shell-state";
+import {
+  hidesBottomNavigation,
+  isExactBottomTabDestination,
+  isIosNativeShell,
+} from "./app-shell-state";
 
 const TABS = [
   { to: "/", label: "홈", icon: Home },
@@ -126,7 +130,10 @@ export function AppShell() {
   const showPublicFooter = showsPublicFooter(pathname);
   const hideBottomNav = hidesBottomNavigation(pathname);
   const authFlow = pathname === "/auth" || pathname.startsWith("/auth/");
-  const iosNative = Capacitor.getPlatform() === "ios";
+  const iosNative = isIosNativeShell(
+    Capacitor.getPlatform(),
+    typeof navigator === "undefined" ? "" : navigator.userAgent,
+  );
 
   useEffect(() => {
     const run = () => {
