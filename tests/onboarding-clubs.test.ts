@@ -64,10 +64,12 @@ test("온보딩 page는 club query redirect 없이 두 SPA 경로를 유지한�
 });
 
 test("native production document는 최신 Worker version을 식별하고 재사용하지 않는다", () => {
-  const server = readFileSync(new URL("../src/server.ts", import.meta.url), "utf8");
+  const start = readFileSync(new URL("../src/start.ts", import.meta.url), "utf8");
   const wrangler = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8");
-  assert.match(server, /Cache-Control", "no-store"/);
-  assert.match(server, /X-Mintondong-Worker-Version/);
+  assert.match(start, /nativeReleaseMiddleware/);
+  assert.match(start, /Cache-Control", "no-store"/);
+  assert.match(start, /X-Mintondong-Worker-Version/);
+  assert.match(start, /requestMiddleware: \[nativeReleaseMiddleware/);
   assert.match(wrangler, /"version_metadata": \{ "binding": "CF_VERSION_METADATA" \}/);
 });
 

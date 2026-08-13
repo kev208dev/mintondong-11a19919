@@ -1,7 +1,34 @@
 import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/react-start";
+import { env as cloudflareEnv } from "cloudflare:workers";
 
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
+
+type WorkerVersionMetadata = {
+  id?: string;
+};
+
+const nativeReleaseMiddleware = createMiddleware().server(async ({ next }) => {
+  const result = await next();
+  const response = result.response;
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("text/html")) return result;
+
+  const headers = new Headers(response.headers);
+  // Capacitor loads the production origin. Never reuse an old app document;
+  // fingerprinted JS/CSS assets keep their normal immutable caching.
+  headers.set("Cache-Control", "no-store");
+  const versionId = (cloudflareEnv["CF_VERSION_METADATA"] as WorkerVersionMetadata | undefined)?.id;
+  if (versionId) headers.set("X-Mintondong-Worker-Version", versionId);
+  return {
+    ...result,
+    response: new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    }),
+  };
+});
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
@@ -27,5 +54,5 @@ const csrfMiddleware = createCsrfMiddleware({
 
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
-  requestMiddleware: [errorMiddleware, csrfMiddleware],
+  requestMiddleware: [nativeReleaseMiddleware, errorMiddleware, csrfMiddleware],
 }));
