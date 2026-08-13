@@ -23,6 +23,7 @@ type Profile = {
   avatar_url: string | null;
   username: string | null;
   role: "USER" | "ADMIN";
+  onboarding_completed_at: string | null;
 };
 
 type AuthValue = {
@@ -86,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, username, role")
+        .select("id, display_name, avatar_url, username, role, onboarding_completed_at")
         .eq("id", id)
         .maybeSingle();
       if (result.error?.code === "42703" || result.error?.code === "PGRST204") {
@@ -98,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (legacy.error) throw legacy.error;
         const row = legacy.data as Omit<Profile, "role"> | null;
         if (currentUserId.current !== id || profileRequestId.current !== requestId) return;
-        setProfile(row ? { ...row, role: "USER" } : null);
+        setProfile(row ? { ...row, role: "USER", onboarding_completed_at: null } : null);
         setProfileStatus(row ? "ready" : "missing");
         return;
       }
@@ -113,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               avatar_url: (row["avatar_url"] as string | null) ?? null,
               username: (row["username"] as string | null) ?? null,
               role: row["role"] === "ADMIN" ? "ADMIN" : "USER",
+              onboarding_completed_at: (row["onboarding_completed_at"] as string | null) ?? null,
             }
           : null,
       );

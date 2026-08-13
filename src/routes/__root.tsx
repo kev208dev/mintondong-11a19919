@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Link,
   createRootRouteWithContext,
@@ -16,7 +16,6 @@ import { AppShell } from "../components/app/AppShell";
 import { AuthProvider, useAuth } from "../lib/auth/AuthProvider";
 import { NEXT_STORAGE_KEY } from "../lib/auth/providers";
 import { resolvePostAuthRedirect } from "../lib/auth/onboarding-state";
-import { clubKeys, listMyClubs } from "../lib/clubs/api";
 import { NativeRuntimeBridge } from "../components/native/NativeRuntimeBridge";
 
 function NotFoundComponent() {
@@ -142,17 +141,11 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-/** 로그인 직후 계정 설정과 첫 동호회 연결을 순서대로 안내한다. */
+/** 로그인 직후 DB의 계정별 one-time onboarding 상태를 확인한다. */
 function PostAuthRedirect() {
   const { user, profile, loading, profileLoading, profileStatus } = useAuth();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const clubs = useQuery({
-    queryKey: clubKeys.mine(user?.id ?? null),
-    queryFn: () => listMyClubs(user?.id ?? null),
-    enabled: !!user && !!profile?.username && !loading && !profileLoading,
-    staleTime: 15_000,
-  });
 
   useEffect(() => {
     if (loading || profileLoading) return;
@@ -161,15 +154,20 @@ function PostAuthRedirect() {
       pathname,
       profile: profileStatus,
       username: profile?.username,
-      clubs: clubs.isError ? "error" : clubs.isLoading ? "loading" : clubs.data ? "ready" : "idle",
-      activeClubCount: clubs.data?.length ?? 0,
+      onboardingCompletedAt: profile?.onboarding_completed_at,
     });
     if (target) {
       void router.navigate({ to: target, replace: true });
       return;
     }
 
-    if (!user || profileStatus !== "ready" || !profile?.username || !clubs.data?.length) return;
+    if (
+      !user ||
+      profileStatus !== "ready" ||
+      !profile?.username ||
+      !profile.onboarding_completed_at
+    )
+      return;
 
     // 첫 동호회 연결까지 끝난 뒤 원래 목적지가 있으면 이어서 이동한다.
     const next = sessionStorage.getItem(NEXT_STORAGE_KEY);
@@ -178,18 +176,7 @@ function PostAuthRedirect() {
     if (next.startsWith("/") && !next.startsWith("//") && next !== pathname) {
       void router.navigate({ to: next });
     }
-  }, [
-    user,
-    profile,
-    loading,
-    profileLoading,
-    profileStatus,
-    clubs.isLoading,
-    clubs.isError,
-    clubs.data,
-    pathname,
-    router,
-  ]);
+  }, [user, profile, loading, profileLoading, profileStatus, pathname, router]);
   return null;
 }
 

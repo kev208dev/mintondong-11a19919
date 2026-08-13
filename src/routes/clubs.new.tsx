@@ -65,6 +65,7 @@ function NewClubPage() {
         queryClient.invalidateQueries({ queryKey: clubKeys.mine(user.id) }),
         queryClient.invalidateQueries({ queryKey: clubKeys.membership(club.id, user.id) }),
         queryClient.invalidateQueries({ queryKey: clubKeys.members(club.id, user.id) }),
+        refreshProfile(),
       ]);
       toast.success("동호회를 만들었어요.");
       void navigate({ to: "/clubs/$clubId", params: { clubId: club.id }, replace: true });

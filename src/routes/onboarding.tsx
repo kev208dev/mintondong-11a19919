@@ -1,11 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, PlusCircle, RotateCw, Search, Sparkles } from "lucide-react";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { NEXT_STORAGE_KEY } from "@/lib/auth/providers";
-import { safeNextPath } from "@/lib/auth/username";
-import { clubKeys, listMyClubs } from "@/lib/clubs/api";
 
 export const Route = createFileRoute("/onboarding")({
   ssr: false,
@@ -24,11 +20,6 @@ export const Route = createFileRoute("/onboarding")({
 function OnboardingPage() {
   const navigate = useNavigate();
   const { user, loading, profileLoading, profileStatus } = useAuth();
-  const clubs = useQuery({
-    queryKey: clubKeys.mine(user?.id ?? null),
-    queryFn: () => listMyClubs(user?.id ?? null),
-    enabled: !!user && profileStatus === "ready",
-  });
 
   useEffect(() => {
     if (loading || profileLoading) return;
@@ -36,19 +27,6 @@ function OnboardingPage() {
       void navigate({ to: "/auth", search: { next: "/" }, replace: true });
     }
   }, [loading, profileLoading, user, navigate]);
-
-  useEffect(() => {
-    if (!user || clubs.isLoading || clubs.isError || (clubs.data?.length ?? 0) === 0) return;
-
-    let next = "/";
-    try {
-      next = safeNextPath(sessionStorage.getItem(NEXT_STORAGE_KEY));
-      sessionStorage.removeItem(NEXT_STORAGE_KEY);
-    } catch {
-      next = "/";
-    }
-    void navigate({ to: next, replace: true });
-  }, [user, clubs.isLoading, clubs.isError, clubs.data, navigate]);
 
   if (loading || profileLoading || profileStatus === "loading" || profileStatus === "missing") {
     return (
@@ -124,20 +102,6 @@ function OnboardingPage() {
           </span>
         </Link>
       </div>
-
-      {clubs.isError ? (
-        <div className="text-center">
-          <p className="px-1 text-[11px] text-muted-foreground">동호회 정보를 확인하지 못했어요.</p>
-          <button
-            type="button"
-            disabled={clubs.isFetching}
-            onClick={() => void clubs.refetch()}
-            className="mt-2 inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-secondary px-4 text-xs font-bold text-secondary-foreground disabled:opacity-60"
-          >
-            <RotateCw className={`size-3.5 ${clubs.isFetching ? "animate-spin" : ""}`} /> 다시 시도
-          </button>
-        </div>
-      ) : null}
     </section>
   );
 }

@@ -1,5 +1,4 @@
 export type ProfileResolution = "loading" | "ready" | "missing" | "error";
-export type ClubsResolution = "idle" | "loading" | "ready" | "error";
 
 export function isOnboardingSubflow(pathname: string): boolean {
   return (
@@ -28,9 +27,8 @@ export function resolvePostAuthRedirect(input: {
   pathname: string;
   profile: ProfileResolution;
   username: string | null | undefined;
-  clubs: ClubsResolution;
-  activeClubCount: number;
-}): "/onboarding/account" | "/onboarding" | null {
+  onboardingCompletedAt: string | null | undefined;
+}): "/" | "/onboarding/account" | "/onboarding" | null {
   if (!input.authenticated || input.pathname.startsWith("/auth/reset-password")) return null;
   if (input.profile === "loading" || input.profile === "error") return null;
 
@@ -38,13 +36,12 @@ export function resolvePostAuthRedirect(input: {
     return input.pathname.startsWith("/onboarding/account") ? null : "/onboarding/account";
   }
 
-  if (input.clubs !== "ready") return null;
-  if (
-    input.activeClubCount === 0 &&
-    !isOnboardingSubflow(input.pathname) &&
-    !isPublicAccountPage(input.pathname)
-  ) {
+  if (!input.onboardingCompletedAt) {
+    if (isOnboardingSubflow(input.pathname) || isPublicAccountPage(input.pathname)) return null;
     return "/onboarding";
   }
+
+  // 이미 완료한 계정이 오래된 앱 history로 온보딩에 다시 진입해도 첫 화면으로 복귀한다.
+  if (input.pathname.startsWith("/onboarding")) return "/";
   return null;
 }

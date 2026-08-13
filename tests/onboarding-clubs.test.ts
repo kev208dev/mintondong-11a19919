@@ -13,8 +13,7 @@ const readyBase = {
   pathname: "/",
   profile: "ready" as const,
   username: "new_member",
-  clubs: "ready" as const,
-  activeClubCount: 0,
+  onboardingCompletedAt: null,
 };
 
 test("신규 이메일 사용자에게 username이 있으면 첫 동호회 온보딩으로 이동한다", () => {
@@ -22,16 +21,11 @@ test("신규 이메일 사용자에게 username이 있으면 첫 동호회 온�
 });
 
 test("username이 없는 소셜 신규 사용자는 계정 온보딩으로 이동한다", () => {
-  assert.equal(
-    resolvePostAuthRedirect({ ...readyBase, username: null, clubs: "idle" }),
-    "/onboarding/account",
-  );
+  assert.equal(resolvePostAuthRedirect({ ...readyBase, username: null }), "/onboarding/account");
 });
 
-test("profile 또는 clubs가 아직 해결되지 않았으면 redirect하지 않는다", () => {
+test("profile이 아직 해결되지 않았으면 redirect하지 않는다", () => {
   assert.equal(resolvePostAuthRedirect({ ...readyBase, profile: "loading" }), null);
-  assert.equal(resolvePostAuthRedirect({ ...readyBase, clubs: "loading" }), null);
-  assert.equal(resolvePostAuthRedirect({ ...readyBase, clubs: "error" }), null);
 });
 
 test("동호회 찾기·생성·상세는 onboarding subflow라 전역 redirect가 가로채지 않는다", () => {
@@ -41,14 +35,56 @@ test("동호회 찾기·생성·상세는 onboarding subflow라 전역 redirect�
   }
 });
 
-test("active membership 생성 후 온보딩 redirect가 종료된다", () => {
-  assert.equal(resolvePostAuthRedirect({ ...readyBase, activeClubCount: 1 }), null);
+test("DB onboarding 완료 상태인 기존 계정은 club 수와 무관하게 온보딩하지 않는다", () => {
+  const completed = { ...readyBase, onboardingCompletedAt: "2026-08-13T12:00:00Z" };
+  assert.equal(resolvePostAuthRedirect(completed), null);
+  assert.equal(resolvePostAuthRedirect({ ...completed, pathname: "/onboarding" }), "/");
 });
 
 test("pending membership은 active club로 계산하지 않는다", () => {
   assert.equal(isActiveMembership("pending"), false);
   assert.equal(isActiveMembership("active"), true);
   assert.equal(resolvePostAuthRedirect(readyBase), "/onboarding");
+});
+
+test("onboarding 완료 여부는 active club count가 아닌 계정 profile만 사용한다", () => {
+  const state = readFileSync(
+    new URL("../src/lib/auth/onboarding-state.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(state, /onboardingCompletedAt/);
+  assert.doesNotMatch(state, /activeClubCount|ClubsResolution/);
+});
+
+test("온보딩 page는 club query redirect 없이 두 SPA 경로를 유지한다", () => {
+  const page = readFileSync(new URL("../src/routes/onboarding.tsx", import.meta.url), "utf8");
+  assert.match(page, /to="\/clubs\/find"/);
+  assert.match(page, /to="\/clubs\/new"/);
+  assert.doesNotMatch(page, /listMyClubs|clubKeys\.mine|clubs\.data|NEXT_STORAGE_KEY/);
+});
+
+test("native production document는 최신 Worker version을 식별하고 재사용하지 않는다", () => {
+  const server = readFileSync(new URL("../src/server.ts", import.meta.url), "utf8");
+  const wrangler = readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8");
+  assert.match(server, /Cache-Control", "no-store"/);
+  assert.match(server, /X-Mintondong-Worker-Version/);
+  assert.match(wrangler, /"version_metadata": \{ "binding": "CF_VERSION_METADATA" \}/);
+});
+
+test("migration은 기존 profile만 backfill하고 active membership에서만 완료한다", () => {
+  const migration = readFileSync(
+    new URL("../supabase/migrations/20260813132809_one_time_club_onboarding.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(migration, /add column if not exists onboarding_completed_at timestamptz/);
+  assert.match(
+    migration,
+    /update public\.profiles[\s\S]*coalesce\(onboarding_completed_at, now\(\)\)/,
+  );
+  assert.match(migration, /new\.status = 'active'/);
+  assert.match(migration, /after insert or update of status on public\.club_members/);
+  assert.match(migration, /ONBOARDING_COMPLETION_SERVER_CONTROLLED/);
+  assert.doesNotMatch(migration, /delete\s+from|drop\s+table|truncate/i);
 });
 
 test("동호회 생성은 이름과 지역을 모두 검증한다", () => {
@@ -80,6 +116,14 @@ test("회원가입은 세션과 profile을 확정한 뒤 onboarding으로 이동
   assert.match(auth, /if \(data\.session\) await loadProfile\(data\.session\.user\.id\)/);
 });
 
+test("로그아웃은 계정별 query cache와 profile 상태를 함께 비운다", () => {
+  const auth = readFileSync(new URL("../src/lib/auth/AuthProvider.tsx", import.meta.url), "utf8");
+  assert.match(auth, /currentUserId\.current !== nextUserId/);
+  assert.match(auth, /await queryClient\.cancelQueries\(\)[\s\S]*queryClient\.clear\(\)/);
+  assert.match(auth, /setProfile\(null\)/);
+  assert.match(auth, /onboarding_completed_at/);
+});
+
 test("생성·가입 화면은 auth와 membership 로딩 완료 전 잘못된 CTA를 노출하지 않는다", () => {
   const createRoute = readFileSync(new URL("../src/routes/clubs.new.tsx", import.meta.url), "utf8");
   const detailRoute = readFileSync(
@@ -90,6 +134,8 @@ test("생성·가입 화면은 auth와 membership 로딩 완료 전 잘못된 CT
   assert.match(detailRoute, /user && membershipQuery\.isLoading/);
   assert.match(detailRoute, /user && membershipQuery\.isError/);
   assert.match(detailRoute, /setQueryData\(clubKeys\.membership/);
+  assert.match(createRoute, /refreshProfile\(\)/);
+  assert.match(detailRoute, /nextMembership\.status === "active"[\s\S]*refreshProfile\(\)/);
 });
 
 test("헤더 동호회 선택은 seed store가 아닌 Supabase active club 목록을 사용한다", () => {

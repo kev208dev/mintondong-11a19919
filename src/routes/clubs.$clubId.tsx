@@ -26,7 +26,7 @@ const TABS = [
 function ClubDetailLayout() {
   const { clubId } = Route.useParams();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user, loading } = useAuth();
+  const { user, loading, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
 
   const clubQuery = useQuery({ queryKey: clubKeys.detail(clubId), queryFn: () => getClub(clubId) });
@@ -48,6 +48,7 @@ function ClubDetailLayout() {
         queryClient.invalidateQueries({ queryKey: clubKeys.mine(user?.id ?? null) }),
         queryClient.invalidateQueries({ queryKey: clubKeys.detail(clubId) }),
         queryClient.invalidateQueries({ queryKey: clubKeys.members(clubId, user?.id ?? null) }),
+        ...(nextMembership.status === "active" ? [refreshProfile()] : []),
       ]);
       toast.success(
         nextMembership.status === "active"

@@ -7,6 +7,10 @@ type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
+type WorkerRuntimeEnv = {
+  CF_VERSION_METADATA?: { id?: string };
+};
+
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
 async function getServerEntry(): Promise<ServerEntry> {
@@ -44,12 +48,29 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+function withNativeReleaseHeaders(response: Response, env: unknown): Response {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("text/html")) return response;
+
+  const headers = new Headers(response.headers);
+  // Capacitor loads the production origin. Never reuse an old app document;
+  // its fingerprinted JS/CSS assets keep their normal immutable caching.
+  headers.set("Cache-Control", "no-store");
+  const versionId = (env as WorkerRuntimeEnv | undefined)?.CF_VERSION_METADATA?.id;
+  if (versionId) headers.set("X-Mintondong-Worker-Version", versionId);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return withNativeReleaseHeaders(await normalizeCatastrophicSsrResponse(response), env);
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {
