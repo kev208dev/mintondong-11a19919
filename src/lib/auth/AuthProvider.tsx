@@ -10,6 +10,10 @@ import {
   type ReactNode,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  clearAppleProviderToken,
+  rememberAppleProviderToken,
+} from "@/lib/auth/apple-provider-token";
 
 type Profile = {
   id: string;
@@ -53,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let unsubscribe: (() => void) | undefined;
     try {
       const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+        rememberAppleProviderToken(next);
         setSession(next);
         setLoading(false);
       });
@@ -142,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
           console.error("[auth] signOut failed", error);
         }
+        clearAppleProviderToken();
         setSession(null);
         setProfile(null);
       },

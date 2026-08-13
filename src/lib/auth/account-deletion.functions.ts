@@ -13,9 +13,14 @@ export const getMyAccountDeletionStatus = createServerFn({ method: "GET" })
 export const deleteMyAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((value) =>
-    z.object({ confirmation: z.literal(ACCOUNT_DELETION_CONFIRMATION) }).parse(value),
+    z
+      .object({
+        confirmation: z.literal(ACCOUNT_DELETION_CONFIRMATION),
+        appleProviderToken: z.string().trim().min(20).max(8192).optional(),
+      })
+      .parse(value),
   )
-  .handler(async ({ context }) => {
+  .handler(async ({ context, data }) => {
     const { deleteCurrentAccount } = await import("./account-deletion.server");
-    return deleteCurrentAccount(context.userId);
+    return deleteCurrentAccount(context.userId, data.appleProviderToken);
   });

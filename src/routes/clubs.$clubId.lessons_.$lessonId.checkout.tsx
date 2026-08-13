@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Capacitor } from "@capacitor/core";
 import {
   AlertCircle,
   ArrowLeft,
@@ -149,6 +150,7 @@ function PortOneCheckoutPage() {
         payMethod: toPortOnePayMethod(paymentMethod),
         customer: order.customer,
         redirectUrl,
+        ...(Capacitor.isNativePlatform() ? { appScheme: "mintondong" } : {}),
       });
       if (response?.code) {
         setResult({ ok: false, message: paymentFailureMessage(response.code, response.message) });

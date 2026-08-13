@@ -4,7 +4,8 @@
 실제 검증 전까지 체크하지 않는다.
 
 - [x] 계정 삭제 UI/server/migration 구현
-- [ ] Production DB에 계정 삭제 migration 적용 및 실제 계정 QA
+- [x] Production DB에 계정 삭제 migration 적용 및 schema/권한 검증
+- [ ] 실제 비소유자 계정 삭제 실기기 QA
 - [x] 공개 계정 삭제 설명 route
 - [x] 개인정보처리방침
 - [x] 이용약관
@@ -12,12 +13,13 @@
 - [x] 고객지원 route
 - [x] 사업자정보 route
 - [x] Capacitor iOS/Android 프로젝트
-- [ ] iOS Simulator build (현재 환경에서 Swift Package resolution이 완료되지 않음)
+- [x] iOS Simulator build 및 cold start/home/safe-area 확인
 - [ ] Apple signing 및 iOS archive
 - [x] Android debug APK build
 - [ ] Android release signing 및 AAB
 - [ ] Google OAuth iPhone 실기기
 - [ ] Google OAuth Android 실기기
+- [x] Apple 계정 삭제 token revoke server flow 구현
 - [ ] Apple OAuth iPhone 실기기 및 계정 삭제 token revoke
 - [ ] PortOne 결제창 진입/취소 복귀 iPhone 실기기
 - [ ] PortOne 결제창 진입/취소 복귀 Android 실기기

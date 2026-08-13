@@ -194,6 +194,7 @@ begin
 
   update public.payments
      set user_id = null,
+         depositor_name = null,
          account_deleted_at = coalesce(account_deleted_at, now()),
          updated_at = now()
    where user_id = old.id;

@@ -36,7 +36,7 @@ Full description은 App Store 설명을 바탕으로 실제 공개 기능만 기
 
 | Data                               | Collected      | Purpose                 | Stored where                | Processor / recipient         | Deletion                                                   |
 | ---------------------------------- | -------------- | ----------------------- | --------------------------- | ----------------------------- | ---------------------------------------------------------- |
-| 이메일, OAuth 계정 식별자          | 예             | 가입, 로그인, 계정 복구 | Supabase Auth               | Supabase, 활성 OAuth provider | Auth user 삭제. Apple token revoke는 확인 필요             |
+| 이메일, OAuth 계정 식별자          | 예             | 가입, 로그인, 계정 복구 | Supabase Auth               | Supabase, 활성 OAuth provider | Auth user 삭제. Apple 로그인은 삭제 직전 token revoke      |
 | 표시 이름, username, 프로필 이미지 | 선택/예        | 프로필, 서비스 식별     | Supabase `profiles`/Storage | Supabase                      | 계정 삭제 시 profile 삭제                                  |
 | 클럽 가입, 역할, 등급              | 예             | 클럽 운영과 권한        | Supabase `club_members`     | Supabase                      | 예약/경기 참조 보존을 위해 식별 link와 이름 익명화         |
 | 출석·경기·일정 기록                | 기능 이용 시   | 클럽 운영               | Supabase                    | Supabase                      | 공동 클럽 기록은 관계 유지, 직접 user link는 schema별 처리 |

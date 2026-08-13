@@ -23,6 +23,12 @@ import {
   accountDeletionMessage,
 } from "@/lib/auth/account-deletion-core";
 import { deleteMyAccount, getMyAccountDeletionStatus } from "@/lib/auth/account-deletion.functions";
+import {
+  clearAppleProviderToken,
+  hasAppleIdentity,
+  readAppleProviderToken,
+} from "@/lib/auth/apple-provider-token";
+import { startSocialLogin } from "@/lib/auth/providers";
 
 export function AccountDeletionPanel() {
   const { user, signOut } = useAuth();
@@ -31,6 +37,8 @@ export function AccountDeletionPanel() {
   const deleteAccount = useServerFn(deleteMyAccount);
   const [confirmation, setConfirmation] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [reauthenticating, setReauthenticating] = useState(false);
+  const [appleProviderToken] = useState(() => readAppleProviderToken());
   const status = useQuery({
     queryKey: ["account-deletion-status", user?.id],
     queryFn: () => getStatus(),
@@ -42,9 +50,12 @@ export function AccountDeletionPanel() {
 
   const blocked = status.data?.canDelete === false;
   const unavailable = status.isError;
+  const appleAccount = hasAppleIdentity(user);
+  const appleReauthenticationRequired = appleAccount && !appleProviderToken;
   const canConfirm =
     !blocked &&
     !unavailable &&
+    !appleReauthenticationRequired &&
     !status.isLoading &&
     !deleting &&
     confirmation.trim() === ACCOUNT_DELETION_CONFIRMATION;
@@ -53,7 +64,13 @@ export function AccountDeletionPanel() {
     if (!canConfirm) return;
     setDeleting(true);
     try {
-      await deleteAccount({ data: { confirmation: ACCOUNT_DELETION_CONFIRMATION } });
+      await deleteAccount({
+        data: {
+          confirmation: ACCOUNT_DELETION_CONFIRMATION,
+          ...(appleProviderToken ? { appleProviderToken } : {}),
+        },
+      });
+      clearAppleProviderToken();
       await signOut();
       toast.success("민턴동 계정이 삭제되었습니다.");
       void navigate({ to: "/", replace: true });
@@ -101,16 +118,40 @@ export function AccountDeletionPanel() {
         </p>
       ) : null}
 
+      {appleReauthenticationRequired ? (
+        <p className="mt-4 rounded-2xl bg-secondary p-3 text-xs font-semibold leading-relaxed text-muted-foreground">
+          Apple 계정 연결을 안전하게 해제하려면 삭제 직전에 Apple로 다시 인증해야 합니다.
+        </p>
+      ) : null}
+
       <AlertDialog>
-        <AlertDialogTrigger asChild>
+        {appleReauthenticationRequired ? (
           <Button
-            variant="destructive"
             className="mt-4 h-12 w-full rounded-2xl font-bold"
-            disabled={blocked || unavailable || status.isLoading}
+            disabled={blocked || unavailable || status.isLoading || reauthenticating}
+            onClick={async () => {
+              setReauthenticating(true);
+              try {
+                await startSocialLogin("apple", "/account-deletion");
+              } catch {
+                toast.error("Apple 인증을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+                setReauthenticating(false);
+              }
+            }}
           >
-            계정 삭제하기
+            {reauthenticating ? "Apple 인증으로 이동 중..." : "Apple 인증 후 계정 삭제"}
           </Button>
-        </AlertDialogTrigger>
+        ) : (
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="destructive"
+              className="mt-4 h-12 w-full rounded-2xl font-bold"
+              disabled={blocked || unavailable || status.isLoading}
+            >
+              계정 삭제하기
+            </Button>
+          </AlertDialogTrigger>
+        )}
         <AlertDialogContent className="w-[calc(100%-2rem)] max-w-sm rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle>계정을 삭제할까요?</AlertDialogTitle>

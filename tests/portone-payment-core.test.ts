@@ -48,6 +48,7 @@ test("모바일 checkout은 결제수단·중복 탭·sticky CTA를 사용한다
   assert.match(checkout, /bottom-\[calc\(56px\+env\(safe-area-inset-bottom\)\)\]/);
   assert.match(checkout, /결제창으로 이동 중/);
   assert.match(checkout, /다시 결제하기/);
+  assert.match(checkout, /Capacitor\.isNativePlatform\(\) \? \{ appScheme: "mintondong" \}/);
 });
 
 const verifiedPayment = {

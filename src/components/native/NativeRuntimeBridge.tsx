@@ -1,10 +1,11 @@
 import { Capacitor } from "@capacitor/core";
 import { useRouter } from "@tanstack/react-router";
 import { WifiOff } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { NEXT_STORAGE_KEY } from "@/lib/auth/providers";
+import { rememberAppleProviderToken } from "@/lib/auth/apple-provider-token";
 import { safeNextPath } from "@/lib/auth/username";
 
 function authParams(url: string): URLSearchParams {
@@ -23,16 +24,23 @@ async function acceptAuthCallback(url: string): Promise<boolean> {
   const code = params.get("code");
 
   if (accessToken && refreshToken) {
-    const { error } = await supabase.auth.setSession({
+    const { data, error } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
     });
     if (error) throw error;
+    const providerToken = params.get("provider_token");
+    rememberAppleProviderToken(
+      providerToken && data.session
+        ? { ...data.session, provider_token: providerToken }
+        : data.session,
+    );
     return true;
   }
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) throw error;
+    rememberAppleProviderToken(data.session);
     return true;
   }
   throw new Error(params.get("error_description") || "OAUTH_CALLBACK_INVALID");
@@ -42,9 +50,13 @@ export function NativeRuntimeBridge() {
   const router = useRouter();
   const native = Capacitor.isNativePlatform();
   const [connected, setConnected] = useState(true);
+  const authCallbackUrls = useRef(new Set<string>());
 
   const handleAppUrl = useCallback(
     async (url: string) => {
+      if (!url.startsWith("mintondong://auth/callback")) return;
+      if (authCallbackUrls.current.has(url)) return;
+      authCallbackUrls.current.add(url);
       try {
         if (!(await acceptAuthCallback(url))) return;
         const { Browser } = await import("@capacitor/browser");
@@ -53,6 +65,7 @@ export function NativeRuntimeBridge() {
         sessionStorage.removeItem(NEXT_STORAGE_KEY);
         await router.navigate({ to: next, replace: true });
       } catch (error) {
+        authCallbackUrls.current.delete(url);
         console.error("[native-auth] OAuth callback failed", error);
         await router.navigate({
           to: "/auth",

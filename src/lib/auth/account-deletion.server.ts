@@ -1,5 +1,8 @@
 import { adminClient } from "./account.server";
 import { ACCOUNT_DELETION_CODES, type AccountDeletionStatus } from "./account-deletion-core";
+import { hasAppleIdentity } from "./apple-provider-token";
+import { revokeAppleProviderToken } from "./apple-revocation.server";
+import { serverEnv } from "@/lib/server-env.server";
 
 type PreflightRow = {
   can_delete: boolean;
@@ -40,13 +43,57 @@ export async function getAccountDeletionStatus(userId: string): Promise<AccountD
   };
 }
 
-export async function deleteCurrentAccount(userId: string): Promise<{ deleted: true }> {
+function appleRevocationCredentials() {
+  const credentials = {
+    teamId: serverEnv("APPLE_TEAM_ID"),
+    keyId: serverEnv("APPLE_KEY_ID"),
+    clientId: serverEnv("APPLE_CLIENT_ID"),
+    privateKey: serverEnv("APPLE_PRIVATE_KEY"),
+  };
+  if (
+    !credentials.teamId ||
+    !credentials.keyId ||
+    !credentials.clientId ||
+    !credentials.privateKey
+  ) {
+    throw new Error(ACCOUNT_DELETION_CODES.appleRevocationNotConfigured);
+  }
+  return credentials as {
+    teamId: string;
+    keyId: string;
+    clientId: string;
+    privateKey: string;
+  };
+}
+
+export async function deleteCurrentAccount(
+  userId: string,
+  appleProviderToken?: string,
+): Promise<{ deleted: true }> {
   const status = await getAccountDeletionStatus(userId);
   if (!status.canDelete) {
     throw new Error(status.blockerCode || ACCOUNT_DELETION_CODES.failed);
   }
 
-  const { error } = await adminClient().auth.admin.deleteUser(userId);
+  const admin = adminClient();
+  const { data: userResult, error: userError } = await admin.auth.admin.getUserById(userId);
+  if (userError || !userResult.user) {
+    console.error("[account-deletion] auth user lookup failed", {
+      status: userError?.status,
+      code: userError?.code,
+      message: userError?.message,
+    });
+    throw new Error(ACCOUNT_DELETION_CODES.failed);
+  }
+
+  if (hasAppleIdentity(userResult.user)) {
+    if (!appleProviderToken) {
+      throw new Error(ACCOUNT_DELETION_CODES.appleReauthenticationRequired);
+    }
+    await revokeAppleProviderToken(appleProviderToken, appleRevocationCredentials());
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(userId);
   if (error) {
     const message = error.message || "";
     if (message.includes(ACCOUNT_DELETION_CODES.ownsClub)) {
