@@ -68,14 +68,14 @@ function LoginPage() {
   };
 
   return (
-    <section className="rounded-3xl border border-border bg-card p-5">
+    <section className="rounded-3xl border border-border bg-card p-4">
       <div className="space-y-2">
         <label className="block text-[11px] font-bold text-muted-foreground" htmlFor="login-id">
           아이디
         </label>
         <Input
           id="login-id"
-          className="h-12 rounded-2xl"
+          className="h-11 rounded-2xl"
           autoComplete="username"
           autoCapitalize="none"
           placeholder="아이디"
@@ -90,7 +90,7 @@ function LoginPage() {
         </label>
         <Input
           id="login-pw"
-          className="h-12 rounded-2xl"
+          className="h-11 rounded-2xl"
           type="password"
           autoComplete="current-password"
           placeholder="비밀번호"
@@ -101,7 +101,7 @@ function LoginPage() {
           }}
         />
         <Button
-          className="h-12 w-full rounded-2xl font-bold"
+          className="h-11 w-full rounded-2xl font-bold"
           disabled={busy !== null || !username.trim() || !password}
           onClick={submit}
         >
@@ -119,7 +119,7 @@ function LoginPage() {
         </Link>
       </div>
 
-      <div className="my-4 flex items-center gap-3">
+      <div className="my-3.5 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
         <span className="shrink-0 text-[11px] font-bold text-muted-foreground">또는 계속하기</span>
         <span className="h-px flex-1 bg-border" />
@@ -131,7 +131,7 @@ function LoginPage() {
             key={p.id}
             disabled={busy !== null}
             onClick={() => void social(p.id)}
-            className={`flex h-12 w-full items-center justify-center rounded-2xl text-sm font-bold active:scale-95 disabled:opacity-60 ${p.className}`}
+            className={`flex h-11 w-full items-center justify-center rounded-2xl text-sm font-bold active:scale-95 disabled:opacity-60 ${p.className}`}
           >
             {busy === p.id ? "이동 중..." : p.label}
           </button>

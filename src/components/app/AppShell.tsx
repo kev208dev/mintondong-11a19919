@@ -6,6 +6,7 @@ import { ClubSectionNav, isClubSection } from "./ClubSectionNav";
 import { AccountButton } from "./AccountButton";
 import { ClubSwitcher } from "./ClubSwitcher";
 import { PublicFooter } from "./PublicFooter";
+import { hidesBottomNavigation, isExactBottomTabDestination } from "./app-shell-state";
 
 const TABS = [
   { to: "/", label: "홈", icon: Home },
@@ -41,12 +42,16 @@ const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
       <ul className="grid grid-cols-4">
         {TABS.map(({ to, label, icon: Icon }) => {
           const active = isTabActive(to, pathname);
+          const atDestination = isExactBottomTabDestination(pathname, to);
           return (
             <li key={to}>
               <Link
                 to={to}
                 preload="intent"
-                className={`flex h-14 select-none flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition-transform duration-75 active:scale-95 active:bg-accent ${
+                preloadDelay={0}
+                disabled={atDestination}
+                aria-current={atDestination ? "page" : undefined}
+                className={`flex h-14 touch-manipulation select-none flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition-[color,background-color,transform] duration-75 active:scale-[0.96] active:bg-accent ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
@@ -100,7 +105,8 @@ export function AppShell() {
   const title = usePageTitle(pathname);
   const router = useRouter();
   const showPublicFooter = showsPublicFooter(pathname);
-  const onboardingFlow = pathname.startsWith("/onboarding");
+  const hideBottomNav = hidesBottomNavigation(pathname);
+  const authFlow = pathname === "/auth" || pathname.startsWith("/auth/");
 
   useEffect(() => {
     const run = () => {
@@ -118,48 +124,64 @@ export function AppShell() {
   }, [router]);
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background">
-      <header className="sticky top-0 z-20 border-b border-border bg-card/95 backdrop-blur pt-[env(safe-area-inset-top)]">
-        <div className="flex h-[54px] items-center gap-1 px-3">
-          <Link to="/" aria-label="민턴동 홈" className="shrink-0">
-            <img
-              src="/mintondong-logo.png"
-              alt="민턴동"
-              width={92}
-              height={24}
-              className="h-6 w-auto object-contain"
-            />
-          </Link>
-          <ClubSwitcher />
-          <div className="ml-auto flex shrink-0 items-center gap-1">
-            <button
-              type="button"
-              aria-label="알림"
-              onClick={() => toast.info("새로운 알림이 없어요.")}
-              className="grid size-9 place-items-center rounded-full text-muted-foreground active:bg-accent"
-            >
-              <Bell className="size-[18px]" />
-            </button>
-            <AccountButton />
+    <div className="app-shell mx-auto flex h-dvh min-h-0 w-full max-w-md flex-col overflow-hidden bg-background">
+      {authFlow ? null : (
+        <header className="z-20 shrink-0 border-b border-border bg-card/95 backdrop-blur pt-[env(safe-area-inset-top)]">
+          <div className="flex h-[54px] items-center gap-1 px-3">
+            <Link to="/" aria-label="민턴동 홈" className="shrink-0">
+              <img
+                src="/mintondong-logo.png"
+                alt="민턴동"
+                width={92}
+                height={24}
+                className="h-6 w-auto object-contain"
+              />
+            </Link>
+            <ClubSwitcher />
+            <div className="ml-auto flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                aria-label="알림"
+                onClick={() => toast.info("새로운 알림이 없어요.")}
+                className="grid size-9 place-items-center rounded-full text-muted-foreground active:bg-accent"
+              >
+                <Bell className="size-[18px]" />
+              </button>
+              <AccountButton />
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
-      <main
-        className={`flex-1 px-4 pt-3 ${
-          onboardingFlow ? "pb-8" : showPublicFooter ? "pb-8" : "pb-24"
-        }`}
+      <div
+        data-app-scroll-container
+        data-scroll-restoration-id="app-scroll"
+        className="app-scroll-region min-h-0 flex-1 overflow-y-auto"
       >
-        {isClubSection(pathname) ? <ClubSectionNav pathname={pathname} /> : null}
-        <h1 className="mt-1 mb-3 text-[17px] font-extrabold tracking-tight text-foreground">
-          {title}
-        </h1>
-        <Outlet />
-      </main>
+        <main
+          className={`px-4 ${authFlow ? "pt-[max(0.75rem,env(safe-area-inset-top))]" : "pt-3"} ${
+            hideBottomNav
+              ? "pb-[max(2rem,env(safe-area-inset-bottom))]"
+              : showPublicFooter
+                ? "pb-8"
+                : "pb-[calc(4.5rem+env(safe-area-inset-bottom))]"
+          }`}
+        >
+          {isClubSection(pathname) ? <ClubSectionNav pathname={pathname} /> : null}
+          {authFlow ? null : (
+            <h1 className="mt-1 mb-3 text-[17px] font-extrabold tracking-tight text-foreground">
+              {title}
+            </h1>
+          )}
+          <div key={pathname} className="app-route-transition">
+            <Outlet />
+          </div>
+        </main>
 
-      {showPublicFooter ? <PublicFooter /> : null}
+        {showPublicFooter ? <PublicFooter /> : null}
+      </div>
 
-      {onboardingFlow ? null : <BottomNav pathname={pathname} />}
+      {hideBottomNav ? null : <BottomNav pathname={pathname} />}
     </div>
   );
 }

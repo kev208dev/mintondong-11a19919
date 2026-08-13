@@ -10,10 +10,10 @@ export const Route = createFileRoute("/auth")({
 
 function AuthLayout() {
   return (
-    <div className="space-y-4">
-      <header className="flex flex-col items-center gap-2 pt-2 text-center">
-        <img src="/mintondong-icon.png" alt="" className="size-14 rounded-2xl" />
-        <h1 className="text-lg font-extrabold text-foreground">민턴동에 로그인</h1>
+    <div className="space-y-3">
+      <header className="flex flex-col items-center gap-1.5 text-center">
+        <img src="/mintondong-icon.png" alt="" className="size-12 rounded-2xl" />
+        <h1 className="text-[17px] font-extrabold text-foreground">민턴동에 로그인</h1>
         <p className="text-xs text-muted-foreground">
           동호회 출석·경기 기록을 여러 기기에서 이어서 사용할 수 있어요.
         </p>
