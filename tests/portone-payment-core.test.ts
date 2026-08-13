@@ -197,6 +197,7 @@ test("확정된 공개 Store ID와 KG이니시스 V2 Channel Key를 공통 설�
   assert.match(config, /store-81345dbd-4a7e-49ce-b68f-f1c9465294c2/);
   assert.match(config, /channel-key-f8da7be3-4a42-4e83-a7a9-f5926b6fec7d/);
   assert.match(config, /VITE_PORTONE_ENABLED/);
+  assert.match(config, /publicEnv\("VITE_PORTONE_ENABLED"\) !== "false"/);
   assert.match(checkout, /portOnePublicConfig/);
   assert.match(server, /portOnePublicConfig/);
   assert.doesNotMatch(config, /PORTONE_API_SECRET|PORTONE_WEBHOOK_SECRET/);
