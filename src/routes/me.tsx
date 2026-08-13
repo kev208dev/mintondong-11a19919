@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Check, Copy, LogOut } from "lucide-react";
+import { Check, Copy, LogOut, Settings } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -170,7 +170,6 @@ function MePage() {
           </div>
         </div>
         <div className="mt-3 grid grid-cols-4 gap-2">
-
           {[
             { label: "경기", value: `${stat.games}` },
             { label: "승", value: `${stat.wins}` },
@@ -227,6 +226,15 @@ function MePage() {
           })}
         </ul>
       </section>
+
+      {profile?.role === "ADMIN" ? (
+        <Link
+          to="/admin/tournaments"
+          className="flex h-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/5 text-sm font-extrabold text-primary"
+        >
+          <Settings className="mr-2 size-4" /> 대회 관리자 페이지
+        </Link>
+      ) : null}
 
       <Button
         variant="secondary"

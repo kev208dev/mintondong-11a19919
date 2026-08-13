@@ -47,7 +47,7 @@ function sourceLabel(source: string) {
       COURTX: "CourtX",
       BKPLAY: "BKPLAY",
       KOC: "스포츠지원포털",
-      MANUAL: "직접 확인",
+      MANUAL: "민턴동 등록",
     }[source] ?? source
   );
 }
@@ -228,11 +228,17 @@ function TournamentDetailPage() {
               >
                 {sourceLabel(source.source)} <ExternalLink className="inline size-3" />
               </a>
-            ) : null;
+            ) : (
+              <span key={`${source.source}-internal`} className="font-bold text-foreground">
+                {sourceLabel(source.source)}
+              </span>
+            );
           })}
         </div>
         <p className="mt-1">
-          민턴동이 주최하는 대회가 아니며, 신청 전 원본 사이트의 최신 정보를 확인해 주세요.
+          {item.sources.every((source) => source.source === "MANUAL")
+            ? "운영자가 등록한 정보입니다. 참가 신청 전 주최 측의 최신 안내를 확인해 주세요."
+            : "민턴동이 주최하는 대회가 아니며, 신청 전 원본 사이트의 최신 정보를 확인해 주세요."}
         </p>
       </section>
     </div>

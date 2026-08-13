@@ -6,7 +6,7 @@ export type TournamentSource = "FACECOCK" | "COURTX" | "BKPLAY" | "KOC" | "MANUA
 
 export type TournamentSourceLink = {
   source: TournamentSource;
-  sourceUrl: string;
+  sourceUrl: string | null;
   registrationUrl: string | null;
   bracketUrl: string | null;
   resultUrl: string | null;

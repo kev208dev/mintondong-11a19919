@@ -22,6 +22,7 @@ import { Route as RecordsRouteImport } from './routes/records'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TournamentsRouteImport } from './routes/tournaments'
+import { Route as AdminTournamentsRouteImport } from './routes/admin.tournaments'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
@@ -114,6 +115,11 @@ const TermsRoute = TermsRouteImport.update({
 const TournamentsRoute = TournamentsRouteImport.update({
   id: '/tournaments',
   path: '/tournaments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTournamentsRoute = AdminTournamentsRouteImport.update({
+  id: '/admin/tournaments',
+  path: '/admin/tournaments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthIndexRoute = AuthIndexRouteImport.update({
@@ -272,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
   '/tournaments': typeof TournamentsRoute
+  '/admin/tournaments': typeof AdminTournamentsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -313,6 +320,7 @@ export interface FileRoutesByTo {
   '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
   '/tournaments': typeof TournamentsRoute
+  '/admin/tournaments': typeof AdminTournamentsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
   '/tournaments': typeof TournamentsRoute
+  '/admin/tournaments': typeof AdminTournamentsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/auth/signup': typeof AuthSignupRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/terms'
     | '/tournaments'
+    | '/admin/tournaments'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/signup'
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/terms'
     | '/tournaments'
+    | '/admin/tournaments'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/signup'
@@ -484,6 +495,7 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/terms'
     | '/tournaments'
+    | '/admin/tournaments'
     | '/auth/forgot-password'
     | '/auth/reset-password'
     | '/auth/signup'
@@ -528,6 +540,7 @@ export interface RootRouteChildren {
   RefundPolicyRoute: typeof RefundPolicyRoute
   TermsRoute: typeof TermsRoute
   TournamentsRoute: typeof TournamentsRoute
+  AdminTournamentsRoute: typeof AdminTournamentsRoute
   ClubsClubIdRoute: typeof ClubsClubIdRouteWithChildren
   ClubsFindRoute: typeof ClubsFindRoute
   ClubsNewRoute: typeof ClubsNewRoute
@@ -629,6 +642,13 @@ declare module '@tanstack/react-router' {
       path: '/tournaments'
       fullPath: '/tournaments'
       preLoaderRoute: typeof TournamentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/tournaments': {
+      id: '/admin/tournaments'
+      path: '/admin/tournaments'
+      fullPath: '/admin/tournaments'
+      preLoaderRoute: typeof AdminTournamentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/': {
@@ -921,6 +941,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundPolicyRoute: RefundPolicyRoute,
   TermsRoute: TermsRoute,
   TournamentsRoute: TournamentsRoute,
+  AdminTournamentsRoute: AdminTournamentsRoute,
   ClubsClubIdRoute: ClubsClubIdRouteWithChildren,
   ClubsFindRoute: ClubsFindRoute,
   ClubsNewRoute: ClubsNewRoute,

@@ -151,6 +151,7 @@ function isOnboardingSubflow(pathname: string) {
 
 function isLegalPage(pathname: string) {
   return (
+    pathname.startsWith("/admin/") ||
     pathname.startsWith("/tournaments") ||
     pathname === "/terms" ||
     pathname === "/privacy" ||

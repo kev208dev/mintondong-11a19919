@@ -84,6 +84,7 @@ export const getTournaments = createServerFn({ method: "GET" })
     const result = await client
       .from("tournaments")
       .select(TOURNAMENT_COLUMNS)
+      .eq("is_active", true)
       .order("start_date", { ascending: true })
       .limit(300);
     if (result.error) throw result.error;
@@ -115,6 +116,7 @@ export const getTournament = createServerFn({ method: "GET" })
         .from("tournaments")
         .select(TOURNAMENT_COLUMNS)
         .eq("id", data.tournamentId)
+        .eq("is_active", true)
         .maybeSingle(),
       client
         .from("tournament_sources")
@@ -127,7 +129,7 @@ export const getTournament = createServerFn({ method: "GET" })
     const sources = ((sourceResult.data ?? []) as Record<string, unknown>[]).map(
       (row): TournamentSourceLink => ({
         source: row["source"] as TournamentSource,
-        sourceUrl: String(row["source_url"]),
+        sourceUrl: (row["source_url"] as string | null) ?? null,
         registrationUrl: (row["registration_url"] as string | null) ?? null,
         bracketUrl: (row["bracket_url"] as string | null) ?? null,
         resultUrl: (row["result_url"] as string | null) ?? null,

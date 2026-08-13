@@ -14,6 +14,7 @@
     "test:lessons": "node --test --experimental-strip-types tests/lesson-management.test.ts",
     "test:portone": "node --test --experimental-strip-types tests/portone-payment-core.test.ts",
     "test:tournaments": "node --test --experimental-strip-types tests/tournament-domain.test.ts",
+    "test:tournament-admin": "node --test --experimental-strip-types tests/tournament-admin.test.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

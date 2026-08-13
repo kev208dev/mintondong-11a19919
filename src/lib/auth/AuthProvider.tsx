@@ -16,6 +16,7 @@ type Profile = {
   display_name: string | null;
   avatar_url: string | null;
   username: string | null;
+  role: "USER" | "ADMIN";
 };
 
 type AuthValue = {
@@ -78,12 +79,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadProfile = useCallback(async (id: string) => {
     setProfileLoading(true);
     try {
-      const { data } = await supabase
+      const result = await supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, username")
+        .select("id, display_name, avatar_url, username, role")
         .eq("id", id)
         .maybeSingle();
-      setProfile((data as Profile | null) ?? null);
+      if (result.error?.code === "42703" || result.error?.code === "PGRST204") {
+        const legacy = await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url, username")
+          .eq("id", id)
+          .maybeSingle();
+        if (legacy.error) throw legacy.error;
+        const row = legacy.data as Omit<Profile, "role"> | null;
+        setProfile(row ? { ...row, role: "USER" } : null);
+        return;
+      }
+      if (result.error) throw result.error;
+      const row = result.data as Record<string, unknown> | null;
+      setProfile(
+        row
+          ? {
+              id: String(row["id"]),
+              display_name: (row["display_name"] as string | null) ?? null,
+              avatar_url: (row["avatar_url"] as string | null) ?? null,
+              username: (row["username"] as string | null) ?? null,
+              role: row["role"] === "ADMIN" ? "ADMIN" : "USER",
+            }
+          : null,
+      );
     } catch (error) {
       console.error("[auth] profile fetch failed", error);
     } finally {

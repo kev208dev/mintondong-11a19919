@@ -64,11 +64,21 @@ PortOne 활성화 및 PG 심사 전에 추가할 브라우저 공개 build 변�
 첫 배포에 반드시 필요한 Workers runtime secret:
 
 - SUPABASE_SERVICE_ROLE_KEY
+- TOURNAMENT_SYNC_SECRET
 
 이 값은 Cloudflare Worker의 Runtime Settings → Variables and Secrets에 Secret 타입으로
 등록합니다. Git build에서 Dashboard runtime secret의 존재 여부를 확인할 수 없으므로
 `wrangler.jsonc`의 `secrets.required`로 검증하지 않습니다. 값이 없으면 service-role이
 필요한 서버 함수가 `SUPABASE_SERVICE_ROLE_KEY_MISSING`으로 안전하게 실패합니다.
+
+대회 동기화 endpoint의 bearer secret은 실제 값을 저장소나 shell history에 쓰지 않고 다음
+대화형 명령으로 등록합니다.
+
+    npx wrangler secret put TOURNAMENT_SYNC_SECRET
+
+Facecock/CourtX는 허가 확인 전까지 각각 `TOURNAMENT_FACECOCK_ENABLED=false`,
+`TOURNAMENT_COURTX_ENABLED=false`를 유지합니다. 수동 등록에는 collector 활성화가 필요하지
+않습니다.
 
 `VITE_PORTONE_ENABLED=true`로 테스트 결제를 활성화하기 전에 반드시 추가해야 하는 Workers
 runtime secret:
@@ -139,7 +149,7 @@ PortOne server SDK의 Standard Webhooks 검증에 전달합니다. 배포 후 �
 
 ## 배포 전 순서
 
-1. 미적용 Supabase migration을 검토하고 운영자가 SQL Editor에서 적용합니다.
+1. 미적용 Supabase migration(대회 directory와 manual admin 포함)을 검토하고 적용합니다.
 2. 실제 클럽과 판매중 레슨을 등록합니다.
 3. npm run build, npm run test:portone, 관련 테스트를 실행합니다.
 4. Workers Builds 변수와 secret을 입력합니다.

@@ -69,3 +69,26 @@ Secret `TOURNAMENT_SYNC_SECRET`을 등록합니다. 활성화된 source는 다�
 실패는 다른 source를 중단시키지 않으며 결과와 건수만 `tournament_sync_runs`에 기록합니다.
 secret과 외부 HTML 본문은 로그에 남기지 않습니다. Cloudflare Cron을 연결할 때도 같은
 보호 endpoint 또는 server-only 호출 구조를 사용해야 합니다.
+
+## Tournament Admin
+
+외부 collector 허가 전에도 전역 `ADMIN` 계정은 `/admin/tournaments`에서 대회를 직접 등록,
+수정, 비활성화할 수 있습니다. 수동 등록은 하나의 DB 함수 안에서 `tournaments` canonical
+행과 `tournament_sources(source=MANUAL)` 행을 함께 저장합니다. 공개 목록과 상세에는
+`is_active=true`인 대회만 표시되며 상태는 별도로 입력하지 않고 한국 date-only 기준으로
+계산합니다.
+
+먼저 다음 migration을 순서대로 적용합니다.
+
+    supabase/migrations/20260812235109_tournament_directory.sql
+    supabase/migrations/20260813022012_tournament_manual_admin.sql
+
+초기 운영 관리자 지정은 Supabase SQL Editor에서 실제 사용자 ID를 확인한 뒤 service-role
+권한으로 한 번만 수행합니다. 이메일이나 ID를 추측하지 않습니다.
+
+    update public.profiles
+       set role = 'ADMIN', updated_at = now()
+     where id = '<확인한 auth.users.id>';
+
+일반 사용자는 RLS와 column grant에 의해 자신의 `profiles.role`을 변경할 수 없고, 모든 관리자
+write server function은 현재 access token 검증 후 서버에서 profile role을 다시 확인합니다.

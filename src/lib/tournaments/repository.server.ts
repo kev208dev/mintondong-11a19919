@@ -108,11 +108,21 @@ async function persistGroup(client: SupabaseClient, group: NormalizedTournament[
     if (inserted.error) throw inserted.error;
     tournamentId = String(inserted.data["id"]);
   } else {
-    const updated = await client
-      .from("tournaments")
-      .update(canonicalUpdatePayload(primary))
-      .eq("id", tournamentId);
-    if (updated.error) throw updated.error;
+    const manual = await client
+      .from("tournament_sources")
+      .select("id")
+      .eq("tournament_id", tournamentId)
+      .eq("source", "MANUAL")
+      .maybeSingle();
+    if (manual.error) throw manual.error;
+    // 운영자가 직접 관리하는 canonical 값은 향후 외부 sync가 덮어쓰지 않는다.
+    if (!manual.data) {
+      const updated = await client
+        .from("tournaments")
+        .update(canonicalUpdatePayload(primary))
+        .eq("id", tournamentId);
+      if (updated.error) throw updated.error;
+    }
   }
 
   for (const item of group) {

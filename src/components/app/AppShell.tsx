@@ -73,6 +73,7 @@ function usePageTitle(pathname: string) {
     if (pathname.startsWith("/privacy")) return "개인정보처리방침";
     if (pathname.startsWith("/refund-policy")) return "취소 및 환불 정책";
     if (pathname.startsWith("/business-info")) return "사업자 정보";
+    if (pathname.startsWith("/admin/tournaments")) return "대회 관리";
     if (pathname.startsWith("/records")) return "활동 기록";
     if (pathname.startsWith("/club/attendance")) return "출석 체크";
     if (pathname.startsWith("/club/schedule")) return "일정";
