@@ -1,4 +1,5 @@
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import { Capacitor } from "@capacitor/core";
 import { Bell, Home, Trophy, User, Users } from "lucide-react";
 import { memo, useEffect, useMemo } from "react";
 import { toast } from "sonner";
@@ -36,9 +37,21 @@ function showsPublicFooter(pathname: string) {
   );
 }
 
-const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
+const BottomNav = memo(function BottomNav({
+  pathname,
+  floating,
+}: {
+  pathname: string;
+  floating: boolean;
+}) {
   return (
-    <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
+    <nav
+      className={
+        floating
+          ? "ios-liquid-tabbar fixed bottom-[max(0.5rem,env(safe-area-inset-bottom))] left-1/2 z-30 w-[calc(100%-1.5rem)] max-w-[26.5rem] -translate-x-1/2 overflow-hidden rounded-[1.75rem]"
+          : "fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
+      }
+    >
       <ul className="grid grid-cols-4">
         {TABS.map(({ to, label, icon: Icon }) => {
           const active = isTabActive(to, pathname);
@@ -51,8 +64,14 @@ const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
                 preloadDelay={0}
                 disabled={atDestination}
                 aria-current={atDestination ? "page" : undefined}
-                className={`flex h-14 touch-manipulation select-none flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition-[color,background-color,transform] duration-75 active:scale-[0.96] active:bg-accent ${
-                  active ? "text-primary" : "text-muted-foreground"
+                className={`relative flex touch-manipulation select-none flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition-[color,background-color,transform,box-shadow] duration-75 active:scale-[0.96] ${
+                  floating ? "m-1.5 h-12 rounded-[1.25rem]" : "h-14 active:bg-accent"
+                } ${
+                  active
+                    ? floating
+                      ? "bg-card/55 text-primary shadow-[inset_0_1px_0_color-mix(in_oklab,var(--card)_80%,transparent),0_1px_5px_oklch(0.44_0.115_249/0.08)]"
+                      : "text-primary"
+                    : "text-muted-foreground"
                 }`}
               >
                 <Icon className="size-5" strokeWidth={active ? 2.6 : 2} />
@@ -107,6 +126,7 @@ export function AppShell() {
   const showPublicFooter = showsPublicFooter(pathname);
   const hideBottomNav = hidesBottomNavigation(pathname);
   const authFlow = pathname === "/auth" || pathname.startsWith("/auth/");
+  const iosNative = Capacitor.getPlatform() === "ios";
 
   useEffect(() => {
     const run = () => {
@@ -164,7 +184,9 @@ export function AppShell() {
               ? "pb-[max(2rem,env(safe-area-inset-bottom))]"
               : showPublicFooter
                 ? "pb-8"
-                : "pb-[calc(4.5rem+env(safe-area-inset-bottom))]"
+                : iosNative
+                  ? "pb-20"
+                  : "pb-[calc(4.5rem+env(safe-area-inset-bottom))]"
           }`}
         >
           {isClubSection(pathname) ? <ClubSectionNav pathname={pathname} /> : null}
@@ -178,10 +200,10 @@ export function AppShell() {
           </div>
         </main>
 
-        {showPublicFooter ? <PublicFooter /> : null}
+        {showPublicFooter ? <PublicFooter floatingNav={iosNative && !hideBottomNav} /> : null}
       </div>
 
-      {hideBottomNav ? null : <BottomNav pathname={pathname} />}
+      {hideBottomNav ? null : <BottomNav pathname={pathname} floating={iosNative} />}
     </div>
   );
 }

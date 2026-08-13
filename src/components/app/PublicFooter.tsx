@@ -20,9 +20,13 @@ const BUSINESS_ROWS = [
   ["이메일", businessConfig.customerServiceEmail],
 ] as const;
 
-export function PublicFooter() {
+export function PublicFooter({ floatingNav = false }: { floatingNav?: boolean }) {
   return (
-    <footer className="border-t border-border/70 bg-card/60 px-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-3">
+    <footer
+      className={`border-t border-border/70 bg-card/60 px-4 pt-3 ${
+        floatingNav ? "pb-20" : "pb-[calc(4.5rem+env(safe-area-inset-bottom))]"
+      }`}
+    >
       <nav aria-label="법적 정보">
         <ul className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           {LEGAL_LINKS.map((item) => (

@@ -39,6 +39,21 @@ test("AppShell은 독립 scroll container, safe area와 짧은 transition을 유
   assert.match(styles, /prefers-reduced-motion: reduce/);
 });
 
+test("iOS BottomNav는 safe-area를 위치에만 쓰는 floating glass bar다", () => {
+  const shell = readFileSync("src/components/app/AppShell.tsx", "utf8");
+  const footer = readFileSync("src/components/app/PublicFooter.tsx", "utf8");
+  const styles = readFileSync("src/styles.css", "utf8");
+  assert.match(shell, /Capacitor\.getPlatform\(\) === "ios"/);
+  assert.match(shell, /bottom-\[max\(0\.5rem,env\(safe-area-inset-bottom\)\)\]/);
+  assert.match(shell, /ios-liquid-tabbar/);
+  assert.doesNotMatch(
+    shell.match(/floating\s*\?\s*"([^"]+)"/)?.[1] ?? "",
+    /pb-\[env\(safe-area-inset-bottom\)\]/,
+  );
+  assert.match(footer, /floatingNav \? "pb-20"/);
+  assert.match(styles, /backdrop-filter: blur\(24px\) saturate\(180%\)/);
+});
+
 test("ClubSwitcher는 seed store가 아닌 Supabase active club query를 유지한다", () => {
   const source = readFileSync("src/components/app/ClubSwitcher.tsx", "utf8");
   assert.match(source, /listMyClubs/);
