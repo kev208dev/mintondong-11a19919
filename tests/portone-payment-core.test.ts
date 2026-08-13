@@ -202,3 +202,19 @@ test("확정된 공개 Store ID와 KG이니시스 V2 Channel Key를 공통 설�
   assert.match(server, /portOnePublicConfig/);
   assert.doesNotMatch(config, /PORTONE_API_SECRET|PORTONE_WEBHOOK_SECRET/);
 });
+
+test("구매자 이름은 늦게 도착한 profile로 한 번만 초기화하고 사용자 편집을 보존한다", () => {
+  const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
+  assert.match(checkout, /const \[name, setName\] = useState\(""\)/);
+  assert.match(checkout, /const buyerNameInitialized = useRef\(false\)/);
+  assert.match(
+    checkout,
+    /if \(buyerNameInitialized\.current \|\| !profile\?\.display_name\) return;/,
+  );
+  assert.match(
+    checkout,
+    /buyerNameInitialized\.current = true;\s+setName\(profile\.display_name\)/,
+  );
+  assert.match(checkout, /buyerNameInitialized\.current = true;\s+setName\(e\.target\.value\)/);
+  assert.doesNotMatch(checkout, /\[name, profile\?\.display_name\]/);
+});

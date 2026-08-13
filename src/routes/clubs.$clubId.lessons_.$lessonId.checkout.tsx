@@ -41,11 +41,12 @@ function PortOneCheckoutPage() {
   const { user, profile, loading } = useAuth();
   const prepare = useServerFn(preparePortOnePayment);
   const complete = useServerFn(completePortOnePayment);
-  const [name, setName] = useState(profile?.display_name ?? "");
+  const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [reviewRequired, setReviewRequired] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const buyerNameInitialized = useRef(false);
   const completedRedirect = useRef(false);
   const product = useQuery({
     queryKey: ["portone-checkout", clubId, lessonId],
@@ -53,8 +54,10 @@ function PortOneCheckoutPage() {
   });
 
   useEffect(() => {
-    if (!name && profile?.display_name) setName(profile.display_name);
-  }, [name, profile?.display_name]);
+    if (buyerNameInitialized.current || !profile?.display_name) return;
+    buyerNameInitialized.current = true;
+    setName(profile.display_name);
+  }, [profile?.display_name]);
 
   useEffect(() => {
     if (!redirectedPaymentId || !user || completedRedirect.current) return;
@@ -210,7 +213,10 @@ function PortOneCheckoutPage() {
                 id="buyer-name"
                 className="mt-1"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  buyerNameInitialized.current = true;
+                  setName(e.target.value);
+                }}
                 maxLength={50}
                 autoComplete="name"
               />
