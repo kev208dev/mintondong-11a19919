@@ -11,7 +11,7 @@ import { portOnePublicConfig } from "@/config/portone";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { won } from "@/lib/badminton/lessons";
 import { WEEKDAY_LABEL } from "@/lib/badminton/types";
-import { formatKoreanMobilePhone, isCompleteKoreanMobilePhone } from "@/lib/portone/checkout-input";
+import { formatKoreanMobilePhone, isValidKoreanMobilePhone } from "@/lib/portone/checkout-input";
 import {
   completePortOnePayment,
   getCheckoutLesson,
@@ -270,7 +270,7 @@ function PortOneCheckoutPage() {
               reviewRequired ||
               busy ||
               !name.trim() ||
-              !isCompleteKoreanMobilePhone(phone)
+              !isValidKoreanMobilePhone(phone)
             }
             onClick={() => void pay()}
           >

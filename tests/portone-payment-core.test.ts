@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  formatKoreanMobilePhone,
+  isValidKoreanMobilePhone,
+} from "../src/lib/portone/checkout-input.ts";
+import {
   cancellationDecision,
   checkoutPaymentAccess,
   executeCancellationDecision,
@@ -9,10 +13,6 @@ import {
   paymentFactsMatch,
   verificationReviewStatus,
 } from "../src/lib/portone/payment-core.ts";
-import {
-  formatKoreanMobilePhone,
-  isCompleteKoreanMobilePhone,
-} from "../src/lib/portone/checkout-input.ts";
 
 const verifiedPayment = {
   paymentId: "md_1234567890123456",
@@ -229,6 +229,8 @@ test("휴대전화 입력을 숫자 11자리와 자동 하이픈 형식으로 �
   assert.equal(formatKoreanMobilePhone("010 1234 5678"), "010-1234-5678");
   assert.equal(formatKoreanMobilePhone("문자010a1234b5678"), "010-1234-5678");
   assert.equal(formatKoreanMobilePhone("010123456789999"), "010-1234-5678");
+  assert.equal(formatKoreanMobilePhone("0101234"), "010-1234");
+  assert.equal(formatKoreanMobilePhone("01012345"), "010-1234-5");
 });
 
 test("휴대전화 부분 입력과 백스페이스 삭제를 유지하고 완성형만 유효하다", () => {
@@ -238,18 +240,19 @@ test("휴대전화 부분 입력과 백스페이스 삭제를 유지하고 완�
   assert.equal(formatKoreanMobilePhone("0101"), "010-1");
   assert.equal(formatKoreanMobilePhone("010-1234-567"), "010-1234-567");
   assert.equal(formatKoreanMobilePhone("010-1234-56"), "010-1234-56");
-  assert.equal(isCompleteKoreanMobilePhone(""), false);
-  assert.equal(isCompleteKoreanMobilePhone("010-1234-567"), false);
-  assert.equal(isCompleteKoreanMobilePhone("010-1234-5678"), true);
-  assert.equal(isCompleteKoreanMobilePhone("01012345678"), false);
+  assert.equal(isValidKoreanMobilePhone(""), false);
+  assert.equal(isValidKoreanMobilePhone("010-1234-567"), false);
+  assert.equal(isValidKoreanMobilePhone("010-1234-5678"), true);
+  assert.equal(isValidKoreanMobilePhone("01012345678"), false);
+  assert.equal(isValidKoreanMobilePhone(formatKoreanMobilePhone("0111234567")), true);
 });
 
 test("checkout과 서버는 동일한 휴대전화 완성 검증 helper를 사용한다", () => {
   const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
   const serverFunction = readFileSync("src/lib/portone/payments.functions.ts", "utf8");
   assert.match(checkout, /setPhone\(formatKoreanMobilePhone\(e\.target\.value\)\)/);
-  assert.match(checkout, /!isCompleteKoreanMobilePhone\(phone\)/);
+  assert.match(checkout, /!isValidKoreanMobilePhone\(phone\)/);
   assert.match(checkout, /inputMode="numeric"/);
   assert.match(checkout, /maxLength=\{13\}/);
-  assert.match(serverFunction, /refine\(isCompleteKoreanMobilePhone\)/);
+  assert.match(serverFunction, /refine\(isValidKoreanMobilePhone\)/);
 });
