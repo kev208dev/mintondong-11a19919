@@ -36,7 +36,12 @@ function db(): SupabaseClient {
 }
 
 function secret(): string {
-  return requireServerEnv("PORTONE_API_SECRET");
+  try {
+    return requireServerEnv("PORTONE_API_SECRET");
+  } catch {
+    // 서버 환경변수 이름을 브라우저 응답이나 클라이언트 번들에 노출하지 않는다.
+    throw new Error("PORTONE_SERVER_NOT_CONFIGURED");
+  }
 }
 
 function expectedStoreId() {
@@ -125,6 +130,9 @@ export async function preparePayment(input: {
   const storeId = expectedStoreId();
   const channelKey = expectedChannelKey();
   if (!portOneEnabled() || !storeId || !channelKey) throw new Error("PORTONE_NOT_CONFIGURED");
+  // 결제창을 연 뒤 서버 검증이 불가능해지는 상태를 만들지 않는다. Runtime API Secret이
+  // 없으면 내부 PENDING 주문 생성 전 fail-closed 하며 브라우저에는 값을 반환하지 않는다.
+  secret();
   const { data: reviewOrder, error: reviewError } = await db()
     .from("payments")
     .select("id")

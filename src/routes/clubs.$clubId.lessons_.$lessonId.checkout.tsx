@@ -161,7 +161,9 @@ function PortOneCheckoutPage() {
           ? PAYMENT_REVIEW_MESSAGE
           : code === "PORTONE_PAYMENT_MIGRATION_REQUIRED"
             ? "결제 DB 준비가 필요합니다. 운영자에게 문의해 주세요."
-            : "결제를 준비하거나 검증하지 못했습니다. 다시 시도해 주세요.",
+            : code === "PORTONE_SERVER_NOT_CONFIGURED"
+              ? "결제 서버 설정이 필요합니다. 운영자에게 문의해 주세요."
+              : "결제를 준비하거나 검증하지 못했습니다. 다시 시도해 주세요.",
       });
     } finally {
       setBusy(false);

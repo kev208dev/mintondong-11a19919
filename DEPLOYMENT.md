@@ -48,7 +48,7 @@ Wrangler로 production Worker를 배포합니다.
 PortOne 활성화 및 PG 심사 전에 추가할 브라우저 공개 build 변수:
 
 - VITE_PORTONE_STORE_ID
-- VITE_PORTONE_CHANNEL_KEY
+- VITE_PORTONE_CHANNEL_KEY=channel-key-f8da7be3-4a42-4e83-a7a9-f5926b6fec7d
 - VITE_PORTONE_ENABLED=true
 - VITE_BUSINESS_NAME
 - VITE_BUSINESS_REPRESENTATIVE_NAME
@@ -77,6 +77,8 @@ secret:
 - PORTONE_WEBHOOK_SECRET
 
 PortOne API secret이 없으면 결제 단건조회·완료·취소가 실패하도록 구현되어 있습니다.
+또한 결제 준비 단계에서 API secret을 먼저 확인하므로, secret이 없으면 내부 주문 생성과
+브라우저 결제창 호출 전에 안전하게 중단됩니다.
 Webhook secret이 없을 때도 webhook payload의 상태나 금액을 신뢰하지 않고 paymentId로
 PortOne API를 재조회합니다. API secret도 없다면 결제를 완료 처리하지 않습니다.
 
@@ -91,6 +93,11 @@ Settings → Variables and Secrets에서 Secret 형식으로 등록합니다.
 
 공개 VITE_ 값은 Workers Builds의 build variables에 입력해야 Vite client bundle에
 반영됩니다. server secret은 Worker runtime variables에만 등록합니다.
+
+현재 KG이니시스 V2 테스트 채널은 `INIpayTest` MID에 연결된 위 Channel Key를 사용합니다.
+웹결제 signkey, INIAPI Key/IV, INILite Key, hashKey는 PortOne 채널 내부 PG 자격정보이므로
+민턴동 환경변수, Worker 설정 또는 저장소에 복사하지 않습니다. Store ID는 PortOne 콘솔에서
+확인한 실제 값만 입력하며 Channel Key나 MID로 추측하지 않습니다.
 
 ## GitHub 자동 배포 연결
 

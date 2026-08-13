@@ -166,3 +166,26 @@ test("비로그인 checkout은 상품·가격·정책을 유지하고 PortOne �
   assert.doesNotMatch(source, /if \(!user\) return null/);
   assert.match(source, /access !== "READY" \|\| !user/);
 });
+
+test("API secret 없이 주문을 만들거나 결제창을 열지 않는다", () => {
+  const server = readFileSync("src/lib/portone/portone.server.ts", "utf8");
+  const configurationCheck = server.indexOf('throw new Error("PORTONE_NOT_CONFIGURED")');
+  const secretCheck = server.indexOf("secret();", configurationCheck);
+  const orderInsert = server.indexOf('.from("payments").insert', secretCheck);
+  assert.ok(configurationCheck >= 0);
+  assert.ok(secretCheck > configurationCheck);
+  assert.ok(orderInsert > secretCheck);
+});
+
+test("서버 secret 환경변수 이름을 checkout 오류 코드로 노출하지 않는다", () => {
+  const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
+  assert.match(checkout, /PORTONE_SERVER_NOT_CONFIGURED/);
+  assert.doesNotMatch(checkout, /PORTONE_API_SECRET/);
+});
+
+test("환불 정책 기본값이 존재하여 결제 준비 조건을 충족한다", () => {
+  const policy = readFileSync("src/config/refund-policy.ts", "utf8");
+  assert.match(policy, /결제 후 7일 이내/);
+  assert.match(policy, /승인 후 3영업일 이내/);
+  assert.match(policy, /export const isRefundPolicyReady = Boolean/);
+});

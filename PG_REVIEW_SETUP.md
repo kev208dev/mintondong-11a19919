@@ -60,7 +60,7 @@
 6. 실제 코치, 소개, 대상, 요일·시간, 수업시간과 원 단위 가격을 입력하고 판매중으로 저장합니다.
 7. 공개 페이지에서 보기를 눌러 저장한 실제 데이터가 즉시 노출되는지 확인합니다.
 8. 로그아웃 상태의 390px 모바일 화면에서 홈 → 동호회 찾기 → 공개 클럽 → 레슨 →
-    checkout으로 이동해 상품·가격·취소 정책과 사업자정보를 확인합니다.
+   checkout으로 이동해 상품·가격·취소 정책과 사업자정보를 확인합니다.
 9. 로그인 후에만 checkout의 PortOne 결제 호출이 가능한지 확인합니다.
 
 공개 클럽이어도 회원 명단은 공개되지 않습니다. DB에서 `anon`의 `club_members` 권한을 회수하고, RLS 정책도 `authenticated` 역할의 본인 멤버십·같은 클럽 active 회원·클럽 owner에게만 로스터 조회를 허용합니다. 따라서 UI 숨김 여부와 관계없이 이름, `user_id`, 역할, 레벨은 비로그인 API 요청으로 읽을 수 없습니다.
@@ -102,7 +102,7 @@ is_active=false로 변경하므로 기존 결제와 향후 예약 참조를 보�
 브라우저 공개값:
 
 - `VITE_PORTONE_STORE_ID`: PortOne V2 상점 ID
-- `VITE_PORTONE_CHANNEL_KEY`: KG이니시스 결제 채널 키
+- `VITE_PORTONE_CHANNEL_KEY=channel-key-f8da7be3-4a42-4e83-a7a9-f5926b6fec7d`: KG이니시스 V2 테스트 채널 키
 - `VITE_PORTONE_ENABLED=true`: DB·정책·계약·채널 검증 뒤 마지막에 활성화
 
 서버 secret:
@@ -111,6 +111,9 @@ is_active=false로 변경하므로 기존 결제와 향후 예약 참조를 보�
 - `PORTONE_WEBHOOK_SECRET`: Standard Webhooks 서명 검증 secret
 
 서버 secret에는 절대 `VITE_` 접두사를 붙이지 말고 브라우저 환경에 주입하지 마세요. PortOne 콘솔에서 KG이니시스 V2 채널을 만들고 상점 ID/채널 키를 등록하며, webhook URL은 `https://<운영도메인>/api/portone/webhook`으로 설정합니다. webhook secret 미설정 시 payload 자체의 상태·금액은 신뢰하지 않고 내부 주문 존재를 확인한 후 단건조회하지만, 운영 활성화 전에는 반드시 secret도 설정하세요.
+
+KG이니시스 테스트 MID `INIpayTest`의 웹결제 signkey, INIAPI Key/IV, INILite Key,
+hashKey는 PortOne 채널 설정에만 보관합니다. 앱 환경변수나 GitHub에 입력하지 않습니다.
 
 결제 흐름은 다음과 같습니다.
 

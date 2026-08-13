@@ -63,6 +63,8 @@ function HomePage() {
     queryFn: () => getPublicLessonCatalog({ data: { clubId: featuredClub!.id } }),
     enabled: Boolean(featuredClub),
   });
+  const featuredCatalog = featuredLessons.data;
+  const featuredCatalogClub = featuredCatalog?.club ?? null;
   const liveMatches = club.matches.filter((m) => m.status === "LIVE");
   const doneCount = club.matches.filter((m) => m.status === "DONE").length;
   const checkedIn = club.checkedIn.length;
@@ -110,10 +112,13 @@ function HomePage() {
         </div>
 
         {publicClubs.isLoading || (featuredClub && featuredLessons.isLoading) ? (
-          <div className="h-36 animate-pulse rounded-2xl bg-secondary" aria-label="레슨 상품 불러오는 중" />
-        ) : featuredLessons.data?.lessons.length && featuredLessons.data.club ? (
+          <div
+            className="h-36 animate-pulse rounded-2xl bg-secondary"
+            aria-label="레슨 상품 불러오는 중"
+          />
+        ) : featuredCatalog?.lessons.length && featuredCatalogClub ? (
           <ul className="space-y-2">
-            {featuredLessons.data.lessons.slice(0, 3).map((lesson) => (
+            {featuredCatalog.lessons.slice(0, 3).map((lesson) => (
               <li key={lesson.id}>
                 <article className="rounded-2xl border border-border bg-card p-4 card-soft">
                   <div className="flex min-w-0 items-start justify-between gap-3">
@@ -125,7 +130,8 @@ function HomePage() {
                       <p className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
                         <MapPin className="size-3 shrink-0" />
                         <span className="truncate">
-                          {featuredLessons.data.club.name} · {featuredLessons.data.club.location || "장소 미등록"}
+                          {featuredCatalogClub.name} ·{" "}
+                          {featuredCatalogClub.location || "장소 미등록"}
                         </span>
                       </p>
                     </div>
@@ -137,7 +143,8 @@ function HomePage() {
                     </div>
                   </div>
                   <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
-                    {lesson.description || "배드민턴 레슨 상품입니다. 상세 일정과 수업 정보를 확인해 주세요."}
+                    {lesson.description ||
+                      "배드민턴 레슨 상품입니다. 상세 일정과 수업 정보를 확인해 주세요."}
                   </p>
                   <Link
                     to="/clubs/$clubId/lessons"
@@ -153,7 +160,9 @@ function HomePage() {
         ) : (
           <div className="rounded-2xl border border-border bg-card p-4 text-center">
             <GraduationCap className="mx-auto size-4 text-muted-foreground" />
-            <p className="mt-1.5 text-xs font-bold text-foreground">현재 판매 중인 레슨 상품을 확인 중이에요</p>
+            <p className="mt-1.5 text-xs font-bold text-foreground">
+              현재 판매 중인 레슨 상품을 확인 중이에요
+            </p>
             <Link to="/clubs/find" className="mt-1 inline-block text-[11px] font-bold text-primary">
               공개 클럽과 레슨 보기
             </Link>
