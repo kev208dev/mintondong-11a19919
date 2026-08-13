@@ -7,12 +7,26 @@ import {
 } from "../src/lib/portone/checkout-input.ts";
 import {
   cancellationDecision,
+  createPortOnePaymentId,
+  PORTONE_PAYMENT_ID,
   checkoutPaymentAccess,
   executeCancellationDecision,
   PAYMENT_REVIEW_MESSAGE,
   paymentFactsMatch,
   verificationReviewStatus,
 } from "../src/lib/portone/payment-core.ts";
+
+test("신규 PortOne paymentId는 KG이니시스 oid 제한을 만족한다", () => {
+  const first = createPortOnePaymentId("11111111-1111-4111-8111-111111111111");
+  const second = createPortOnePaymentId("22222222-2222-4222-8222-222222222222");
+  assert.ok(first.length <= 40);
+  assert.ok(first.length >= 16);
+  assert.match(first, /^md_/);
+  assert.ok([...first].every((character) => character.charCodeAt(0) <= 0x7f));
+  assert.match(first, PORTONE_PAYMENT_ID);
+  assert.notEqual(first, second);
+  assert.equal(createPortOnePaymentId("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa").length, 35);
+});
 
 const verifiedPayment = {
   paymentId: "md_1234567890123456",

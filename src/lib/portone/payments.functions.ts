@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { isValidKoreanMobilePhone } from "./checkout-input";
+import { LEGACY_PORTONE_PAYMENT_ID } from "./payment-core";
 
 const ids = z.object({
   clubId: z.string().uuid(),
@@ -38,7 +39,7 @@ export const preparePortOnePayment = createServerFn({ method: "POST" })
 export const completePortOnePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((value) =>
-    z.object({ paymentId: z.string().regex(/^[A-Za-z0-9_-]{16,64}$/) }).parse(value),
+    z.object({ paymentId: z.string().regex(LEGACY_PORTONE_PAYMENT_ID) }).parse(value),
   )
   .handler(async ({ data, context }) => {
     const { synchronizePayment } = await import("./portone.server");
@@ -50,7 +51,7 @@ export const requestPortOneCancellation = createServerFn({ method: "POST" })
   .validator((value) =>
     z
       .object({
-        paymentId: z.string().regex(/^[A-Za-z0-9_-]{16,64}$/),
+        paymentId: z.string().regex(LEGACY_PORTONE_PAYMENT_ID),
         reason: z.string().trim().min(2).max(200),
       })
       .parse(value),

@@ -1,4 +1,12 @@
-export const PORTONE_PAYMENT_ID = /^[A-Za-z0-9_-]{16,64}$/;
+/** KG이니시스 V2 oid 제한을 만족하는 신규 결제 ID 형식(16~40 ASCII 문자). */
+export const PORTONE_PAYMENT_ID = /^[A-Za-z0-9_-]{16,40}$/;
+
+/** 기존 DB에 저장된 과거 ID를 재조회·정리할 때만 허용하는 legacy 형식. */
+export const LEGACY_PORTONE_PAYMENT_ID = /^[A-Za-z0-9_-]{16,64}$/;
+
+export function createPortOnePaymentId(uuid: string): string {
+  return `md_${uuid.replaceAll("-", "").slice(0, 32)}`;
+}
 
 export type InternalPaymentStatus = "PENDING" | "PAID" | "CANCELLED" | "REFUNDED" | "FAILED";
 

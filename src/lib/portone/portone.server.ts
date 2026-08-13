@@ -7,12 +7,13 @@ import { adminClient } from "@/lib/auth/account.server";
 import { requireServerEnv, serverEnv } from "@/lib/server-env.server";
 import {
   cancellationDecision,
+  createPortOnePaymentId,
   executeCancellationDecision,
   isSellableLesson,
   mapPortOneStatus,
   PAYMENT_REVIEW_MESSAGE,
   paymentFactsMatch,
-  PORTONE_PAYMENT_ID,
+  LEGACY_PORTONE_PAYMENT_ID,
   verificationReviewStatus,
 } from "./payment-core";
 
@@ -145,7 +146,7 @@ export async function preparePayment(input: {
     .maybeSingle();
   if (reviewError) throw reviewError;
   if (reviewOrder) throw new Error("PAYMENT_REVIEW_REQUIRED");
-  const paymentId = `md_${Date.now().toString(36)}_${randomUUID().replaceAll("-", "")}`;
+  const paymentId = createPortOnePaymentId(randomUUID());
   const name = orderName(product);
   const { error } = await db().from("payments").insert({
     booking_id: null,
@@ -280,7 +281,7 @@ async function markVerificationReview(internal: Row, remoteStatus: string) {
 }
 
 export async function synchronizePayment(paymentId: string, userId?: string) {
-  if (!PORTONE_PAYMENT_ID.test(paymentId)) throw new Error("INVALID_PAYMENT_ID");
+  if (!LEGACY_PORTONE_PAYMENT_ID.test(paymentId)) throw new Error("INVALID_PAYMENT_ID");
   const internal = await internalPayment(paymentId);
   if (!internal || internal["provider"] !== "PORTONE") throw new Error("ORDER_NOT_FOUND");
   if (userId && internal["user_id"] !== userId) throw new Error("ORDER_FORBIDDEN");
@@ -370,7 +371,7 @@ export async function webhookPaymentId(rawBody: string, headers: Headers) {
   const data = (payload as { data?: unknown }).data;
   if (!data || typeof data !== "object") throw new Error("INVALID_WEBHOOK");
   const paymentId = (data as { paymentId?: unknown }).paymentId;
-  if (typeof paymentId !== "string" || !PORTONE_PAYMENT_ID.test(paymentId)) {
+  if (typeof paymentId !== "string" || !LEGACY_PORTONE_PAYMENT_ID.test(paymentId)) {
     throw new Error("INVALID_WEBHOOK_PAYMENT_ID");
   }
   return paymentId;
