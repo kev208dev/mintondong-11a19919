@@ -9,6 +9,10 @@ import {
   paymentFactsMatch,
   verificationReviewStatus,
 } from "../src/lib/portone/payment-core.ts";
+import {
+  formatKoreanMobilePhone,
+  isCompleteKoreanMobilePhone,
+} from "../src/lib/portone/checkout-input.ts";
 
 const verifiedPayment = {
   paymentId: "md_1234567890123456",
@@ -217,4 +221,35 @@ test("구매자 이름은 늦게 도착한 profile로 한 번만 초기화하고
   );
   assert.match(checkout, /buyerNameInitialized\.current = true;\s+setName\(e\.target\.value\)/);
   assert.doesNotMatch(checkout, /\[name, profile\?\.display_name\]/);
+});
+
+test("휴대전화 입력을 숫자 11자리와 자동 하이픈 형식으로 정규화한다", () => {
+  assert.equal(formatKoreanMobilePhone("01012345678"), "010-1234-5678");
+  assert.equal(formatKoreanMobilePhone("010-1234-5678"), "010-1234-5678");
+  assert.equal(formatKoreanMobilePhone("010 1234 5678"), "010-1234-5678");
+  assert.equal(formatKoreanMobilePhone("문자010a1234b5678"), "010-1234-5678");
+  assert.equal(formatKoreanMobilePhone("010123456789999"), "010-1234-5678");
+});
+
+test("휴대전화 부분 입력과 백스페이스 삭제를 유지하고 완성형만 유효하다", () => {
+  assert.equal(formatKoreanMobilePhone("0"), "0");
+  assert.equal(formatKoreanMobilePhone("01"), "01");
+  assert.equal(formatKoreanMobilePhone("010"), "010");
+  assert.equal(formatKoreanMobilePhone("0101"), "010-1");
+  assert.equal(formatKoreanMobilePhone("010-1234-567"), "010-1234-567");
+  assert.equal(formatKoreanMobilePhone("010-1234-56"), "010-1234-56");
+  assert.equal(isCompleteKoreanMobilePhone(""), false);
+  assert.equal(isCompleteKoreanMobilePhone("010-1234-567"), false);
+  assert.equal(isCompleteKoreanMobilePhone("010-1234-5678"), true);
+  assert.equal(isCompleteKoreanMobilePhone("01012345678"), false);
+});
+
+test("checkout과 서버는 동일한 휴대전화 완성 검증 helper를 사용한다", () => {
+  const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
+  const serverFunction = readFileSync("src/lib/portone/payments.functions.ts", "utf8");
+  assert.match(checkout, /setPhone\(formatKoreanMobilePhone\(e\.target\.value\)\)/);
+  assert.match(checkout, /!isCompleteKoreanMobilePhone\(phone\)/);
+  assert.match(checkout, /inputMode="numeric"/);
+  assert.match(checkout, /maxLength=\{13\}/);
+  assert.match(serverFunction, /refine\(isCompleteKoreanMobilePhone\)/);
 });

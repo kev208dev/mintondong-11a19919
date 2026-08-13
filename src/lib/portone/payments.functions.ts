@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { isCompleteKoreanMobilePhone } from "./checkout-input";
 
 const ids = z.object({
   clubId: z.string().uuid(),
@@ -20,10 +21,7 @@ export const preparePortOnePayment = createServerFn({ method: "POST" })
     ids
       .extend({
         customerName: z.string().trim().min(1).max(50),
-        customerPhone: z
-          .string()
-          .trim()
-          .regex(/^01[016789]-?\d{3,4}-?\d{4}$/),
+        customerPhone: z.string().trim().refine(isCompleteKoreanMobilePhone),
       })
       .parse(value),
   )
