@@ -89,6 +89,22 @@ Standard Webhooks 서명 검증을 위한 다음 secret은 운영 실결제 전�
 
 - PORTONE_WEBHOOK_SECRET
 
+Sign in with Apple server-to-server notification 검증에는 private key가 아니라 Apple 공개
+JWKS를 사용합니다. Worker의 비밀값이 아닌 server runtime 변수로 Primary App ID를 설정합니다.
+
+- APPLE_NOTIFICATION_AUDIENCE=com.mintondong.app
+
+이 값은 browser OAuth용 Services ID인 `APPLE_CLIENT_ID`와 구분됩니다. Apple Developer의
+Server-to-Server Notification Endpoint는 다음 Production URL과 정확히 일치해야 합니다.
+
+    https://mintondong-11a19919.kev208dev.workers.dev/api/apple/notifications
+
+`20260813112445_apple_auth_notifications.sql`을 먼저 적용해야 알림의 `jti` 멱등성, Apple
+provider subject 매핑과 server-only audit가 동작합니다. endpoint는 Apple JWS의 RS256 서명,
+issuer와 위 audience를 검증한 뒤에만 기록합니다. `consent-revoked`는 Apple 권한 상태만
+기록하며, `account-deleted`도 기존 클럽 소유권·결제 원장 보존 절차를 우회해 사용자를 즉시
+삭제하지 않고 검토 필요 상태로 기록합니다.
+
 PortOne API secret이 없으면 결제 단건조회·완료·취소가 실패하도록 구현되어 있습니다.
 또한 결제 준비 단계에서 API secret을 먼저 확인하므로, secret이 없으면 내부 주문 생성과
 브라우저 결제창 호출 전에 안전하게 중단됩니다.

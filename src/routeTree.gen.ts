@@ -43,6 +43,7 @@ import { Route as ClubsFindRouteImport } from './routes/clubs.find'
 import { Route as ClubsNewRouteImport } from './routes/clubs.new'
 import { Route as OnboardingAccountRouteImport } from './routes/onboarding.account'
 import { Route as TournamentsTournamentIdRouteImport } from './routes/tournaments_.$tournamentId'
+import { Route as ApiAppleNotificationsRouteImport } from './routes/api.apple.notifications'
 import { Route as ApiPortoneWebhookRouteImport } from './routes/api.portone.webhook'
 import { Route as ApiTournamentsSyncRouteImport } from './routes/api.tournaments.sync'
 import { Route as ClubManageLessonsRouteImport } from './routes/club.manage_.lessons'
@@ -224,6 +225,11 @@ const TournamentsTournamentIdRoute = TournamentsTournamentIdRouteImport.update({
   path: '/tournaments/$tournamentId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAppleNotificationsRoute = ApiAppleNotificationsRouteImport.update({
+  id: '/api/apple/notifications',
+  path: '/api/apple/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPortoneWebhookRoute = ApiPortoneWebhookRouteImport.update({
   id: '/api/portone/webhook',
   path: '/api/portone/webhook',
@@ -311,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/tournaments/$tournamentId': typeof TournamentsTournamentIdRoute
   '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
+  '/api/apple/notifications': typeof ApiAppleNotificationsRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
   '/api/tournaments/sync': typeof ApiTournamentsSyncRoute
   '/club/manage/lessons': typeof ClubManageLessonsRoute
@@ -354,6 +361,7 @@ export interface FileRoutesByTo {
   '/tournaments/$tournamentId': typeof TournamentsTournamentIdRoute
   '/auth': typeof AuthIndexRoute
   '/club': typeof ClubIndexRoute
+  '/api/apple/notifications': typeof ApiAppleNotificationsRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
   '/api/tournaments/sync': typeof ApiTournamentsSyncRoute
   '/club/manage/lessons': typeof ClubManageLessonsRoute
@@ -401,6 +409,7 @@ export interface FileRoutesById {
   '/tournaments_/$tournamentId': typeof TournamentsTournamentIdRoute
   '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
+  '/api/apple/notifications': typeof ApiAppleNotificationsRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
   '/api/tournaments/sync': typeof ApiTournamentsSyncRoute
   '/club/manage_/lessons': typeof ClubManageLessonsRoute
@@ -449,6 +458,7 @@ export interface FileRouteTypes {
     | '/tournaments/$tournamentId'
     | '/auth/'
     | '/club/'
+    | '/api/apple/notifications'
     | '/api/portone/webhook'
     | '/api/tournaments/sync'
     | '/club/manage/lessons'
@@ -492,6 +502,7 @@ export interface FileRouteTypes {
     | '/tournaments/$tournamentId'
     | '/auth'
     | '/club'
+    | '/api/apple/notifications'
     | '/api/portone/webhook'
     | '/api/tournaments/sync'
     | '/club/manage/lessons'
@@ -538,6 +549,7 @@ export interface FileRouteTypes {
     | '/tournaments_/$tournamentId'
     | '/auth/'
     | '/club/'
+    | '/api/apple/notifications'
     | '/api/portone/webhook'
     | '/api/tournaments/sync'
     | '/club/manage_/lessons'
@@ -571,6 +583,7 @@ export interface RootRouteChildren {
   ClubsFindRoute: typeof ClubsFindRoute
   ClubsNewRoute: typeof ClubsNewRoute
   TournamentsTournamentIdRoute: typeof TournamentsTournamentIdRoute
+  ApiAppleNotificationsRoute: typeof ApiAppleNotificationsRoute
   ApiPortoneWebhookRoute: typeof ApiPortoneWebhookRoute
   ApiTournamentsSyncRoute: typeof ApiTournamentsSyncRoute
   PaymentsTossFailRoute: typeof PaymentsTossFailRoute
@@ -817,6 +830,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TournamentsTournamentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/apple/notifications': {
+      id: '/api/apple/notifications'
+      path: '/api/apple/notifications'
+      fullPath: '/api/apple/notifications'
+      preLoaderRoute: typeof ApiAppleNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/portone/webhook': {
       id: '/api/portone/webhook'
       path: '/api/portone/webhook'
@@ -988,6 +1008,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClubsFindRoute: ClubsFindRoute,
   ClubsNewRoute: ClubsNewRoute,
   TournamentsTournamentIdRoute: TournamentsTournamentIdRoute,
+  ApiAppleNotificationsRoute: ApiAppleNotificationsRoute,
   ApiPortoneWebhookRoute: ApiPortoneWebhookRoute,
   ApiTournamentsSyncRoute: ApiTournamentsSyncRoute,
   PaymentsTossFailRoute: PaymentsTossFailRoute,

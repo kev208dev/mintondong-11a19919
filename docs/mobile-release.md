@@ -73,6 +73,18 @@ Services ID 값을 Supabase Apple provider Client IDs의 첫 항목과 Worker의
 있다. Apple private key는 Supabase provider secret과 별개로 token revocation에 사용할 수 있는
 Sign in with Apple key이며, 저장소가 아닌 Cloudflare Runtime Secret에만 둔다.
 
+### Apple server-to-server notifications
+
+Apple Developer의 Primary App ID `com.mintondong.app`에는 다음 endpoint를 등록한다.
+
+    https://mintondong-11a19919.kev208dev.workers.dev/api/apple/notifications
+
+Worker의 `APPLE_NOTIFICATION_AUDIENCE`도 동일한 Primary App ID로 설정한다. 이는 browser
+OAuth의 Services ID(`APPLE_CLIENT_ID`)와 다른 목적의 값이다. endpoint는 Apple 공개 JWKS로
+서명과 issuer/audience를 검증하고, `jti`를 중복 방지 키로 영구 기록한다. Apple subject 원문,
+relay email과 raw JWS는 저장하지 않는다. `account-deleted` 알림은 기존 계정 삭제 보호 절차를
+우회하지 않고 검토 필요 상태로만 기록한다.
+
 ## Native behavior
 
 - 상태 표시줄은 밝은 배경/어두운 아이콘으로 설정하고 WebView를 침범하지 않는다.
