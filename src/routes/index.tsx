@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   CalendarDays,
   ChevronRight,
   GraduationCap,
+  MapPin,
   Megaphone,
   Search,
   Trophy,
@@ -10,20 +12,23 @@ import {
   Zap,
 } from "lucide-react";
 import { useStore, useTodayPlayers } from "@/lib/badminton/store";
+import { won } from "@/lib/badminton/lessons";
+import { clubKeys, searchPublicClubs } from "@/lib/clubs/api";
+import { getPublicLessonCatalog } from "@/lib/clubs/public-lessons.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "민턴동 – 배드민턴 동호회 운영 앱" },
+      { title: "민턴동 – 배드민턴 동호회 운영·레슨 예약" },
       {
         name: "description",
         content:
-          "출석 체크, 경기 배정, 회원 관리, 일정 관리까지. 배드민턴 동호회 운영을 더 간편하게 만드는 모바일 앱 민턴동.",
+          "배드민턴 동호회 운영과 공개 레슨 상품의 코치, 수업 시간, 장소, 가격을 확인하고 신청할 수 있는 민턴동.",
       },
-      { property: "og:title", content: "민턴동 – 배드민턴 동호회 운영 앱" },
+      { property: "og:title", content: "민턴동 – 배드민턴 동호회 운영·레슨 예약" },
       {
         property: "og:description",
-        content: "출석 · 경기 배정 · 회원 관리 · 일정 관리를 한 화면에서.",
+        content: "배드민턴 클럽 관리와 실제 레슨 상품·가격 확인을 한 곳에서.",
       },
     ],
   }),
@@ -46,6 +51,18 @@ function SectionHeader({ title, to, cta }: { title: string; to?: string; cta?: s
 function HomePage() {
   const { club, can } = useStore();
   const { coming, counts } = useTodayPlayers();
+  const publicClubs = useQuery({
+    queryKey: clubKeys.search(""),
+    queryFn: () => searchPublicClubs(""),
+  });
+  const featuredClub = publicClubs.data?.find((item) => item.lessons_enabled);
+  const featuredLessons = useQuery({
+    queryKey: featuredClub
+      ? [...clubKeys.publicLessons(featuredClub.id), "home"]
+      : ["clubs", "public-lessons", "home", "none"],
+    queryFn: () => getPublicLessonCatalog({ data: { clubId: featuredClub!.id } }),
+    enabled: Boolean(featuredClub),
+  });
   const liveMatches = club.matches.filter((m) => m.status === "LIVE");
   const doneCount = club.matches.filter((m) => m.status === "DONE").length;
   const checkedIn = club.checkedIn.length;
@@ -60,7 +77,7 @@ function HomePage() {
           배드민턴 동호회 운영을 더 간편하게
         </p>
         <p className="mt-0.5 text-[11.5px] text-muted-foreground">
-          출석 · 경기 배정 · 회원 관리 · 일정 관리
+          출석 · 경기 배정 · 회원 관리 · 일정 관리 · 레슨 예약
         </p>
       </section>
 
@@ -73,7 +90,7 @@ function HomePage() {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block break-keep text-xs font-extrabold text-foreground">
-            배드민턴 클럽과 레슨을 찾고 신청해보세요.
+            배드민턴 클럽과 레슨 상품을 찾고 신청해보세요.
           </span>
           <span className="mt-0.5 block text-[11px] text-muted-foreground">
             코치 · 일정 · 수업 시간 · 가격 확인
@@ -81,6 +98,68 @@ function HomePage() {
         </span>
         <ChevronRight className="size-4 shrink-0 text-primary" />
       </Link>
+
+      <section id="lesson-products" aria-labelledby="lesson-products-title">
+        <div className="mb-1.5 flex items-center justify-between px-1">
+          <h2 id="lesson-products-title" className="text-[13px] font-extrabold text-foreground">
+            판매 중인 레슨 상품
+          </h2>
+          <Link to="/clubs/find" className="flex items-center text-[11px] font-bold text-primary">
+            전체 보기 <ChevronRight className="size-3" />
+          </Link>
+        </div>
+
+        {publicClubs.isLoading || (featuredClub && featuredLessons.isLoading) ? (
+          <div className="h-36 animate-pulse rounded-2xl bg-secondary" aria-label="레슨 상품 불러오는 중" />
+        ) : featuredLessons.data?.lessons.length && featuredLessons.data.club ? (
+          <ul className="space-y-2">
+            {featuredLessons.data.lessons.slice(0, 3).map((lesson) => (
+              <li key={lesson.id}>
+                <article className="rounded-2xl border border-border bg-card p-4 card-soft">
+                  <div className="flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold text-primary">레슨 상품</p>
+                      <h3 className="mt-0.5 truncate text-sm font-extrabold text-foreground">
+                        {lesson.coachName} 코치 {lesson.durationMin}분 레슨
+                      </h3>
+                      <p className="mt-1 flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
+                        <MapPin className="size-3 shrink-0" />
+                        <span className="truncate">
+                          {featuredLessons.data.club.name} · {featuredLessons.data.club.location || "장소 미등록"}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[10px] text-muted-foreground">상품 가격</p>
+                      <p className="text-base font-extrabold tabular-nums text-primary">
+                        {won(lesson.priceWon)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+                    {lesson.description || "배드민턴 레슨 상품입니다. 상세 일정과 수업 정보를 확인해 주세요."}
+                  </p>
+                  <Link
+                    to="/clubs/$clubId/lessons"
+                    params={{ clubId: lesson.clubId }}
+                    className="mt-3 flex h-10 items-center justify-center rounded-xl bg-secondary text-xs font-extrabold text-secondary-foreground active:bg-accent"
+                  >
+                    상품 상세 설명 · 가격 보기
+                  </Link>
+                </article>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="rounded-2xl border border-border bg-card p-4 text-center">
+            <GraduationCap className="mx-auto size-4 text-muted-foreground" />
+            <p className="mt-1.5 text-xs font-bold text-foreground">현재 판매 중인 레슨 상품을 확인 중이에요</p>
+            <Link to="/clubs/find" className="mt-1 inline-block text-[11px] font-bold text-primary">
+              공개 클럽과 레슨 보기
+            </Link>
+          </div>
+        )}
+      </section>
 
       <section className="brand-gradient rounded-2xl p-4 text-primary-foreground">
         <p className="text-[11px] font-semibold opacity-75">오늘 운동 요약</p>
