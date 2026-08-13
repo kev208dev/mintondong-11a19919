@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, PlusCircle, RotateCw, Search, Sparkles } from "lucide-react";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { logOnboardingNavigation } from "@/lib/auth/onboarding-debug";
 
 export const Route = createFileRoute("/onboarding")({
   ssr: false,
@@ -72,6 +73,7 @@ function OnboardingPage() {
       <div className="grid gap-2.5">
         <Link
           to="/clubs/find"
+          onClick={() => logOnboardingNavigation("/onboarding", "/clubs/find")}
           className="flex min-h-24 items-center gap-4 rounded-3xl border border-border bg-card px-4 py-4 active:bg-accent"
         >
           <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary text-primary">
@@ -89,6 +91,7 @@ function OnboardingPage() {
 
         <Link
           to="/clubs/new"
+          onClick={() => logOnboardingNavigation("/onboarding", "/clubs/new")}
           className="flex min-h-24 items-center gap-4 rounded-3xl border border-border bg-card px-4 py-4 active:bg-accent"
         >
           <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary text-primary">

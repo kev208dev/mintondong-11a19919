@@ -15,6 +15,7 @@ import { Toaster } from "../components/ui/sonner";
 import { AppShell } from "../components/app/AppShell";
 import { AuthProvider, useAuth } from "../lib/auth/AuthProvider";
 import { NEXT_STORAGE_KEY } from "../lib/auth/providers";
+import { logOnboardingState } from "../lib/auth/onboarding-debug";
 import { resolvePostAuthRedirect } from "../lib/auth/onboarding-state";
 import { NativeRuntimeBridge } from "../components/native/NativeRuntimeBridge";
 
@@ -155,6 +156,13 @@ function PostAuthRedirect() {
       profile: profileStatus,
       username: profile?.username,
       onboardingCompletedAt: profile?.onboarding_completed_at,
+    });
+    logOnboardingState({
+      pathname,
+      profileStatus,
+      usernamePresent: Boolean(profile?.username),
+      onboardingCompleted: Boolean(profile?.onboarding_completed_at),
+      redirectTarget: target,
     });
     if (target) {
       void router.navigate({ to: target, replace: true });

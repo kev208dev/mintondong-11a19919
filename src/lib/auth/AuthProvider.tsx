@@ -90,31 +90,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select("id, display_name, avatar_url, username, role, onboarding_completed_at")
         .eq("id", id)
         .maybeSingle();
-      if (result.error?.code === "42703" || result.error?.code === "PGRST204") {
-        const legacy = await supabase
-          .from("profiles")
-          .select("id, display_name, avatar_url, username")
-          .eq("id", id)
-          .maybeSingle();
-        if (legacy.error) throw legacy.error;
-        const row = legacy.data as Omit<Profile, "role"> | null;
-        if (currentUserId.current !== id || profileRequestId.current !== requestId) return;
-        setProfile(row ? { ...row, role: "USER", onboarding_completed_at: null } : null);
-        setProfileStatus(row ? "ready" : "missing");
-        return;
-      }
       if (result.error) throw result.error;
-      const row = result.data as Record<string, unknown> | null;
+      const row = result.data;
       if (currentUserId.current !== id || profileRequestId.current !== requestId) return;
       setProfile(
         row
           ? {
-              id: String(row["id"]),
-              display_name: (row["display_name"] as string | null) ?? null,
-              avatar_url: (row["avatar_url"] as string | null) ?? null,
-              username: (row["username"] as string | null) ?? null,
-              role: row["role"] === "ADMIN" ? "ADMIN" : "USER",
-              onboarding_completed_at: (row["onboarding_completed_at"] as string | null) ?? null,
+              id: row.id,
+              display_name: row.display_name,
+              avatar_url: row.avatar_url,
+              username: row.username,
+              role: row.role === "ADMIN" ? "ADMIN" : "USER",
+              onboarding_completed_at: row.onboarding_completed_at,
             }
           : null,
       );

@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { isOnboardingSubflow, resolvePostAuthRedirect } from "../src/lib/auth/onboarding-state.ts";
+import {
+  isOnboardingSubflow,
+  normalizeRoutePathname,
+  resolvePostAuthRedirect,
+} from "../src/lib/auth/onboarding-state.ts";
 import {
   clubMutationErrorMessage,
   isActiveMembership,
@@ -24,15 +28,26 @@ test("username이 없는 소셜 신규 사용자는 계정 온보딩으로 이�
   assert.equal(resolvePostAuthRedirect({ ...readyBase, username: null }), "/onboarding/account");
 });
 
-test("profile이 아직 해결되지 않았으면 redirect하지 않는다", () => {
+test("profile이 ready가 아니면 신규 사용자로 추정하지 않고 redirect하지 않는다", () => {
   assert.equal(resolvePostAuthRedirect({ ...readyBase, profile: "loading" }), null);
+  assert.equal(resolvePostAuthRedirect({ ...readyBase, profile: "missing" }), null);
+  assert.equal(resolvePostAuthRedirect({ ...readyBase, profile: "error" }), null);
 });
 
-test("동호회 찾기·생성·상세는 onboarding subflow라 전역 redirect가 가로채지 않는다", () => {
-  for (const pathname of ["/onboarding", "/clubs/find", "/clubs/new", "/clubs/club-id"]) {
+test("동호회 찾기·생성·상세와 trailing slash는 onboarding subflow로 유지된다", () => {
+  for (const pathname of [
+    "/onboarding",
+    "/clubs/find",
+    "/clubs/find/",
+    "/clubs/new",
+    "/clubs/new/",
+    "/clubs/club-id",
+  ]) {
     assert.equal(isOnboardingSubflow(pathname), true);
     assert.equal(resolvePostAuthRedirect({ ...readyBase, pathname }), null);
   }
+  assert.equal(normalizeRoutePathname("/clubs/find/?q=seoul#results"), "/clubs/find");
+  assert.equal(normalizeRoutePathname("/clubs/new/#form"), "/clubs/new");
 });
 
 test("DB onboarding 완료 상태인 기존 계정은 club 수와 무관하게 온보딩하지 않는다", () => {
@@ -60,7 +75,37 @@ test("온보딩 page는 club query redirect 없이 두 SPA 경로를 유지한�
   const page = readFileSync(new URL("../src/routes/onboarding.tsx", import.meta.url), "utf8");
   assert.match(page, /to="\/clubs\/find"/);
   assert.match(page, /to="\/clubs\/new"/);
+  assert.match(page, /logOnboardingNavigation\("\/onboarding", "\/clubs\/find"\)/);
+  assert.match(page, /logOnboardingNavigation\("\/onboarding", "\/clubs\/new"\)/);
   assert.doesNotMatch(page, /listMyClubs|clubKeys\.mine|clubs\.data|NEXT_STORAGE_KEY/);
+});
+
+test("production generated profiles 타입은 실제 onboarding 필드를 포함한다", () => {
+  const generated = readFileSync(
+    new URL("../src/integrations/supabase/types.ts", import.meta.url),
+    "utf8",
+  );
+  const profileBlock = generated.match(/\n\s+profiles: \{[\s\S]*?\n\s+Relationships: \[\]/)?.[0];
+  assert.ok(profileBlock);
+  assert.match(profileBlock, /username: string \| null/);
+  assert.match(profileBlock, /role: string/);
+  assert.match(profileBlock, /onboarding_completed_at: string \| null/);
+});
+
+test("profile schema 오류를 nullable onboarding으로 바꾸는 legacy fallback이 없다", () => {
+  const auth = readFileSync(new URL("../src/lib/auth/AuthProvider.tsx", import.meta.url), "utf8");
+  assert.match(auth, /username, role, onboarding_completed_at/);
+  assert.doesNotMatch(auth, /PGRST204|42703|const legacy|onboarding_completed_at: null/);
+});
+
+test("native onboarding diagnostic은 opt-in이고 개인정보를 기록하지 않는다", () => {
+  const debug = readFileSync(
+    new URL("../src/lib/auth/onboarding-debug.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(debug, /\[onboarding-debug\]/);
+  assert.match(debug, /onboardingDebug/);
+  assert.doesNotMatch(debug, /access_token|refresh_token|email|userId|user_id/);
 });
 
 test("native production document는 최신 Worker version을 식별하고 재사용하지 않는다", () => {
