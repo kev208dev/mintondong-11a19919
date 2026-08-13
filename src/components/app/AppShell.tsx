@@ -159,9 +159,9 @@ export function AppShell() {
               <img
                 src="/mintondong-logo.png"
                 alt="민턴동"
-                width={92}
-                height={24}
-                className="h-6 w-auto object-contain"
+                width={40}
+                height={40}
+                className="size-10 rounded-xl object-contain"
               />
             </Link>
             <ClubSwitcher />
