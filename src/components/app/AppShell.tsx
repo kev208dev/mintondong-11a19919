@@ -52,7 +52,7 @@ const BottomNav = memo(function BottomNav({
     <nav
       className={
         floating
-          ? "ios-liquid-tabbar fixed bottom-[max(0.5rem,env(safe-area-inset-bottom))] left-1/2 z-30 w-[calc(100%-1.5rem)] max-w-[26.5rem] -translate-x-1/2 overflow-hidden rounded-[1.75rem]"
+          ? "ios-liquid-tabbar fixed bottom-[max(0.5rem,calc(env(safe-area-inset-bottom)-1rem))] left-1/2 z-30 w-[calc(100%-1.5rem)] max-w-[26.5rem] -translate-x-1/2 overflow-hidden rounded-[1.75rem]"
           : "fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]"
       }
     >

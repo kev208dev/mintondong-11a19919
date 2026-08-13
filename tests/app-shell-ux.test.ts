@@ -45,7 +45,7 @@ test("iOS BottomNav는 safe-area를 위치에만 쓰는 floating glass bar다", 
   const footer = readFileSync("src/components/app/PublicFooter.tsx", "utf8");
   const styles = readFileSync("src/styles.css", "utf8");
   assert.match(shell, /isIosNativeShell/);
-  assert.match(shell, /bottom-\[max\(0\.5rem,env\(safe-area-inset-bottom\)\)\]/);
+  assert.match(shell, /bottom-\[max\(0\.5rem,calc\(env\(safe-area-inset-bottom\)-1rem\)\)\]/);
   assert.match(shell, /ios-liquid-tabbar/);
   assert.doesNotMatch(
     shell.match(/floating\s*\?\s*"([^"]+)"/)?.[1] ?? "",
