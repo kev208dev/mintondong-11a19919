@@ -45,16 +45,19 @@ export function resolvePostAuthRedirect(input: {
   if (!input.authenticated || isPathOrDescendant(pathname, "/auth/reset-password")) return null;
   if (input.profile !== "ready") return null;
 
+  // one-time onboarding 완료 여부가 최종 source of truth다.
+  // 기존 계정은 username 유무와 관계없이 다시 onboarding으로 보내지 않는다.
+  if (input.onboardingCompletedAt) {
+    return isPathOrDescendant(pathname, "/onboarding") ? "/" : null;
+  }
+
   if (!input.username) {
     return isPathOrDescendant(pathname, "/onboarding/account") ? null : "/onboarding/account";
   }
 
-  if (!input.onboardingCompletedAt) {
-    if (isOnboardingSubflow(pathname) || isPublicAccountPage(pathname)) return null;
-    return "/onboarding";
-  }
+  // username 설정이 끝난 미완료 계정은 account form에 머물지 않는다.
+  if (isPathOrDescendant(pathname, "/onboarding/account")) return "/onboarding";
 
-  // 이미 완료한 계정이 오래된 앱 history로 온보딩에 다시 진입해도 첫 화면으로 복귀한다.
-  if (isPathOrDescendant(pathname, "/onboarding")) return "/";
-  return null;
+  if (isOnboardingSubflow(pathname) || isPublicAccountPage(pathname)) return null;
+  return "/onboarding";
 }

@@ -40,10 +40,7 @@ function OnboardingAccountPage() {
       void navigate({ to: "/auth", search: { next: "/" }, replace: true });
       return;
     }
-    if (!profileLoading && profileStatus === "ready" && profile?.username) {
-      void navigate({ to: "/onboarding", replace: true });
-    }
-  }, [loading, profileLoading, profileStatus, user, profile, navigate]);
+  }, [loading, user, navigate]);
 
   useEffect(() => {
     if (!displayName && profile?.display_name) setDisplayName(profile.display_name);

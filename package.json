@@ -18,6 +18,7 @@
     "test:account-deletion": "node --test --experimental-strip-types tests/account-deletion.test.ts",
     "test:apple-notifications": "node --test --experimental-strip-types tests/apple-notifications.test.ts",
     "test:onboarding": "node --test --experimental-strip-types tests/onboarding-clubs.test.ts",
+    "test:onboarding-render": "vitest run --config vitest.config.ts tests/onboarding-routing.test.tsx",
     "test:app-shell": "node --test --experimental-strip-types tests/app-shell-ux.test.ts",
     "mobile:sync": "cap sync",
     "mobile:ios": "cap sync ios",
@@ -112,6 +113,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.1.5",
+    "vitest": "^4.1.10",
     "wrangler": "4.120.1"
   }
 }

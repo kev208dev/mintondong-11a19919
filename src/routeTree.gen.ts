@@ -41,6 +41,7 @@ import { Route as ClubScheduleRouteImport } from './routes/club.schedule'
 import { Route as ClubsClubIdRouteImport } from './routes/clubs.$clubId'
 import { Route as ClubsFindRouteImport } from './routes/clubs.find'
 import { Route as ClubsNewRouteImport } from './routes/clubs.new'
+import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as OnboardingAccountRouteImport } from './routes/onboarding.account'
 import { Route as TournamentsTournamentIdRouteImport } from './routes/tournaments_.$tournamentId'
 import { Route as ApiAppleNotificationsRouteImport } from './routes/api.apple.notifications'
@@ -215,6 +216,11 @@ const ClubsNewRoute = ClubsNewRouteImport.update({
   path: '/clubs/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OnboardingRoute,
+} as any)
 const OnboardingAccountRoute = OnboardingAccountRouteImport.update({
   id: '/account',
   path: '/account',
@@ -317,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/tournaments/$tournamentId': typeof TournamentsTournamentIdRoute
   '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
+  '/onboarding/': typeof OnboardingIndexRoute
   '/api/apple/notifications': typeof ApiAppleNotificationsRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
   '/api/tournaments/sync': typeof ApiTournamentsSyncRoute
@@ -336,7 +343,6 @@ export interface FileRoutesByTo {
   '/games': typeof GamesRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
-  '/onboarding': typeof OnboardingRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/records': typeof RecordsRoute
   '/refund-policy': typeof RefundPolicyRoute
@@ -361,6 +367,7 @@ export interface FileRoutesByTo {
   '/tournaments/$tournamentId': typeof TournamentsTournamentIdRoute
   '/auth': typeof AuthIndexRoute
   '/club': typeof ClubIndexRoute
+  '/onboarding': typeof OnboardingIndexRoute
   '/api/apple/notifications': typeof ApiAppleNotificationsRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
   '/api/tournaments/sync': typeof ApiTournamentsSyncRoute
@@ -409,6 +416,7 @@ export interface FileRoutesById {
   '/tournaments_/$tournamentId': typeof TournamentsTournamentIdRoute
   '/auth/': typeof AuthIndexRoute
   '/club/': typeof ClubIndexRoute
+  '/onboarding/': typeof OnboardingIndexRoute
   '/api/apple/notifications': typeof ApiAppleNotificationsRoute
   '/api/portone/webhook': typeof ApiPortoneWebhookRoute
   '/api/tournaments/sync': typeof ApiTournamentsSyncRoute
@@ -458,6 +466,7 @@ export interface FileRouteTypes {
     | '/tournaments/$tournamentId'
     | '/auth/'
     | '/club/'
+    | '/onboarding/'
     | '/api/apple/notifications'
     | '/api/portone/webhook'
     | '/api/tournaments/sync'
@@ -477,7 +486,6 @@ export interface FileRouteTypes {
     | '/games'
     | '/lessons'
     | '/me'
-    | '/onboarding'
     | '/privacy'
     | '/records'
     | '/refund-policy'
@@ -502,6 +510,7 @@ export interface FileRouteTypes {
     | '/tournaments/$tournamentId'
     | '/auth'
     | '/club'
+    | '/onboarding'
     | '/api/apple/notifications'
     | '/api/portone/webhook'
     | '/api/tournaments/sync'
@@ -549,6 +558,7 @@ export interface FileRouteTypes {
     | '/tournaments_/$tournamentId'
     | '/auth/'
     | '/club/'
+    | '/onboarding/'
     | '/api/apple/notifications'
     | '/api/portone/webhook'
     | '/api/tournaments/sync'
@@ -816,6 +826,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding/': {
+      id: '/onboarding/'
+      path: '/'
+      fullPath: '/onboarding/'
+      preLoaderRoute: typeof OnboardingIndexRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
     '/onboarding/account': {
       id: '/onboarding/account'
       path: '/account'
@@ -956,10 +973,12 @@ const ClubRouteWithChildren = ClubRoute._addFileChildren(ClubRouteChildren)
 
 interface OnboardingRouteChildren {
   OnboardingAccountRoute: typeof OnboardingAccountRoute
+  OnboardingIndexRoute: typeof OnboardingIndexRoute
 }
 
 const OnboardingRouteChildren: OnboardingRouteChildren = {
   OnboardingAccountRoute: OnboardingAccountRoute,
+  OnboardingIndexRoute: OnboardingIndexRoute,
 }
 
 const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(

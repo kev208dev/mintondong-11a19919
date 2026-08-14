@@ -53,7 +53,28 @@ test("동호회 찾기·생성·상세와 trailing slash는 onboarding subflow�
 test("DB onboarding 완료 상태인 기존 계정은 club 수와 무관하게 온보딩하지 않는다", () => {
   const completed = { ...readyBase, onboardingCompletedAt: "2026-08-13T12:00:00Z" };
   assert.equal(resolvePostAuthRedirect(completed), null);
+  assert.equal(resolvePostAuthRedirect({ ...completed, username: null }), null);
   assert.equal(resolvePostAuthRedirect({ ...completed, pathname: "/onboarding" }), "/");
+  assert.equal(
+    resolvePostAuthRedirect({ ...completed, username: null, pathname: "/onboarding/account" }),
+    "/",
+  );
+});
+
+test("신규 미완료 계정만 username 설정을 먼저 거친다", () => {
+  assert.equal(resolvePostAuthRedirect({ ...readyBase, username: null }), "/onboarding/account");
+  assert.equal(
+    resolvePostAuthRedirect({ ...readyBase, username: null, pathname: "/onboarding/account" }),
+    null,
+  );
+  assert.equal(resolvePostAuthRedirect(readyBase), "/onboarding");
+  assert.equal(resolvePostAuthRedirect({ ...readyBase, pathname: "/onboarding" }), null);
+  assert.equal(resolvePostAuthRedirect({ ...readyBase, pathname: "/clubs/find" }), null);
+  assert.equal(resolvePostAuthRedirect({ ...readyBase, pathname: "/clubs/new" }), null);
+  assert.equal(
+    resolvePostAuthRedirect({ ...readyBase, pathname: "/onboarding/account" }),
+    "/onboarding",
+  );
 });
 
 test("pending membership은 active club로 계산하지 않는다", () => {
@@ -71,8 +92,8 @@ test("onboarding 완료 여부는 active club count가 아닌 계정 profile만 
   assert.doesNotMatch(state, /activeClubCount|ClubsResolution/);
 });
 
-test("온보딩 page는 club query redirect 없이 두 SPA 경로를 유지한다", () => {
-  const page = readFileSync(new URL("../src/routes/onboarding.tsx", import.meta.url), "utf8");
+test("온보딩 index는 club query redirect 없이 두 SPA 경로를 유지한다", () => {
+  const page = readFileSync(new URL("../src/routes/onboarding.index.tsx", import.meta.url), "utf8");
   assert.match(page, /to="\/clubs\/find"/);
   assert.match(page, /to="\/clubs\/new"/);
   assert.match(page, /logOnboardingNavigation\("\/onboarding", "\/clubs\/find"\)/);
