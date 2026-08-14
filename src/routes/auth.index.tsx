@@ -8,6 +8,37 @@ import { signInWithUsername } from "@/lib/auth/account.functions";
 import { SOCIAL_PROVIDERS, isProviderEnabled, startSocialLogin } from "@/lib/auth/providers";
 import { safeNextPath } from "@/lib/auth/username";
 
+function GoogleBrandIcon() {
+  return (
+    <svg viewBox="0 0 18 18" aria-hidden className="size-[18px] shrink-0">
+      <path
+        fill="#4285F4"
+        d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.716v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.615Z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.91-2.258c-.806.54-1.835.86-3.046.86-2.344 0-4.328-1.585-5.037-3.714H.957v2.332A9 9 0 0 0 9 18Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.963 10.708A5.42 5.42 0 0 1 3.68 9c0-.593.102-1.17.283-1.708V4.96H.957A9 9 0 0 0 0 9c0 1.452.347 2.827.957 4.04l3.006-2.332Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.578c1.321 0 2.507.454 3.44 1.346l2.582-2.582C13.463.89 11.426 0 9 0A9 9 0 0 0 .957 4.96l3.006 2.332C4.672 5.163 6.656 3.578 9 3.578Z"
+      />
+    </svg>
+  );
+}
+
+function AppleBrandIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="size-[19px] shrink-0 fill-current">
+      <path d="M16.7 12.24c.02-2 1.64-2.96 1.72-3.01a3.7 3.7 0 0 0-2.92-1.58c-1.23-.13-2.43.74-3.05.74-.64 0-1.59-.73-2.63-.71a3.88 3.88 0 0 0-3.26 1.99c-1.42 2.46-.36 6.07 1 8.06.68.97 1.47 2.05 2.51 2.01 1.02-.04 1.4-.65 2.63-.65 1.22 0 1.58.65 2.64.63 1.1-.02 1.79-.97 2.44-1.95a8.04 8.04 0 0 0 1.12-2.28 3.48 3.48 0 0 1-2.2-3.25ZM14.7 6.35a3.58 3.58 0 0 0 .82-2.57 3.64 3.64 0 0 0-2.36 1.22 3.4 3.4 0 0 0-.84 2.47 3 3 0 0 0 2.38-1.12Z" />
+    </svg>
+  );
+}
+
 export const Route = createFileRoute("/auth/")({
   head: () => ({
     meta: [
@@ -24,6 +55,33 @@ export const Route = createFileRoute("/auth/")({
   }),
   component: LoginPage,
 });
+
+export function SocialLoginButtons({
+  busy,
+  onSelect,
+}: {
+  busy: "password" | "kakao" | "google" | "apple" | null;
+  onSelect: (provider: "kakao" | "google" | "apple") => void;
+}) {
+  return (
+    <div className="space-y-2.5">
+      {SOCIAL_PROVIDERS.filter((provider) => isProviderEnabled(provider.id)).map((provider) => (
+        <button
+          key={provider.id}
+          type="button"
+          disabled={busy !== null}
+          onClick={() => onSelect(provider.id)}
+          aria-label={provider.label}
+          className={`relative flex h-12 w-full items-center justify-center gap-2 rounded-2xl px-4 text-sm font-bold transition-[transform,opacity] active:scale-[0.98] disabled:opacity-60 ${provider.className}`}
+        >
+          {provider.id === "google" ? <GoogleBrandIcon /> : null}
+          {provider.id === "apple" ? <AppleBrandIcon /> : null}
+          <span>{busy === provider.id ? "이동 중..." : provider.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function LoginPage() {
   const { next } = useSearch({ from: "/auth" });
@@ -63,12 +121,13 @@ function LoginPage() {
       await startSocialLogin(id, next);
     } catch {
       toast.error("지금은 이 방법으로 로그인할 수 없어요. 다른 방법을 이용해 주세요.");
+    } finally {
       setBusy(null);
     }
   };
 
   return (
-    <section className="rounded-3xl border border-border bg-card p-4">
+    <section className="rounded-3xl border border-border bg-card p-4 sm:p-5">
       <div className="space-y-2">
         <label className="block text-[11px] font-bold text-muted-foreground" htmlFor="login-id">
           아이디
@@ -125,21 +184,18 @@ function LoginPage() {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <div className="space-y-2">
-        {SOCIAL_PROVIDERS.filter((p) => isProviderEnabled(p.id)).map((p) => (
-          <button
-            key={p.id}
-            disabled={busy !== null}
-            onClick={() => void social(p.id)}
-            className={`flex h-11 w-full items-center justify-center rounded-2xl text-sm font-bold active:scale-95 disabled:opacity-60 ${p.className}`}
-          >
-            {busy === p.id ? "이동 중..." : p.label}
-          </button>
-        ))}
-      </div>
+      <SocialLoginButtons busy={busy} onSelect={(provider) => void social(provider)} />
 
       <p className="mt-3 text-center text-[11px] leading-relaxed text-muted-foreground">
-        로그인하면 민턴동 이용약관과 개인정보 처리방침에 동의하게 됩니다.
+        로그인하면 민턴동{" "}
+        <Link to="/terms" className="underline underline-offset-2">
+          이용약관
+        </Link>
+        과{" "}
+        <Link to="/privacy" className="underline underline-offset-2">
+          개인정보 처리방침
+        </Link>
+        에 동의하게 됩니다.
       </p>
     </section>
   );

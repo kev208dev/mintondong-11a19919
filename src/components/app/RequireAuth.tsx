@@ -1,22 +1,6 @@
-import { redirect } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
-
-/** 로그인이 필요한 화면 공통 옵션. 비로그인 시 /auth?next=현재경로 로 보낸다. */
-export function authGuard() {
-  return {
-    ssr: false as const,
-    beforeLoad: async ({ location }: { location: { href: string } }) => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        if (data.user) return;
-      } catch {
-        // Supabase 를 사용할 수 없으면 로그인 화면으로 안내한다.
-      }
-      const next = location.href.startsWith("/auth") ? "/" : location.href;
-      throw redirect({ to: "/auth", search: { next }, replace: true });
-    },
-  };
-}
+// 이 경로를 사용 중인 기존 route들의 호환성을 유지한다.
+// eslint-disable-next-line react-refresh/only-export-components
+export { authGuard } from "@/lib/auth/auth-guard";
 
 /** 권한이 없을 때 보여줄 안내 (관리 화면 등) */
 export function NoPermission({ message }: { message?: string }) {

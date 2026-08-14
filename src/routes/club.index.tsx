@@ -10,10 +10,12 @@ import {
   Search,
   Trophy,
   UserCheck,
+  Users,
   Wallet,
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { resolveClubRootView } from "@/lib/auth/club-route-access";
 import { useStore, useTodayPlayers } from "@/lib/badminton/store";
 import { clubKeys, listMyClubs } from "@/lib/clubs/api";
 
@@ -29,7 +31,7 @@ export const Route = createFileRoute("/club/")({
       { property: "og:description", content: "동호회 출석·경기·레슨·회비 현황 요약." },
     ],
   }),
-  component: ClubHomePage,
+  component: ClubIndexPage,
 });
 
 const QUICK = [
@@ -45,6 +47,64 @@ const MORE = [
   { to: "/club/finance", label: "회비/재정", icon: Wallet },
   { to: "/club/manage", label: "동호회 관리", icon: Trophy },
 ] as const;
+
+export function ClubLoginGate() {
+  return (
+    <section className="mx-auto flex min-h-[58vh] max-w-sm flex-col items-center justify-center px-4 py-10 text-center">
+      <span className="grid size-16 place-items-center rounded-full bg-secondary text-primary">
+        <Users className="size-7" aria-hidden />
+      </span>
+      <h2 className="mt-5 text-lg font-extrabold tracking-tight text-foreground">
+        동호회 기능은 로그인이 필요해요
+      </h2>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+        로그인하면 가입한 동호회의 일정, 출석, 경기, 회원 정보를 이용할 수 있어요.
+      </p>
+      <Link
+        to="/auth"
+        search={{ next: "/club" }}
+        className="mt-7 flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground active:scale-[0.98]"
+      >
+        로그인하기
+      </Link>
+      <Link
+        to="/auth/signup"
+        search={{ next: "/club" }}
+        className="mt-3 flex min-h-11 items-center justify-center text-sm font-bold text-primary"
+      >
+        계정이 없나요? 회원가입
+      </Link>
+      <Link
+        to="/clubs/find"
+        className="mt-1 flex min-h-11 items-center justify-center text-sm font-semibold text-muted-foreground underline-offset-4 active:text-foreground"
+      >
+        동호회 둘러보기
+      </Link>
+    </section>
+  );
+}
+
+function ClubAuthLoading() {
+  return (
+    <div
+      className="mx-auto flex min-h-[58vh] max-w-sm flex-col items-center justify-center px-4"
+      role="status"
+    >
+      <span className="size-16 animate-pulse rounded-full bg-secondary" />
+      <span className="mt-5 h-5 w-48 animate-pulse rounded-full bg-secondary" />
+      <span className="mt-3 h-4 w-64 max-w-full animate-pulse rounded-full bg-secondary" />
+      <span className="sr-only">로그인 상태 확인 중</span>
+    </div>
+  );
+}
+
+function ClubIndexPage() {
+  const { user, loading } = useAuth();
+  const view = resolveClubRootView({ authLoading: loading, authenticated: Boolean(user) });
+  if (view === "loading") return <ClubAuthLoading />;
+  if (view === "login") return <ClubLoginGate />;
+  return <ClubHomePage />;
+}
 
 function ClubHomePage() {
   const { club } = useStore();

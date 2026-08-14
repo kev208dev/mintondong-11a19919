@@ -1,7 +1,12 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { authGuard } from "@/components/app/RequireAuth";
+import { requireAuthenticated } from "@/lib/auth/auth-guard";
+import { requiresClubAuthentication } from "@/lib/auth/club-route-access";
 
 export const Route = createFileRoute("/club")({
-  ...authGuard(),
+  ssr: false,
+  beforeLoad: async ({ location }) => {
+    if (!requiresClubAuthentication(location.pathname)) return;
+    await requireAuthenticated(location);
+  },
   component: () => <Outlet />,
 });

@@ -20,6 +20,7 @@
     "test:onboarding": "node --test --experimental-strip-types tests/onboarding-clubs.test.ts",
     "test:onboarding-render": "vitest run --config vitest.config.ts tests/onboarding-routing.test.tsx",
     "test:app-shell": "node --test --experimental-strip-types tests/app-shell-ux.test.ts",
+    "test:auth-entry": "vitest run --config vitest.config.ts tests/auth-entry-ux.test.tsx",
     "mobile:sync": "cap sync",
     "mobile:ios": "cap sync ios",
     "mobile:android": "cap sync android",

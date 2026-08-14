@@ -4,6 +4,8 @@ import { Capacitor } from "@capacitor/core";
 
 export type SocialProvider = "kakao" | "google" | "apple";
 
+type ConfigurableSocialProvider = Exclude<SocialProvider, "kakao">;
+
 export const SOCIAL_PROVIDERS: {
   id: SocialProvider;
   label: string;
@@ -27,14 +29,20 @@ export const SOCIAL_PROVIDERS: {
 ];
 
 /**
- * provider 자격증명이 외부 Supabase 에 설정된 경우에만 버튼을 노출한다.
- * Kakao 는 설정 완료 상태이므로 기본 활성화, Google/Apple 은 환경변수로 켠다.
+ * Production Supabase에서 활성화가 확인된 공개 provider 표시 설정이다.
+ * VITE 플래그를 명시적으로 false로 둔 긴급 차단만 우선한다.
  */
-export function isProviderEnabled(id: SocialProvider): boolean {
+export function resolveProviderEnabled(id: SocialProvider, configuredValue?: string): boolean {
   if (id === "kakao") return true;
-  if (id === "google") return import.meta.env["VITE_ENABLE_GOOGLE_LOGIN"] === "true";
-  if (id === "apple") return import.meta.env["VITE_ENABLE_APPLE_LOGIN"] === "true";
-  return false;
+  return configuredValue !== "false";
+}
+
+export function isProviderEnabled(id: SocialProvider): boolean {
+  const configuredValues: Record<ConfigurableSocialProvider, string | undefined> = {
+    google: import.meta.env["VITE_ENABLE_GOOGLE_LOGIN"],
+    apple: import.meta.env["VITE_ENABLE_APPLE_LOGIN"],
+  };
+  return id === "kakao" ? true : resolveProviderEnabled(id, configuredValues[id]);
 }
 
 export const NEXT_STORAGE_KEY = "mintondong:next";

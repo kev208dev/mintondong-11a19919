@@ -7,6 +7,7 @@ import { ClubSectionNav } from "./ClubSectionNav";
 import { AccountButton } from "./AccountButton";
 import { ClubSwitcher } from "./ClubSwitcher";
 import { PublicFooter } from "./PublicFooter";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   hidesBottomNavigation,
   isExactBottomTabDestination,
@@ -75,6 +76,7 @@ const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
 });
 
 export function AppShell() {
+  const { user, loading: authLoading } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const title = pageTitle(pathname);
   const router = useRouter();
@@ -86,9 +88,7 @@ export function AppShell() {
 
   useEffect(() => {
     const run = () => {
-      // 로그인 가드가 있는 탭(/club)은 사전 로딩에서 제외한다.
       for (const tab of TABS) {
-        if (tab.to === "/club") continue;
         void router.preloadRoute({ to: tab.to }).catch(() => {});
       }
     };
@@ -170,7 +170,10 @@ export function AppShell() {
               </div>
             </div>
           ) : null}
-          {isClubSection(pathname) ? <ClubSectionNav pathname={pathname} /> : null}
+          {isClubSection(pathname) &&
+          !(isExactBottomTabDestination(pathname, "/club") && (!user || authLoading)) ? (
+            <ClubSectionNav pathname={pathname} />
+          ) : null}
           {authFlow || usesUIKitChrome ? null : (
             <h1 className="mt-1 mb-3 text-[17px] font-extrabold tracking-tight text-foreground">
               {title}
