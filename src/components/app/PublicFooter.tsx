@@ -20,11 +20,13 @@ const BUSINESS_ROWS = [
   ["이메일", businessConfig.customerServiceEmail],
 ] as const;
 
-export function PublicFooter({ floatingNav = false }: { floatingNav?: boolean }) {
+export function PublicFooter({ nativeTabBar = false }: { nativeTabBar?: boolean }) {
   return (
     <footer
       className={`border-t border-border/70 bg-card/60 px-4 pt-3 ${
-        floatingNav ? "pb-20" : "pb-[calc(4.5rem+env(safe-area-inset-bottom))]"
+        nativeTabBar
+          ? "pb-[calc(4rem+env(safe-area-inset-bottom))]"
+          : "pb-[calc(4.5rem+env(safe-area-inset-bottom))]"
       }`}
     >
       <nav aria-label="법적 정보">

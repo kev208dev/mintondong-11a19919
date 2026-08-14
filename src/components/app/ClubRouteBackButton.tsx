@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -7,6 +8,8 @@ export function ClubRouteBackButton() {
   const navigate = useNavigate();
   const router = useRouter();
   const { user, profile, profileStatus } = useAuth();
+
+  if (Capacitor.getPlatform() === "ios") return null;
 
   const handleBack = () => {
     const fallback = resolveClubRouteBackFallback({

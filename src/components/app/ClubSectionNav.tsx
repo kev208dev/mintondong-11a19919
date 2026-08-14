@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { isClubSection } from "./app-shell-state";
 
 /** 동호회 섹션 내부 가로 스크롤 서브 내비게이션 */
 const SECTIONS = [
@@ -9,12 +10,6 @@ const SECTIONS = [
   { to: "/club/ranking", label: "랭킹" },
   { to: "/club/more", label: "더보기" },
 ] as const;
-
-export const CLUB_SECTION_PREFIXES = ["/club", "/games", "/lessons", "/records"] as const;
-
-export function isClubSection(pathname: string) {
-  return CLUB_SECTION_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-}
 
 export function ClubSectionNav({ pathname }: { pathname: string }) {
   return (

@@ -1,12 +1,20 @@
 import { Capacitor } from "@capacitor/core";
-import { useRouter } from "@tanstack/react-router";
+import { useRouter, useRouterState } from "@tanstack/react-router";
 import { WifiOff } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  getNativeChromeState,
+  isBottomTabRoute,
+  isExactBottomTabDestination,
+} from "@/components/app/app-shell-state";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import { NEXT_STORAGE_KEY } from "@/lib/auth/providers";
 import { rememberAppleProviderToken } from "@/lib/auth/apple-provider-token";
 import { safeNextPath } from "@/lib/auth/username";
+import { goBackOrFallback, resolveClubRouteBackFallback } from "@/lib/navigation/club-route-back";
+import { NativeChrome } from "@/lib/native/native-chrome";
 
 function authParams(url: string): URLSearchParams {
   const parsed = new URL(url);
@@ -48,9 +56,14 @@ async function acceptAuthCallback(url: string): Promise<boolean> {
 
 export function NativeRuntimeBridge() {
   const router = useRouter();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { user, profile, profileStatus } = useAuth();
   const native = Capacitor.isNativePlatform();
+  const iosNative = Capacitor.getPlatform() === "ios";
   const [connected, setConnected] = useState(true);
   const authCallbackUrls = useRef(new Set<string>());
+  const routeState = useRef({ pathname, user, profile, profileStatus });
+  routeState.current = { pathname, user, profile, profileStatus };
 
   const handleAppUrl = useCallback(
     async (url: string) => {
@@ -150,6 +163,60 @@ export function NativeRuntimeBridge() {
       for (const remove of cleanup) void remove();
     };
   }, [handleAppUrl, native, router]);
+
+  useEffect(() => {
+    if (!iosNative) return;
+    let cancelled = false;
+    const listeners: Array<{ remove: () => Promise<void> }> = [];
+
+    void (async () => {
+      const tabListener = await NativeChrome.addListener("tabSelected", ({ route }) => {
+        const currentPathname = routeState.current.pathname;
+        if (!isBottomTabRoute(route)) return;
+        if (isExactBottomTabDestination(currentPathname, route)) return;
+        void router.navigate({ to: route });
+      });
+      const backListener = await NativeChrome.addListener("backRequested", () => {
+        const current = routeState.current;
+        const fallback = current.pathname.startsWith("/clubs/")
+          ? resolveClubRouteBackFallback({
+              authenticated: Boolean(current.user),
+              profileReady: current.profileStatus === "ready",
+              onboardingCompletedAt: current.profile?.onboarding_completed_at,
+            })
+          : current.pathname.startsWith("/tournaments/")
+            ? "/tournaments"
+            : current.pathname.startsWith("/club/") ||
+                current.pathname.startsWith("/games") ||
+                current.pathname.startsWith("/lessons") ||
+                current.pathname.startsWith("/records")
+              ? "/club"
+              : "/";
+
+        goBackOrFallback(router.history, () => {
+          void router.navigate({ to: fallback, replace: true });
+        });
+      });
+      if (cancelled) {
+        await tabListener.remove();
+        await backListener.remove();
+        return;
+      }
+      listeners.push(tabListener, backListener);
+    })().catch((error) => console.error("[native-chrome] listener setup failed", error));
+
+    return () => {
+      cancelled = true;
+      for (const listener of listeners) void listener.remove();
+    };
+  }, [iosNative, router]);
+
+  useEffect(() => {
+    if (!iosNative) return;
+    void NativeChrome.setState(getNativeChromeState(pathname)).catch((error) =>
+      console.error("[native-chrome] state sync failed", error),
+    );
+  }, [iosNative, pathname]);
 
   if (!native || connected) return null;
 
