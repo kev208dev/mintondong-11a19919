@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ClubRouteBackButton } from "@/components/app/ClubRouteBackButton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -79,27 +80,35 @@ function NewClubPage() {
 
   if (profileStatus === "error") {
     return (
-      <section className="rounded-3xl border border-border bg-card p-5 text-center">
-        <p className="text-sm font-extrabold text-foreground">계정 정보를 확인하지 못했어요.</p>
-        <button
-          type="button"
-          onClick={() => void refreshProfile()}
-          className="mt-4 h-11 rounded-xl bg-secondary px-4 text-xs font-bold text-secondary-foreground"
-        >
-          다시 시도
-        </button>
-      </section>
+      <div className="space-y-3">
+        <ClubRouteBackButton />
+        <section className="rounded-3xl border border-border bg-card p-5 text-center">
+          <p className="text-sm font-extrabold text-foreground">계정 정보를 확인하지 못했어요.</p>
+          <button
+            type="button"
+            onClick={() => void refreshProfile()}
+            className="mt-4 h-11 rounded-xl bg-secondary px-4 text-xs font-bold text-secondary-foreground"
+          >
+            다시 시도
+          </button>
+        </section>
+      </div>
     );
   }
 
   if (loading || profileLoading || profileStatus !== "ready" || !user) {
     return (
-      <div className="h-52 animate-pulse rounded-3xl bg-secondary" aria-label="계정 확인 중" />
+      <div className="space-y-3">
+        <ClubRouteBackButton />
+        <div className="h-52 animate-pulse rounded-3xl bg-secondary" aria-label="계정 확인 중" />
+      </div>
     );
   }
 
   return (
     <div className="space-y-5">
+      <ClubRouteBackButton />
+
       <button
         type="button"
         onClick={() => fileRef.current?.click()}

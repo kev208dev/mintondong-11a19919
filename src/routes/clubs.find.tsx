@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { GraduationCap, MapPin, RotateCw, Search, Users } from "lucide-react";
 import { useState } from "react";
+import { ClubRouteBackButton } from "@/components/app/ClubRouteBackButton";
 import { Input } from "@/components/ui/input";
 import { clubKeys, searchPublicClubs, type ClubRow } from "@/lib/clubs/api";
 
@@ -47,6 +48,8 @@ function FindClubPage() {
 
   return (
     <div className="space-y-3">
+      <ClubRouteBackButton />
+
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input

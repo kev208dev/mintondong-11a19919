@@ -11,6 +11,11 @@ import {
   isActiveMembership,
   validateCreateClubInput,
 } from "../src/lib/clubs/club-core.ts";
+import {
+  goBackOrFallback,
+  resolveClubRouteBackFallback,
+  type ClubRouteBackHistory,
+} from "../src/lib/navigation/club-route-back.ts";
 
 const readyBase = {
   authenticated: true,
@@ -214,4 +219,93 @@ test("헤더 동호회 선택은 seed store가 아닌 Supabase active club 목�
   assert.match(switcher, /listMyClubs/);
   assert.match(switcher, /동호회 없음/);
   assert.doesNotMatch(switcher, /useStore|SEED_STATE/);
+});
+
+function createRouteHistory(entries: string[]) {
+  let index = entries.length - 1;
+  const history: ClubRouteBackHistory = {
+    canGoBack: () => index > 0,
+    back: () => {
+      if (index > 0) index -= 1;
+    },
+  };
+
+  return {
+    history,
+    current: () => entries[index],
+  };
+}
+
+test("동호회 찾기·생성 화면은 TanStack history의 실제 이전 경로로 돌아간다", () => {
+  for (const entries of [
+    ["/onboarding", "/clubs/find"],
+    ["/onboarding", "/clubs/new"],
+    ["/clubs/find", "/clubs/new"],
+  ]) {
+    const routeHistory = createRouteHistory(entries);
+    let fallbackCalled = false;
+    assert.equal(
+      goBackOrFallback(routeHistory.history, () => {
+        fallbackCalled = true;
+      }),
+      "history",
+    );
+    assert.equal(routeHistory.current(), entries[0]);
+    assert.equal(fallbackCalled, false);
+  }
+});
+
+test("이전 history가 없으면 계정 onboarding 완료 상태로 fallback한다", () => {
+  const fallbacks: string[] = [];
+
+  for (const pathname of ["/clubs/find", "/clubs/new"]) {
+    const routeHistory = createRouteHistory([pathname]);
+    assert.equal(
+      goBackOrFallback(routeHistory.history, () => {
+        fallbacks.push(
+          resolveClubRouteBackFallback({
+            authenticated: true,
+            profileReady: true,
+            onboardingCompletedAt: null,
+          }),
+        );
+      }),
+      "fallback",
+    );
+  }
+  assert.deepEqual(fallbacks, ["/onboarding", "/onboarding"]);
+
+  assert.equal(
+    resolveClubRouteBackFallback({
+      authenticated: true,
+      profileReady: true,
+      onboardingCompletedAt: "2026-08-14T10:00:00Z",
+    }),
+    "/",
+  );
+  assert.equal(
+    resolveClubRouteBackFallback({
+      authenticated: true,
+      profileReady: false,
+      onboardingCompletedAt: null,
+    }),
+    "/",
+  );
+});
+
+test("두 club route는 공통 iOS형 뒤로가기 버튼을 최상단에 렌더한다", () => {
+  for (const route of ["clubs.find.tsx", "clubs.new.tsx"]) {
+    const source = readFileSync(new URL(`../src/routes/${route}`, import.meta.url), "utf8");
+    assert.match(source, /<ClubRouteBackButton\s*\/>/);
+    assert.ok(source.indexOf("<ClubRouteBackButton") < source.indexOf("<Input"));
+  }
+
+  const button = readFileSync(
+    new URL("../src/components/app/ClubRouteBackButton.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(button, /router\.history/);
+  assert.match(button, /h-10/);
+  assert.match(button, /ChevronLeft/);
+  assert.doesNotMatch(button, /window\.location|location\.href/);
 });
