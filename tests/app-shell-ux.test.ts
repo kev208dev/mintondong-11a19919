@@ -112,6 +112,18 @@ test("iOS shell은 표준 UIKit bar와 공식 Capacitor local plugin containment
   assert.doesNotMatch(native, /UIBlurEffect|UIVisualEffectView|UIGlassEffect/);
 });
 
+test("iOS native tab과 Debug/Release web origin이 분리되어 있다", () => {
+  const native = readFileSync("ios/App/App/SceneDelegate.swift", "utf8");
+  assert.match(
+    native,
+    /case home[\s\S]*case club[\s\S]*case guest[\s\S]*case tournaments[\s\S]*case me/,
+  );
+  assert.match(native, /case \.guest: return "게스트"/);
+  assert.match(native, /case \.guest: return "\/guest"/);
+  assert.match(native, /#if DEBUG[\s\S]*descriptor\.serverURL = "http:\/\/127\.0\.0\.1:5173"/);
+  assert.match(native, /#else[\s\S]*descriptor\.serverURL = nil/);
+});
+
 test("ClubSwitcher는 seed store가 아닌 Supabase active club query를 유지한다", () => {
   const source = readFileSync("src/components/app/ClubSwitcher.tsx", "utf8");
   assert.match(source, /listMyClubs/);

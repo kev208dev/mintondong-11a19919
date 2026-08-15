@@ -170,6 +170,22 @@ private final class MintondongBridgeViewController: CAPBridgeViewController {
     private(set) var nativeChromePlugin: NativeChromePlugin?
     private(set) var nativeAuthPlugin: NativeAuthPlugin?
 
+    /// The bundled mobile-web shell intentionally redirects to Production for Release builds.
+    /// Debug Simulator builds instead load Vite directly so local routes/server functions are visible.
+    override func instanceDescriptor() -> InstanceDescriptor {
+        let descriptor = super.instanceDescriptor()
+#if DEBUG
+        descriptor.serverURL = "http://127.0.0.1:5173"
+        descriptor.allowedNavigationHostnames = Array(
+            Set(descriptor.allowedNavigationHostnames + ["127.0.0.1", "localhost"])
+        )
+#else
+        // Do not let a stale local server.url from a Debug sync leak into an Archive/Release build.
+        descriptor.serverURL = nil
+#endif
+        return descriptor
+    }
+
     override func capacitorDidLoad() {
         let plugin = NativeChromePlugin()
         plugin.chromeDelegate = nativeChromeDelegate
