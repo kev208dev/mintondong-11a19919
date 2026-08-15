@@ -192,6 +192,19 @@ export async function createGuestOffer(
   },
 ) {
   if (!isValidPlace(input.place)) throw new Error("STRUCTURED_PLACE_REQUIRED");
+  const startsAt = new Date(input.startsAt);
+  const endsAt = new Date(input.endsAt);
+  const bookingClosesAt = new Date(input.bookingClosesAt);
+  const bookingOpensAt = input.bookingOpensAt ? new Date(input.bookingOpensAt) : new Date();
+  if (
+    [startsAt, endsAt, bookingClosesAt, bookingOpensAt].some((date) => Number.isNaN(date.getTime()))
+  ) {
+    throw new Error("INVALID_GUEST_SCHEDULE");
+  }
+  if (startsAt <= new Date()) throw new Error("GUEST_START_IN_PAST");
+  if (endsAt <= startsAt) throw new Error("GUEST_END_BEFORE_START");
+  if (bookingClosesAt > startsAt) throw new Error("BOOKING_CLOSE_AFTER_START");
+  if (bookingOpensAt >= bookingClosesAt) throw new Error("BOOKING_OPEN_AFTER_CLOSE");
   const { data: club, error: clubError } = await db()
     .from("clubs")
     .select("id,owner_id")

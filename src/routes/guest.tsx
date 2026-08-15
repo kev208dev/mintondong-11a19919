@@ -3,13 +3,15 @@ import { MapPin, Search, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePickerSheet } from "@/components/date-time/DatePickerSheet";
+import { dateOnlyFromDate } from "@/components/date-time/format";
 
 export const Route = createFileRoute("/guest")({ ssr: false, component: GuestPage });
 
 function GuestPage() {
   const navigate = useNavigate();
   const [partySize, setPartySize] = useState(4);
-  const [startsOn, setStartsOn] = useState(() => new Date().toISOString().slice(0, 10));
+  const [startsOn, setStartsOn] = useState(() => dateOnlyFromDate(new Date()));
   const [region, setRegion] = useState("");
 
   return (
@@ -35,15 +37,7 @@ function GuestPage() {
               ))}
             </select>
           </label>
-          <label className="rounded-2xl bg-secondary p-4">
-            <span className="block text-sm font-bold text-muted-foreground">날짜</span>
-            <Input
-              type="date"
-              value={startsOn}
-              onChange={(event) => setStartsOn(event.target.value)}
-              className="mt-2 h-7 border-0 bg-transparent p-0 text-lg font-extrabold shadow-none"
-            />
-          </label>
+          <DatePickerSheet label="날짜" value={startsOn} onChange={setStartsOn} />
         </div>
         <label className="mt-3 flex items-center gap-3 rounded-2xl bg-secondary px-4 py-3">
           <MapPin className="size-5 text-brand-green" />

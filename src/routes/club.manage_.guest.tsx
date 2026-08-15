@@ -10,6 +10,14 @@ import { useStore } from "@/lib/badminton/store";
 import { listMyClubs } from "@/lib/clubs/api";
 import { PlacePicker } from "@/components/places/PlacePicker";
 import type { Place } from "@/lib/places/types";
+import { DatePickerSheet } from "@/components/date-time/DatePickerSheet";
+import { TimePickerSheet } from "@/components/date-time/TimePickerSheet";
+import {
+  combineLocalDateTime,
+  dateOnlyFromDate,
+  localDateTimeParts,
+  localDateTimeToIso,
+} from "@/components/date-time/format";
 
 export const Route = createFileRoute("/club/manage_/guest")({
   component: GuestOfferManagementPage,
@@ -39,6 +47,10 @@ function GuestOfferManagementPage() {
   const [showerAvailable, setShowerAvailable] = useState(false);
   const [shuttlecockIncluded, setShuttlecockIncluded] = useState(false);
   const clubId = clubs.data?.[0]?.id;
+  const setDatePart = (current: string, date: string) =>
+    combineLocalDateTime(date, localDateTimeParts(current)?.time ?? "19:00");
+  const setTimePart = (current: string, time: string) =>
+    combineLocalDateTime(localDateTimeParts(current)?.date ?? dateOnlyFromDate(new Date()), time);
   const offers = useQuery({
     queryKey: ["guest-offers", "managed", clubId],
     queryFn: () => listManagedGuestOffersFn({ data: { clubId: clubId! } }),
@@ -53,10 +65,10 @@ function GuestOfferManagementPage() {
           title,
           place: place!,
           locationNote: locationNote || undefined,
-          startsAt: new Date(startsAt).toISOString(),
-          endsAt: new Date(endsAt).toISOString(),
-          ...(bookingOpensAt ? { bookingOpensAt: new Date(bookingOpensAt).toISOString() } : {}),
-          bookingClosesAt: new Date(bookingClosesAt).toISOString(),
+          startsAt: localDateTimeToIso(startsAt),
+          endsAt: localDateTimeToIso(endsAt),
+          ...(bookingOpensAt ? { bookingOpensAt: localDateTimeToIso(bookingOpensAt) } : {}),
+          bookingClosesAt: localDateTimeToIso(bookingClosesAt),
           capacity,
           pricePerPerson,
           skillNote: skillNote || undefined,
@@ -108,42 +120,63 @@ function GuestOfferManagementPage() {
           locationNote={locationNote}
           onLocationNoteChange={setLocationNote}
         />
-        <label className="block text-sm font-bold">
-          운동 시작
-          <input
-            type="datetime-local"
-            value={startsAt}
-            onChange={(e) => setStartsAt(e.target.value)}
-            className="mt-1 h-11 w-full rounded-2xl border border-border px-3"
-          />
-        </label>
-        <label className="block text-sm font-bold">
-          운동 종료
-          <input
-            type="datetime-local"
-            value={endsAt}
-            onChange={(e) => setEndsAt(e.target.value)}
-            className="mt-1 h-11 w-full rounded-2xl border border-border px-3"
-          />
-        </label>
-        <label className="block text-sm font-bold">
-          모집 시작 (선택)
-          <input
-            type="datetime-local"
-            value={bookingOpensAt}
-            onChange={(e) => setBookingOpensAt(e.target.value)}
-            className="mt-1 h-11 w-full rounded-2xl border border-border px-3"
-          />
-        </label>
-        <label className="block text-sm font-bold">
-          모집 마감
-          <input
-            type="datetime-local"
-            value={bookingClosesAt}
-            onChange={(e) => setBookingClosesAt(e.target.value)}
-            className="mt-1 h-11 w-full rounded-2xl border border-border px-3"
-          />
-        </label>
+        <div className="space-y-2 rounded-2xl bg-muted/30 p-3">
+          <p className="text-sm font-extrabold">운동 일정</p>
+          <div className="grid grid-cols-2 gap-2">
+            <DatePickerSheet
+              label="운동 날짜"
+              value={localDateTimeParts(startsAt)?.date ?? ""}
+              onChange={(date) => setStartsAt(setDatePart(startsAt, date))}
+            />
+            <TimePickerSheet
+              label="시작 시간"
+              value={localDateTimeParts(startsAt)?.time ?? ""}
+              onChange={(time) => setStartsAt(setTimePart(startsAt, time))}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <DatePickerSheet
+              label="종료 날짜"
+              value={localDateTimeParts(endsAt)?.date ?? ""}
+              {...(localDateTimeParts(startsAt)?.date
+                ? { minDate: localDateTimeParts(startsAt)!.date }
+                : {})}
+              onChange={(date) => setEndsAt(setDatePart(endsAt, date))}
+            />
+            <TimePickerSheet
+              label="종료 시간"
+              value={localDateTimeParts(endsAt)?.time ?? ""}
+              onChange={(time) => setEndsAt(setTimePart(endsAt, time))}
+            />
+          </div>
+        </div>
+        <div className="space-y-2 rounded-2xl bg-muted/30 p-3">
+          <p className="text-sm font-extrabold">모집 기간</p>
+          <div className="grid grid-cols-2 gap-2">
+            <DatePickerSheet
+              label="모집 시작 날짜 (선택)"
+              value={localDateTimeParts(bookingOpensAt)?.date ?? ""}
+              onChange={(date) => setBookingOpensAt(setDatePart(bookingOpensAt, date))}
+            />
+            <TimePickerSheet
+              label="모집 시작 시간"
+              value={localDateTimeParts(bookingOpensAt)?.time ?? ""}
+              onChange={(time) => setBookingOpensAt(setTimePart(bookingOpensAt, time))}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <DatePickerSheet
+              label="모집 마감 날짜"
+              value={localDateTimeParts(bookingClosesAt)?.date ?? ""}
+              onChange={(date) => setBookingClosesAt(setDatePart(bookingClosesAt, date))}
+            />
+            <TimePickerSheet
+              label="모집 마감 시간"
+              value={localDateTimeParts(bookingClosesAt)?.time ?? ""}
+              onChange={(time) => setBookingClosesAt(setTimePart(bookingClosesAt, time))}
+            />
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <label className="text-sm font-bold">
             최대 인원

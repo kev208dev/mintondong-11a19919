@@ -5,6 +5,7 @@ import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PlacePicker } from "@/components/places/PlacePicker";
+import { DatePickerSheet } from "@/components/date-time/DatePickerSheet";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -401,34 +402,36 @@ function TournamentEditor({
 
       <div className="grid grid-cols-2 gap-2">
         <FormField label="대회 시작일" required error={errors.startDate}>
-          <Input
-            type="date"
+          <DatePickerSheet
+            label="대회 시작일"
             value={draft.startDate}
-            onChange={(event) => set("startDate", event.target.value)}
+            onChange={(value) => set("startDate", value)}
           />
         </FormField>
         <FormField label="대회 종료일" required error={errors.endDate}>
-          <Input
-            type="date"
+          <DatePickerSheet
+            label="대회 종료일"
             value={draft.endDate}
-            onChange={(event) => set("endDate", event.target.value)}
+            {...(draft.startDate ? { minDate: draft.startDate } : {})}
+            onChange={(value) => set("endDate", value)}
           />
         </FormField>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <FormField label="접수 시작일" error={errors.registrationStartDate}>
-          <Input
-            type="date"
+          <DatePickerSheet
+            label="접수 시작일"
             value={draft.registrationStartDate}
-            onChange={(event) => set("registrationStartDate", event.target.value)}
+            onChange={(value) => set("registrationStartDate", value)}
           />
         </FormField>
         <FormField label="접수 종료일" error={errors.registrationEndDate}>
-          <Input
-            type="date"
+          <DatePickerSheet
+            label="접수 종료일"
             value={draft.registrationEndDate}
-            onChange={(event) => set("registrationEndDate", event.target.value)}
+            {...(draft.registrationStartDate ? { minDate: draft.registrationStartDate } : {})}
+            onChange={(value) => set("registrationEndDate", value)}
           />
         </FormField>
       </div>
