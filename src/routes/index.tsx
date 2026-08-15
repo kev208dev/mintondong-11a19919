@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { HomeTournamentSection } from "@/components/tournaments/HomeTournamentSection";
+import { Capacitor } from "@capacitor/core";
 import { useStore, useTodayPlayers } from "@/lib/badminton/store";
 import { won } from "@/lib/badminton/lessons";
 import { clubKeys, searchPublicClubs } from "@/lib/clubs/api";
@@ -75,9 +76,21 @@ function HomePage() {
   return (
     <div className="space-y-4">
       <section className="px-1">
-        <p className="text-[15px] font-extrabold tracking-tight text-foreground">
+        {Capacitor.getPlatform() === "ios" ? (
+          <div className="mb-3 flex items-center gap-2">
+            <img
+              src="/mintondong-logo.png"
+              alt="민턴동"
+              width={40}
+              height={40}
+              className="size-10 rounded-xl object-contain"
+            />
+            <span className="text-sm font-extrabold tracking-tight text-foreground">민턴동</span>
+          </div>
+        ) : null}
+        <h1 className="text-xl font-extrabold tracking-tight text-foreground">
           배드민턴 동호회 운영을 더 간편하게
-        </p>
+        </h1>
         <p className="mt-0.5 text-[11.5px] text-muted-foreground">
           출석 · 경기 배정 · 회원 관리 · 일정 관리 · 레슨 예약
         </p>
@@ -170,7 +183,7 @@ function HomePage() {
         )}
       </section>
 
-      <section className="brand-gradient rounded-2xl p-4 text-primary-foreground">
+      <section className="rounded-2xl bg-brand-deep p-4 text-primary-foreground">
         <p className="text-[11px] font-semibold opacity-75">오늘 운동 요약</p>
         <p className="mt-0.5 truncate text-[15px] font-extrabold">{club.club.name}</p>
         <p className="text-[11px] opacity-80">

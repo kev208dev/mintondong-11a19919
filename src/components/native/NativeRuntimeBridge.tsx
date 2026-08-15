@@ -8,51 +8,12 @@ import {
   isBottomTabRoute,
   isExactBottomTabDestination,
 } from "@/components/app/app-shell-state";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { NEXT_STORAGE_KEY } from "@/lib/auth/providers";
-import { rememberAppleProviderToken } from "@/lib/auth/apple-provider-token";
+import { acceptAuthCallback } from "@/lib/auth/native-callback";
 import { safeNextPath } from "@/lib/auth/username";
 import { goBackOrFallback, resolveClubRouteBackFallback } from "@/lib/navigation/club-route-back";
 import { NativeChrome } from "@/lib/native/native-chrome";
-
-function authParams(url: string): URLSearchParams {
-  const parsed = new URL(url);
-  const params = new URLSearchParams(parsed.search);
-  const hash = new URLSearchParams(parsed.hash.replace(/^#/, ""));
-  hash.forEach((value, key) => params.set(key, value));
-  return params;
-}
-
-async function acceptAuthCallback(url: string): Promise<boolean> {
-  if (!url.startsWith("mintondong://auth/callback")) return false;
-  const params = authParams(url);
-  const accessToken = params.get("access_token");
-  const refreshToken = params.get("refresh_token");
-  const code = params.get("code");
-
-  if (accessToken && refreshToken) {
-    const { data, error } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-    if (error) throw error;
-    const providerToken = params.get("provider_token");
-    rememberAppleProviderToken(
-      providerToken && data.session
-        ? { ...data.session, provider_token: providerToken }
-        : data.session,
-    );
-    return true;
-  }
-  if (code) {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) throw error;
-    rememberAppleProviderToken(data.session);
-    return true;
-  }
-  throw new Error(params.get("error_description") || "OAUTH_CALLBACK_INVALID");
-}
 
 export function NativeRuntimeBridge() {
   const router = useRouter();

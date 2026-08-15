@@ -102,7 +102,10 @@ function TournamentsPage() {
   return (
     <div className="space-y-4">
       <section className="px-1">
-        <p className="text-[15px] font-extrabold text-foreground">전국 배드민턴 대회를 한곳에서</p>
+        <h1 className="text-xl font-extrabold tracking-tight text-foreground">대회</h1>
+        <p className="mt-2 text-[15px] font-extrabold text-foreground">
+          전국 배드민턴 대회를 한곳에서
+        </p>
         <p className="mt-0.5 text-[11.5px] text-muted-foreground">
           접수 일정과 장소를 확인하고 원본 사이트에서 신청하세요.
         </p>

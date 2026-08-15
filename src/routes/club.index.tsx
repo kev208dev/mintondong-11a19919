@@ -119,6 +119,10 @@ function ClubHomePage() {
 
   return (
     <div className="space-y-3">
+      <section className="px-1 pb-1">
+        <h1 className="text-xl font-extrabold tracking-tight text-foreground">동호회</h1>
+        <p className="mt-1 text-xs text-muted-foreground">내 모임과 운동을 한눈에 관리해요.</p>
+      </section>
       <div className="flex items-center gap-2">
         <Link
           to="/clubs/new"

@@ -7,9 +7,11 @@ import { ClubSectionNav } from "./ClubSectionNav";
 import { AccountButton } from "./AccountButton";
 import { ClubSwitcher } from "./ClubSwitcher";
 import { PublicFooter } from "./PublicFooter";
+import { ClubRouteBackButton } from "./ClubRouteBackButton";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   hidesBottomNavigation,
+  getNativeChromeState,
   isExactBottomTabDestination,
   isClubSection,
   pageTitle,
@@ -85,6 +87,11 @@ export function AppShell() {
   const authFlow = pathname === "/auth" || pathname.startsWith("/auth/");
   const usesUIKitChrome = usesNativeUIKitChrome(Capacitor.getPlatform());
   const showNativePrimaryControls = usesUIKitChrome && showsNativePrimaryControls(pathname);
+  const showNativeInlineBack =
+    usesUIKitChrome &&
+    getNativeChromeState(pathname).showsBackButton &&
+    !pathname.startsWith("/clubs/find") &&
+    !pathname.startsWith("/clubs/new");
 
   useEffect(() => {
     const run = () => {
@@ -135,7 +142,7 @@ export function AppShell() {
         className="app-scroll-region min-h-0 flex-1 overflow-y-auto"
       >
         <main
-          className={`px-4 ${authFlow ? "pt-[max(0.75rem,env(safe-area-inset-top))]" : "pt-3"} ${
+          className={`px-4 pt-3 ${
             hideBottomNav
               ? "pb-[max(2rem,env(safe-area-inset-bottom))]"
               : showPublicFooter
@@ -170,6 +177,7 @@ export function AppShell() {
               </div>
             </div>
           ) : null}
+          {showNativeInlineBack ? <ClubRouteBackButton /> : null}
           {isClubSection(pathname) &&
           !(isExactBottomTabDestination(pathname, "/club") && (!user || authLoading)) ? (
             <ClubSectionNav pathname={pathname} />

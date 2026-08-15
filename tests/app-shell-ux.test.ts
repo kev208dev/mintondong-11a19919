@@ -57,7 +57,7 @@ test("iOS native는 CSS glass nav 대신 UIKit chrome을 사용한다", () => {
   assert.doesNotMatch(styles, /ios-liquid-tabbar|blur\(24px\) saturate\(180%\)/);
 });
 
-test("UIKit chrome route metadata는 tab, title, back, auth visibility를 함께 계산한다", () => {
+test("iOS는 상단 native navigation bar 없이 tab과 back 메타데이터만 계산한다", () => {
   assert.equal(usesNativeUIKitChrome("ios"), true);
   assert.equal(usesNativeUIKitChrome("android"), false);
   assert.equal(usesNativeUIKitChrome("web"), false);
@@ -67,12 +67,13 @@ test("UIKit chrome route metadata는 tab, title, back, auth visibility를 함께
     title: "홈",
     selectedTab: "home",
     showsTabBar: true,
-    showsNavigationBar: true,
+    showsNavigationBar: false,
     showsBackButton: false,
   });
   assert.equal(getNativeChromeState("/club").selectedTab, "club");
   assert.equal(getNativeChromeState("/tournaments/abc").selectedTab, "tournaments");
   assert.equal(getNativeChromeState("/tournaments/abc").showsBackButton, true);
+  assert.equal(getNativeChromeState("/tournaments/abc").showsNavigationBar, false);
   assert.equal(getNativeChromeState("/clubs/find").selectedTab, "home");
   assert.equal(getNativeChromeState("/clubs/find").showsBackButton, true);
   assert.equal(getNativeChromeState("/clubs/new").selectedTab, null);
@@ -87,7 +88,6 @@ test("UIKit chrome route metadata는 tab, title, back, auth visibility를 함께
 test("iOS shell은 표준 UIKit bar와 공식 Capacitor local plugin containment를 사용한다", () => {
   const native = readFileSync("ios/App/App/SceneDelegate.swift", "utf8");
   assert.match(native, /MintondongShellViewController/);
-  assert.match(native, /UINavigationBar\(\)/);
   assert.match(native, /UITabBar\(\)/);
   assert.match(native, /UIImage\(systemName: tab\.systemImageName\)/);
   assert.match(native, /CAPPlugin, CAPBridgedPlugin/);
@@ -96,6 +96,11 @@ test("iOS shell은 표준 UIKit bar와 공식 Capacitor local plugin containment
   assert.match(native, /addChild\(bridgeViewController\)/);
   assert.match(native, /didMove\(toParent: self\)/);
   assert.match(native, /SceneDelegateProxy\.shared/);
+  assert.match(native, /NativeAuthPlugin/);
+  assert.match(native, /ASAuthorizationAppleIDProvider/);
+  assert.match(native, /SHA256/);
+  assert.match(native, /signInWithApple/);
+  assert.doesNotMatch(native, /navigationBar\.setItems/);
   assert.doesNotMatch(native, /UIBlurEffect|UIVisualEffectView|UIGlassEffect/);
 });
 

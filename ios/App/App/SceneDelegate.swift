@@ -1,5 +1,8 @@
 import UIKit
 import Capacitor
+import AuthenticationServices
+import CryptoKit
+import Security
 
 private struct MintondongNativeChromeState {
     let title: String
@@ -60,15 +63,119 @@ public final class NativeChromePlugin: CAPPlugin, CAPBridgedPlugin {
     }
 }
 
+@objc(NativeAuthPlugin)
+public final class NativeAuthPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "NativeAuthPlugin"
+    public let jsName = "NativeAuth"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "signInWithApple", returnType: CAPPluginReturnPromise)
+    ]
+
+    private var currentCall: CAPPluginCall?
+    private var currentNonce: String?
+
+    @objc public func signInWithApple(_ call: CAPPluginCall) {
+        guard currentCall == nil else {
+            call.reject("APPLE_SIGN_IN_IN_PROGRESS")
+            return
+        }
+        guard let nonce = Self.randomNonce() else {
+            call.reject("APPLE_NONCE_GENERATION_FAILED")
+            return
+        }
+
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = [.fullName, .email]
+        request.nonce = Self.sha256(nonce)
+
+        currentCall = call
+        currentNonce = nonce
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = self
+        controller.presentationContextProvider = self
+        controller.performRequests()
+    }
+
+    private static func randomNonce(length: Int = 32) -> String? {
+        let characters = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var bytes = [UInt8](repeating: 0, count: length)
+        guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
+            return nil
+        }
+        return bytes.map { characters[Int($0) % characters.count] }.map(String.init).joined()
+    }
+
+    private static func sha256(_ value: String) -> String {
+        SHA256.hash(data: Data(value.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func finish(_ result: Result<[String: Any], Error>) {
+        guard let call = currentCall else { return }
+        currentCall = nil
+        currentNonce = nil
+        DispatchQueue.main.async {
+            switch result {
+            case .success(let data): call.resolve(data)
+            case .failure(let error):
+                if let authorizationError = error as? ASAuthorizationError,
+                   authorizationError.code == .canceled {
+                    call.reject("Apple sign-in was cancelled", "APPLE_SIGN_IN_CANCELLED")
+                } else {
+                    call.reject("Apple sign-in failed", "APPLE_SIGN_IN_FAILED")
+                }
+            }
+        }
+    }
+}
+
+extension NativeAuthPlugin: ASAuthorizationControllerDelegate,
+    ASAuthorizationControllerPresentationContextProviding
+{
+    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        bridge?.viewController?.view.window ?? ASPresentationAnchor()
+    }
+
+    public func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithAuthorization authorization: ASAuthorization
+    ) {
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let identityToken = credential.identityToken,
+              let idToken = String(data: identityToken, encoding: .utf8),
+              let nonce = currentNonce else {
+            finish(.failure(NSError(domain: "NativeAuth", code: 1)))
+            return
+        }
+
+        var result: [String: Any] = ["idToken": idToken, "nonce": nonce]
+        if let email = credential.email { result["email"] = email }
+        if let givenName = credential.fullName?.givenName { result["givenName"] = givenName }
+        if let familyName = credential.fullName?.familyName { result["familyName"] = familyName }
+        finish(.success(result))
+    }
+
+    public func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithError error: Error
+    ) {
+        finish(.failure(error))
+    }
+}
+
 private final class MintondongBridgeViewController: CAPBridgeViewController {
     weak var nativeChromeDelegate: MintondongNativeChromeDelegate?
     private(set) var nativeChromePlugin: NativeChromePlugin?
+    private(set) var nativeAuthPlugin: NativeAuthPlugin?
 
     override func capacitorDidLoad() {
         let plugin = NativeChromePlugin()
         plugin.chromeDelegate = nativeChromeDelegate
         bridge?.registerPluginInstance(plugin)
         nativeChromePlugin = plugin
+
+        let authPlugin = NativeAuthPlugin()
+        bridge?.registerPluginInstance(authPlugin)
+        nativeAuthPlugin = authPlugin
     }
 }
 
@@ -119,11 +226,9 @@ private final class MintondongShellViewController: UIViewController,
         }
     }
 
-    private let navigationBar = UINavigationBar()
     private let tabBar = UITabBar()
     private let bridgeViewController = MintondongBridgeViewController()
     private var bridgeTopToSafeArea: NSLayoutConstraint!
-    private var bridgeTopToNavigationBar: NSLayoutConstraint!
     private var tabBarHeight: NSLayoutConstraint!
     private var chromeState = MintondongNativeChromeState.hidden
     private var keyboardVisible = false
@@ -134,7 +239,6 @@ private final class MintondongShellViewController: UIViewController,
         view.backgroundColor = .systemBackground
 
         configureBridgeContainment()
-        configureNavigationBar()
         configureTabBar()
         configureKeyboardObservers()
         applyChromeState(animated: false)
@@ -159,7 +263,6 @@ private final class MintondongShellViewController: UIViewController,
         view.addSubview(bridgeView)
 
         bridgeTopToSafeArea = bridgeView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor)
-        bridgeTopToNavigationBar = bridgeView.topAnchor.constraint(equalTo: navigationBar.bottomAnchor)
         bridgeTopToSafeArea.isActive = true
 
         NSLayoutConstraint.activate([
@@ -168,20 +271,6 @@ private final class MintondongShellViewController: UIViewController,
             bridgeView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         bridgeViewController.didMove(toParent: self)
-    }
-
-    private func configureNavigationBar() {
-        navigationBar.translatesAutoresizingMaskIntoConstraints = false
-        navigationBar.tintColor = .systemTeal
-        navigationBar.isHidden = true
-        view.addSubview(navigationBar)
-
-        NSLayoutConstraint.activate([
-            navigationBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            navigationBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            navigationBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            navigationBar.heightAnchor.constraint(equalToConstant: 44)
-        ])
     }
 
     private func configureTabBar() {
@@ -239,39 +328,8 @@ private final class MintondongShellViewController: UIViewController,
 
     private func applyChromeState(animated: Bool) {
         let apply = {
-            self.navigationBar.isHidden = !self.chromeState.showsNavigationBar
             self.tabBar.isHidden = !self.chromeState.showsTabBar || self.keyboardVisible
-            self.bridgeTopToSafeArea.isActive = false
-            self.bridgeTopToNavigationBar.isActive = false
-            if self.chromeState.showsNavigationBar {
-                self.bridgeTopToNavigationBar.isActive = true
-            } else {
-                self.bridgeTopToSafeArea.isActive = true
-            }
-
-            let item = UINavigationItem(title: self.chromeState.title)
-            if self.chromeState.showsBackButton {
-                let image = UIImage(systemName: "chevron.backward")
-                let backItem: UIBarButtonItem
-                if #available(iOS 16.0, *) {
-                    backItem = UIBarButtonItem(
-                        title: "뒤로",
-                        image: image,
-                        target: self,
-                        action: #selector(self.backRequested)
-                    )
-                } else {
-                    backItem = UIBarButtonItem(
-                        image: image,
-                        style: .plain,
-                        target: self,
-                        action: #selector(self.backRequested)
-                    )
-                    backItem.accessibilityLabel = "뒤로"
-                }
-                item.leftBarButtonItem = backItem
-            }
-            self.navigationBar.setItems([item], animated: false)
+            self.bridgeTopToSafeArea.isActive = true
 
             if let selectedTab = self.chromeState.selectedTab,
                let tab = Tab.allCases.first(where: { $0.identifier == selectedTab }),
@@ -288,10 +346,6 @@ private final class MintondongShellViewController: UIViewController,
         } else {
             apply()
         }
-    }
-
-    @objc private func backRequested() {
-        bridgeViewController.nativeChromePlugin?.emitBackRequested()
     }
 
     func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {

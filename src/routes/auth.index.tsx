@@ -119,7 +119,14 @@ function LoginPage() {
     setBusy(id);
     try {
       await startSocialLogin(id, next);
-    } catch {
+    } catch (error) {
+      const errorCode =
+        typeof error === "object" && error && "code" in error
+          ? String(error.code)
+          : error instanceof Error
+            ? error.message
+            : "";
+      if (id === "apple" && errorCode.includes("APPLE_SIGN_IN_CANCELLED")) return;
       toast.error("지금은 이 방법으로 로그인할 수 없어요. 다른 방법을 이용해 주세요.");
     } finally {
       setBusy(null);
@@ -127,7 +134,7 @@ function LoginPage() {
   };
 
   return (
-    <section className="rounded-3xl border border-border bg-card p-4 sm:p-5">
+    <section className="rounded-3xl bg-card/80 p-4 sm:p-5">
       <div className="space-y-2">
         <label className="block text-[11px] font-bold text-muted-foreground" htmlFor="login-id">
           아이디

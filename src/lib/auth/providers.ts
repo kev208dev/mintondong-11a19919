@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { safeNextPath } from "./username";
 import { Capacitor } from "@capacitor/core";
+import { NativeAuth } from "@/lib/native/native-auth";
 
 export type SocialProvider = "kakao" | "google" | "apple";
 
@@ -55,6 +56,41 @@ export async function startSocialLogin(provider: SocialProvider, next?: string) 
   } catch {
     // 저장 실패는 무시 (로그인 후 홈으로 이동)
   }
+  if (native && Capacitor.getPlatform() === "ios" && provider === "apple") {
+    const credential = await NativeAuth.signInWithApple();
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: "apple",
+      token: credential.idToken,
+      nonce: credential.nonce,
+    });
+    if (error) throw error;
+
+    const name = [credential.givenName, credential.familyName].filter(Boolean).join(" ").trim();
+    if (name || credential.email) {
+      await supabase.auth
+        .updateUser({
+          data: {
+            ...(name
+              ? {
+                  full_name: name,
+                  given_name: credential.givenName,
+                  family_name: credential.familyName,
+                }
+              : {}),
+            ...(credential.email ? { email: credential.email } : {}),
+          },
+        })
+        .catch((metadataError) =>
+          console.warn(
+            "[native-auth] optional Apple profile metadata update failed",
+            metadataError,
+          ),
+        );
+    }
+    if (!data.session) throw new Error("APPLE_SESSION_MISSING");
+    return;
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {

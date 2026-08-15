@@ -71,7 +71,7 @@
 }
 
 :root {
-  --radius: 0.875rem;
+  --radius: 1rem;
   /* 페이지 배경: 아주 옅은 민트/블루 */
   --background: oklch(0.986 0.005 205);
   --foreground: oklch(0.208 0.04 265.8);
@@ -96,8 +96,8 @@
   --brand-deep: oklch(0.44 0.115 249);
   --brand-mint: oklch(0.828 0.119 178.9);
   --brand-soft: oklch(0.959 0.028 194);
-  --shadow-soft: 0 1px 2px oklch(0.44 0.115 249 / 0.05);
-  --shadow-card: 0 6px 20px -12px oklch(0.44 0.115 249 / 0.18);
+  --shadow-soft: 0 1px 2px oklch(0.44 0.115 249 / 0.04);
+  --shadow-card: 0 4px 16px -12px oklch(0.44 0.115 249 / 0.14);
   --chart-1: oklch(0.615 0.105 206.4);
   --chart-2: oklch(0.828 0.119 178.9);
   --chart-3: oklch(0.44 0.115 249);

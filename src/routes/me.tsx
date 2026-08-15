@@ -78,6 +78,10 @@ function MePage() {
 
   return (
     <div className="space-y-4">
+      <section className="px-1">
+        <h1 className="text-xl font-extrabold tracking-tight text-foreground">마이</h1>
+        <p className="mt-1 text-xs text-muted-foreground">계정과 활동 정보를 관리해요.</p>
+      </section>
       <section className="rounded-3xl border border-border bg-card p-5">
         <div className="flex items-center gap-3">
           {profile?.avatar_url ? (

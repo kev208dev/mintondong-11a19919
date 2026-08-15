@@ -90,7 +90,7 @@ export function getNativeChromeState(pathname: string): NativeChromeState {
     title: pageTitle(pathname),
     selectedTab: selectedNativeTab(pathname),
     showsTabBar: !hidesBottomNavigation(pathname),
-    showsNavigationBar: !authFlow,
+    showsNavigationBar: false,
     showsBackButton: !authFlow && !onboardingRoot && !rootDestination,
   };
 }
