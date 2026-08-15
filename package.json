@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "npm run test:lessons && npm run test:portone && npm run test:tournaments && npm run test:tournament-admin && npm run test:account-deletion && npm run test:apple-notifications && npm run test:onboarding && npm run test:onboarding-render && npm run test:app-shell && npm run test:auth-entry && npm run test:guest && node --test --experimental-strip-types tests/native-auth.test.ts",
-    "dev": "vite dev",
+    "dev": "node scripts/dev-with-env.mjs",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",

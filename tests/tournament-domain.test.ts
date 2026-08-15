@@ -65,6 +65,8 @@ test("홈 대회 미리보기는 3개로 고정하지 않고 최대 8개를 요�
   const home = readFileSync("src/components/tournaments/HomeTournamentSection.tsx", "utf8");
   assert.match(home, /status: "REGISTERING"[\s\S]*limit: 8/);
   assert.match(home, /overflow-x-auto/);
+  assert.match(home, /대회 정보를 불러오지 못했어요/);
+  assert.match(home, /tournaments\.refetch/);
 });
 
 test("대회 상세는 목록 fallback을 가진 inline back 버튼을 먼저 제공한다", () => {

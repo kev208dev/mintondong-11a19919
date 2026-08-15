@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ChevronRight, MapPin, Trophy } from "lucide-react";
+import { CalendarDays, ChevronRight, MapPin, RefreshCw, Trophy } from "lucide-react";
 import { listTournaments, tournamentKeys } from "@/lib/tournaments/api";
 import {
   formatTournamentPeriod,
@@ -16,8 +16,6 @@ export function HomeTournamentSection() {
     queryFn: () => listTournaments(filters),
     staleTime: 60_000,
   });
-  if (tournaments.isError) return null;
-
   return (
     <section>
       <div className="mb-1.5 flex items-center justify-between px-1">
@@ -31,6 +29,21 @@ export function HomeTournamentSection() {
       </div>
       {tournaments.isLoading ? (
         <div className="h-24 animate-pulse rounded-2xl bg-secondary" />
+      ) : tournaments.isError ? (
+        <section className="surface-card p-5 text-center" role="alert">
+          <p className="text-sm font-extrabold text-foreground">대회 정보를 불러오지 못했어요</p>
+          <p className="mt-1 text-xs font-medium text-muted-foreground">
+            잠시 후 다시 시도해 주세요.
+          </p>
+          <button
+            type="button"
+            onClick={() => void tournaments.refetch()}
+            className="mt-4 inline-flex h-11 items-center gap-1.5 rounded-xl bg-foreground px-4 text-sm font-bold text-background transition-transform active:scale-[0.98]"
+          >
+            <RefreshCw className="size-4" />
+            다시 시도
+          </button>
+        </section>
       ) : tournaments.data?.length ? (
         <ul className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tournaments.data.map((item) => (
