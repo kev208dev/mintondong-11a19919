@@ -47,6 +47,11 @@ export function anonAuthClient(): SupabaseClient {
   });
 }
 
+/** 공개 RLS 데이터를 읽는 서버 전용 publishable 클라이언트. */
+export function publicClient(): SupabaseClient {
+  return anonAuthClient();
+}
+
 // ---------------------------------------------------------------------------
 // 아주 단순한 in-memory rate limit (brute force 완화). 워커 인스턴스 단위.
 // ---------------------------------------------------------------------------

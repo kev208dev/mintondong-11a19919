@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarDays, ChevronRight, MapPin, RefreshCw, Trophy } from "lucide-react";
 import { listTournaments, tournamentKeys } from "@/lib/tournaments/api";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   formatTournamentPeriod,
   getTournamentDDay,
@@ -15,6 +16,8 @@ export function HomeTournamentSection() {
     queryKey: tournamentKeys.all(filters),
     queryFn: () => listTournaments(filters),
     staleTime: 60_000,
+    retry: 0,
+    retryDelay: 250,
   });
   return (
     <section>
@@ -28,7 +31,11 @@ export function HomeTournamentSection() {
         </Link>
       </div>
       {tournaments.isLoading ? (
-        <div className="h-24 animate-pulse rounded-2xl bg-secondary" />
+        <div className="-mx-4 flex gap-3 overflow-hidden px-4" aria-label="대회 목록을 불러오는 중">
+          {[0, 1, 2].map((item) => (
+            <Skeleton key={item} className="h-36 w-[78%] max-w-[290px] shrink-0 rounded-3xl" />
+          ))}
+        </div>
       ) : tournaments.isError ? (
         <section className="surface-card p-5 text-center" role="alert">
           <p className="text-sm font-extrabold text-foreground">대회 정보를 불러오지 못했어요</p>

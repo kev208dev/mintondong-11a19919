@@ -75,6 +75,8 @@ function TournamentsPage() {
     queryKey: tournamentKeys.all(filters),
     queryFn: () => listTournaments(filters),
     staleTime: 60_000,
+    retry: 0,
+    retryDelay: 250,
   });
   const favorites = useQuery({
     queryKey: tournamentKeys.favorites(user?.id ?? null),

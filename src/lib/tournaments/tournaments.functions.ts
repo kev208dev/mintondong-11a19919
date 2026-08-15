@@ -69,71 +69,106 @@ function matchesFilters(item: Tournament, filters: TournamentFilters): boolean {
 }
 
 async function publicDb(): Promise<SupabaseClient> {
+  const { publicClient } = await import("@/lib/auth/account.server");
+  return publicClient() as unknown as SupabaseClient;
+}
+
+async function sourceDb(): Promise<SupabaseClient | null> {
+  const { serverEnv } = await import("@/lib/server-env.server");
+  // tournament_sources intentionally has no public grant because it contains raw provenance.
+  // Local Debug can still render public tournament details without a service-role secret.
+  if (!serverEnv("SUPABASE_SERVICE_ROLE_KEY")) return null;
   const { adminClient } = await import("@/lib/auth/account.server");
   return adminClient() as unknown as SupabaseClient;
+}
+
+function logTournamentFailure(functionName: string, error: unknown, startedAt: number) {
+  const candidate = error as { code?: unknown; message?: unknown; status?: unknown };
+  console.error("[tournaments] query failed", {
+    function: functionName,
+    code: typeof candidate?.code === "string" ? candidate.code : "SERVER_ERROR",
+    message: error instanceof Error ? error.message : String(candidate?.message ?? error),
+    status: typeof candidate?.status === "number" ? candidate.status : null,
+    durationMs: Math.round(performance.now() - startedAt),
+  });
 }
 
 export const getTournaments = createServerFn({ method: "GET" })
   .validator((input: TournamentFilters) => input)
   .handler(async ({ data }): Promise<Tournament[]> => {
-    const { clientKey, rateLimit } = await import("@/lib/auth/account.server");
-    if (!rateLimit(clientKey(getRequest().headers, "tournaments"), 120, 60_000)) {
-      throw new Error("too_many_requests");
+    const startedAt = performance.now();
+    try {
+      const { clientKey, rateLimit } = await import("@/lib/auth/account.server");
+      if (!rateLimit(clientKey(getRequest().headers, "tournaments"), 120, 60_000)) {
+        throw new Error("too_many_requests");
+      }
+      const client = await publicDb();
+      const result = await client
+        .from("tournaments")
+        .select(TOURNAMENT_COLUMNS)
+        .eq("is_active", true)
+        .order("start_date", { ascending: true })
+        .limit(300);
+      if (result.error) throw result.error;
+      const limit = Math.min(Math.max(data.limit ?? 100, 1), 300);
+      return ((result.data ?? []) as Record<string, unknown>[])
+        .map((row) => rowToTournament(row))
+        .filter((item) => matchesFilters(item, data))
+        .sort(
+          (left, right) =>
+            tournamentSortValue(left.status) - tournamentSortValue(right.status) ||
+            left.startDate.localeCompare(right.startDate),
+        )
+        .slice(0, limit);
+    } catch (error) {
+      logTournamentFailure("getTournaments", error, startedAt);
+      throw error;
     }
-    const client = await publicDb();
-    const result = await client
-      .from("tournaments")
-      .select(TOURNAMENT_COLUMNS)
-      .eq("is_active", true)
-      .order("start_date", { ascending: true })
-      .limit(300);
-    if (result.error) throw result.error;
-    const limit = Math.min(Math.max(data.limit ?? 100, 1), 300);
-    return ((result.data ?? []) as Record<string, unknown>[])
-      .map((row) => rowToTournament(row))
-      .filter((item) => matchesFilters(item, data))
-      .sort(
-        (left, right) =>
-          tournamentSortValue(left.status) - tournamentSortValue(right.status) ||
-          left.startDate.localeCompare(right.startDate),
-      )
-      .slice(0, limit);
   });
 
 export const getTournament = createServerFn({ method: "GET" })
   .validator((input: { tournamentId: string }) => input)
   .handler(async ({ data }): Promise<Tournament | null> => {
-    if (
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        data.tournamentId,
-      )
-    ) {
-      return null;
+    const startedAt = performance.now();
+    try {
+      if (
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          data.tournamentId,
+        )
+      ) {
+        return null;
+      }
+      const client = await publicDb();
+      const sourceClient = await sourceDb();
+      const [tournament, sourceResult] = await Promise.all([
+        client
+          .from("tournaments")
+          .select(TOURNAMENT_COLUMNS)
+          .eq("id", data.tournamentId)
+          .eq("is_active", true)
+          .maybeSingle(),
+        sourceClient
+          ? sourceClient
+              .from("tournament_sources")
+              .select("source, source_url, registration_url, bracket_url, result_url")
+              .eq("tournament_id", data.tournamentId)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+      if (tournament.error) throw tournament.error;
+      if (sourceResult.error) throw sourceResult.error;
+      if (!tournament.data) return null;
+      const sources = ((sourceResult.data ?? []) as Record<string, unknown>[]).map(
+        (row): TournamentSourceLink => ({
+          source: row["source"] as TournamentSource,
+          sourceUrl: (row["source_url"] as string | null) ?? null,
+          registrationUrl: (row["registration_url"] as string | null) ?? null,
+          bracketUrl: (row["bracket_url"] as string | null) ?? null,
+          resultUrl: (row["result_url"] as string | null) ?? null,
+        }),
+      );
+      return rowToTournament(tournament.data as Record<string, unknown>, sources);
+    } catch (error) {
+      logTournamentFailure("getTournament", error, startedAt);
+      throw error;
     }
-    const client = await publicDb();
-    const [tournament, sourceResult] = await Promise.all([
-      client
-        .from("tournaments")
-        .select(TOURNAMENT_COLUMNS)
-        .eq("id", data.tournamentId)
-        .eq("is_active", true)
-        .maybeSingle(),
-      client
-        .from("tournament_sources")
-        .select("source, source_url, registration_url, bracket_url, result_url")
-        .eq("tournament_id", data.tournamentId),
-    ]);
-    if (tournament.error) throw tournament.error;
-    if (sourceResult.error) throw sourceResult.error;
-    if (!tournament.data) return null;
-    const sources = ((sourceResult.data ?? []) as Record<string, unknown>[]).map(
-      (row): TournamentSourceLink => ({
-        source: row["source"] as TournamentSource,
-        sourceUrl: (row["source_url"] as string | null) ?? null,
-        registrationUrl: (row["registration_url"] as string | null) ?? null,
-        bracketUrl: (row["bracket_url"] as string | null) ?? null,
-        resultUrl: (row["result_url"] as string | null) ?? null,
-      }),
-    );
-    return rowToTournament(tournament.data as Record<string, unknown>, sources);
   });

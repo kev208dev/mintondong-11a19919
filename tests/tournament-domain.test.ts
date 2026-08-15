@@ -67,6 +67,19 @@ test("홈 대회 미리보기는 3개로 고정하지 않고 최대 8개를 요�
   assert.match(home, /overflow-x-auto/);
   assert.match(home, /대회 정보를 불러오지 못했어요/);
   assert.match(home, /tournaments\.refetch/);
+  assert.match(home, /retry: 0/);
+});
+
+test("공개 대회 목록은 service role 없이 publishable RLS client를 사용한다", () => {
+  const functions = readFileSync("src/lib/tournaments/tournaments.functions.ts", "utf8");
+  assert.match(functions, /async function publicDb[\s\S]*publicClient\(\)/);
+  assert.match(functions, /async function sourceDb[\s\S]*adminClient\(\)/);
+});
+
+test("대회 목록 실패는 기본 retry로 10초 지연되지 않는다", () => {
+  const route = readFileSync("src/routes/tournaments.tsx", "utf8");
+  assert.match(route, /retry: 0/);
+  assert.match(route, /retryDelay: 250/);
 });
 
 test("대회 상세는 목록 fallback을 가진 inline back 버튼을 먼저 제공한다", () => {
