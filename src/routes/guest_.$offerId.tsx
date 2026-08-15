@@ -70,6 +70,19 @@ function GuestOfferPage() {
           <div>
             <p className="font-bold">{offer.venueName}</p>
             <p className="text-sm text-muted-foreground">{offer.address}</p>
+            {offer.locationNote ? (
+              <p className="mt-1 text-sm text-muted-foreground">상세 안내 · {offer.locationNote}</p>
+            ) : null}
+            {offer.placeUrl ? (
+              <a
+                href={offer.placeUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex min-h-10 items-center text-sm font-bold text-primary"
+              >
+                지도에서 보기
+              </a>
+            ) : null}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 text-sm">

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { GUEST_MAX_PARTY_SIZE, GUEST_MIN_PARTY_SIZE } from "./guest-core";
+import { isValidPlace, type Place } from "@/lib/places/types";
 
 const offerId = z.object({ offerId: z.string().uuid() });
 
@@ -53,8 +54,8 @@ export const createGuestOfferFn = createServerFn({ method: "POST" })
       .object({
         clubId: z.string().uuid(),
         title: z.string().trim().min(1).max(120),
-        venueName: z.string().trim().min(1).max(160),
-        address: z.string().trim().min(1).max(240),
+        place: z.custom<Place>(isValidPlace, "검색 결과에서 장소를 선택해 주세요."),
+        locationNote: z.string().trim().max(300).optional(),
         startsAt: z.string().datetime(),
         endsAt: z.string().datetime(),
         bookingOpensAt: z.string().datetime().optional(),
@@ -74,8 +75,8 @@ export const createGuestOfferFn = createServerFn({ method: "POST" })
     (await import("./guest.server")).createGuestOffer(context.userId, {
       clubId: data.clubId,
       title: data.title,
-      venueName: data.venueName,
-      address: data.address,
+      place: data.place,
+      ...(data.locationNote ? { locationNote: data.locationNote } : {}),
       startsAt: data.startsAt,
       endsAt: data.endsAt,
       ...(data.bookingOpensAt ? { bookingOpensAt: data.bookingOpensAt } : {}),

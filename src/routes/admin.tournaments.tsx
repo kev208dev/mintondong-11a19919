@@ -4,6 +4,7 @@ import { ExternalLink, Loader2, Pencil, Plus, Search, ShieldAlert, Trophy } from
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { PlacePicker } from "@/components/places/PlacePicker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -20,6 +21,7 @@ import {
   type ManualTournamentInput,
 } from "@/lib/tournaments/admin-core";
 import { formatTournamentPeriod, tournamentStatusLabel } from "@/lib/tournaments/format";
+import type { Place } from "@/lib/places/types";
 
 export const Route = createFileRoute("/admin/tournaments")({
   head: () => ({
@@ -38,6 +40,7 @@ type Draft = {
   city: string;
   venue: string;
   venueAddress: string;
+  place: Place | null;
   scope: "NATIONAL" | "LOCAL";
   organizer: string;
   host: string;
@@ -60,6 +63,7 @@ const emptyDraft = (): Draft => ({
   city: "",
   venue: "",
   venueAddress: "",
+  place: null,
   scope: "LOCAL",
   organizer: "",
   host: "",
@@ -83,6 +87,7 @@ function draftFromTournament(item: AdminTournament): Draft {
     city: item.city,
     venue: item.venue,
     venueAddress: item.venueAddress ?? "",
+    place: null,
     scope: item.scope,
     organizer: item.organizer ?? "",
     host: item.host ?? "",
@@ -446,12 +451,14 @@ function TournamentEditor({
       </div>
 
       <FormField label="경기장" required error={errors.venue}>
-        <Input value={draft.venue} onChange={(event) => set("venue", event.target.value)} />
-      </FormField>
-      <FormField label="경기장 주소" error={errors.venueAddress}>
-        <Input
-          value={draft.venueAddress}
-          onChange={(event) => set("venueAddress", event.target.value)}
+        <PlacePicker
+          value={draft.place}
+          legacyLabel={draft.place ? null : draft.venue || null}
+          onChange={(place) => {
+            set("place", place);
+            set("venue", place.name);
+            set("venueAddress", place.roadAddress ?? place.jibunAddress ?? "");
+          }}
         />
       </FormField>
 

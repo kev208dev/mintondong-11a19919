@@ -4,9 +4,11 @@ import { ImagePlus, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ClubRouteBackButton } from "@/components/app/ClubRouteBackButton";
+import { PlacePicker } from "@/components/places/PlacePicker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import type { Place } from "@/lib/places/types";
 import {
   clubKeys,
   clubMutationErrorMessage,
@@ -33,7 +35,7 @@ function NewClubPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
-  const [region, setRegion] = useState("");
+  const [place, setPlace] = useState<Place | null>(null);
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [file, setFile] = useState<File | null>(null);
@@ -53,6 +55,7 @@ function NewClubPage() {
       void navigate({ to: "/auth", search: { next: "/clubs/new" } });
       return;
     }
+    const region = place?.roadAddress ?? place?.jibunAddress ?? "";
     const problem = validateCreateClubInput({ name, region });
     if (problem) {
       toast.error(problem);
@@ -60,7 +63,14 @@ function NewClubPage() {
     }
     setSaving(true);
     try {
-      const club = await createClub({ name, region, description, isPublic, imageFile: file });
+      const club = await createClub({
+        name,
+        region,
+        description,
+        isPublic,
+        imageFile: file,
+        place,
+      });
       queryClient.setQueryData(clubKeys.detail(club.id), club);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: clubKeys.mine(user.id) }),
@@ -153,16 +163,10 @@ function NewClubPage() {
       </div>
 
       <div className="space-y-1.5">
-        <label htmlFor="club-region" className="text-xs font-bold text-foreground">
+        <p className="text-xs font-bold text-foreground">
           지역 <span className="text-destructive">*</span>
-        </label>
-        <Input
-          id="club-region"
-          value={region}
-          onChange={(e) => setRegion(e.target.value)}
-          placeholder="예: 서울 강남구"
-          className="h-11 rounded-xl"
-        />
+        </p>
+        <PlacePicker value={place} onChange={setPlace} />
       </div>
 
       <div className="space-y-1.5">
@@ -205,7 +209,7 @@ function NewClubPage() {
 
       <button
         type="button"
-        disabled={saving || !name.trim() || !region.trim()}
+        disabled={saving || !name.trim() || !place}
         onClick={() => void submit()}
         className="flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-extrabold text-primary-foreground disabled:opacity-60"
       >

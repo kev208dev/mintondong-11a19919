@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { TournamentSource, TournamentStatus } from "./types";
+import type { Place } from "../places/types.ts";
+import { isValidPlace } from "../places/types.ts";
 
 export type AppRole = "USER" | "ADMIN";
 
@@ -58,6 +60,7 @@ export const manualTournamentSchema = z
     city: requiredText("도시", 80),
     venue: requiredText("경기장", 200),
     venueAddress: optionalText(300),
+    place: z.custom<Place>(isValidPlace).nullable().optional(),
     scope: z.enum(["NATIONAL", "LOCAL"], { message: "대회 구분을 선택해 주세요." }),
     organizer: optionalText(200),
     host: optionalText(200),

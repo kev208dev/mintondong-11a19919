@@ -5,6 +5,11 @@ export type GuestOffer = {
   title: string;
   venueName: string;
   address: string;
+  placeId?: string | null;
+  locationNote?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  placeUrl?: string | null;
   startsAt: string;
   endsAt: string;
   bookingClosesAt: string;

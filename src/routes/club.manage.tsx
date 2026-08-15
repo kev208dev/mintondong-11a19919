@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { NoPermission } from "@/components/app/RequireAuth";
+import { PlacePicker } from "@/components/places/PlacePicker";
 import {
   Copy,
   UserRoundPlus,
@@ -33,6 +34,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/lib/badminton/store";
 import { ATTENDANCE_LABEL, LEVEL_LABEL } from "@/lib/badminton/types";
+import type { Place } from "@/lib/places/types";
 
 export const Route = createFileRoute("/club/manage")({
   head: () => ({
@@ -101,17 +103,19 @@ function ClubPage() {
   const canViewFinance = can("VIEW_FINANCE");
   const canManageAnything = canSettings || canCourts || canInvite || canViewFinance;
   const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
+  const [createPlace, setCreatePlace] = useState<Place | null>(null);
   const [code, setCode] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [editName, setEditName] = useState(club.club.name);
   const [editLoc, setEditLoc] = useState(club.club.location);
+  const [editPlace, setEditPlace] = useState<Place | null>(null);
   const [syncedId, setSyncedId] = useState(club.club.id);
   if (syncedId !== club.club.id) {
     setSyncedId(club.club.id);
     setEditName(club.club.name);
     setEditLoc(club.club.location);
+    setEditPlace(null);
   }
 
   if (!canManageAnything) {
@@ -180,19 +184,16 @@ function ClubPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <Input
-              className="h-12 rounded-2xl"
-              placeholder="활동 장소 (예: 서울 송파구 올림픽체육관)"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
+            <PlacePicker value={createPlace} onChange={setCreatePlace} />
             <Button
               className="h-12 rounded-2xl font-bold"
-              disabled={!name.trim() || !location.trim()}
+              disabled={!name.trim() || !createPlace}
               onClick={() => {
-                const created = createClub(name.trim(), location.trim());
+                const displayLocation =
+                  createPlace?.roadAddress ?? createPlace?.jibunAddress ?? createPlace?.name ?? "";
+                const created = createClub(name.trim(), displayLocation);
                 setName("");
-                setLocation("");
+                setCreatePlace(null);
                 setCreateOpen(false);
                 toast.success(`클럽 생성 완료 · 초대 코드 ${created}`);
               }}
@@ -357,11 +358,13 @@ function ClubPage() {
                       onChange={(e) => setEditName(e.target.value)}
                       placeholder="클럽 이름"
                     />
-                    <Input
-                      className="h-12 rounded-2xl"
-                      value={editLoc}
-                      onChange={(e) => setEditLoc(e.target.value)}
-                      placeholder="활동 장소"
+                    <PlacePicker
+                      value={editPlace}
+                      legacyLabel={editPlace ? null : editLoc}
+                      onChange={(next) => {
+                        setEditPlace(next);
+                        setEditLoc(next.roadAddress ?? next.jibunAddress ?? next.name);
+                      }}
                     />
                   </>
                 ) : null}

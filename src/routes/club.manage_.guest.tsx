@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { createGuestOfferFn, listManagedGuestOffersFn } from "@/lib/guest/guest.functions";
 import { useStore } from "@/lib/badminton/store";
 import { listMyClubs } from "@/lib/clubs/api";
+import { PlacePicker } from "@/components/places/PlacePicker";
+import type { Place } from "@/lib/places/types";
 
 export const Route = createFileRoute("/club/manage_/guest")({
   component: GuestOfferManagementPage,
@@ -22,8 +24,8 @@ function GuestOfferManagementPage() {
     enabled: Boolean(user),
   });
   const [title, setTitle] = useState("");
-  const [venueName, setVenueName] = useState("");
-  const [address, setAddress] = useState(club.club.location);
+  const [place, setPlace] = useState<Place | null>(null);
+  const [locationNote, setLocationNote] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [bookingOpensAt, setBookingOpensAt] = useState("");
@@ -49,8 +51,8 @@ function GuestOfferManagementPage() {
         data: {
           clubId,
           title,
-          venueName,
-          address,
+          place: place!,
+          locationNote: locationNote || undefined,
           startsAt: new Date(startsAt).toISOString(),
           endsAt: new Date(endsAt).toISOString(),
           ...(bookingOpensAt ? { bookingOpensAt: new Date(bookingOpensAt).toISOString() } : {}),
@@ -70,7 +72,8 @@ function GuestOfferManagementPage() {
       toast.success("게스트 모집을 열었어요.");
       void offers.refetch();
       setTitle("");
-      setVenueName("");
+      setPlace(null);
+      setLocationNote("");
       setStartsAt("");
       setEndsAt("");
       setBookingOpensAt("");
@@ -98,17 +101,12 @@ function GuestOfferManagementPage() {
           placeholder="모집 제목 (예: 토요일 저녁 게스트)"
           className="h-12 rounded-2xl"
         />
-        <Input
-          value={venueName}
-          onChange={(e) => setVenueName(e.target.value)}
-          placeholder="장소명"
-          className="h-12 rounded-2xl"
-        />
-        <Input
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="주소"
-          className="h-12 rounded-2xl"
+        <PlacePicker
+          value={place}
+          legacyLabel={club.club.location}
+          onChange={setPlace}
+          locationNote={locationNote}
+          onLocationNoteChange={setLocationNote}
         />
         <label className="block text-sm font-bold">
           운동 시작
@@ -210,15 +208,7 @@ function GuestOfferManagementPage() {
       </section>
       <Button
         className="h-12 w-full rounded-2xl font-bold"
-        disabled={
-          create.isPending ||
-          !title ||
-          !venueName ||
-          !address ||
-          !startsAt ||
-          !endsAt ||
-          !bookingClosesAt
-        }
+        disabled={create.isPending || !title || !place || !startsAt || !endsAt || !bookingClosesAt}
         onClick={() => create.mutate()}
       >
         {create.isPending ? "모집을 여는 중..." : "게스트 모집 열기"}

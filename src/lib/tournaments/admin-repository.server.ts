@@ -9,6 +9,7 @@ import {
   type ManualTournamentInput,
 } from "./admin-core";
 import type { TournamentSource } from "./types";
+import { upsertCanonicalPlace } from "@/lib/places/places.server";
 
 const ADMIN_TOURNAMENT_COLUMNS =
   "id, title, start_date, end_date, registration_start_date, registration_end_date, region, city, venue, venue_address, scope, organizer, host, entry_fee, poster_url, description, registration_url, bracket_url, result_url, is_active, updated_at";
@@ -105,6 +106,22 @@ function manualRpcPayload(input: ManualTournamentInput) {
   };
 }
 
+async function attachPlace(
+  client: SupabaseClient,
+  tournamentId: string,
+  input: ManualTournamentInput,
+) {
+  if (!input.place) return;
+  const placeId = await upsertCanonicalPlace(input.place);
+  const { error } = await client
+    .from("tournaments")
+    .update({ place_id: placeId })
+    .eq("id", tournamentId);
+  // The additive migration is intentionally not applied by this change. Keep
+  // legacy manual tournament writes usable until the place_id column exists.
+  if (error && error.code !== "42703" && error.code !== "PGRST204") throw error;
+}
+
 export async function listAdminTournaments(userId: string): Promise<AdminTournament[]> {
   return runAdminAction(userId, async (client) => {
     const [tournaments, sources] = await Promise.all([
@@ -140,7 +157,9 @@ export async function createManualTournament(
     const input = parseManualTournamentInput(untrustedInput);
     const result = await client.rpc("create_manual_tournament", manualRpcPayload(input));
     if (result.error) throw result.error;
-    return { id: String(result.data) };
+    const id = String(result.data);
+    await attachPlace(client, id, input);
+    return { id };
   });
 }
 
@@ -163,7 +182,9 @@ export async function updateManualTournament(
       ...manualRpcPayload(input),
     });
     if (result.error) throw result.error;
-    return { id: String(result.data) };
+    const id = String(result.data);
+    await attachPlace(client, id, input);
+    return { id };
   });
 }
 

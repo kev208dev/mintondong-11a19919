@@ -2,6 +2,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { adminClient } from "@/lib/auth/account.server";
 import type { GuestBooking, GuestOffer } from "./types";
+import { isValidPlace, type Place } from "@/lib/places/types";
 
 type Row = {
   id?: any;
@@ -12,6 +13,11 @@ type Row = {
   title?: any;
   venue_name?: any;
   address?: any;
+  place_id?: any;
+  location_note?: any;
+  latitude?: any;
+  longitude?: any;
+  app_places?: any;
   starts_at?: any;
   ends_at?: any;
   booking_closes_at?: any;
@@ -47,6 +53,13 @@ function mapOffer(row: Row, clubName = "민턴동 클럽", remainingCapacity?: n
     title: String(row.title),
     venueName: String(row.venue_name),
     address: String(row.address),
+    ...(row.place_id ? { placeId: String(row.place_id) } : {}),
+    ...(row.location_note ? { locationNote: String(row.location_note) } : {}),
+    ...(row.latitude != null ? { latitude: Number(row.latitude) } : {}),
+    ...(row.longitude != null ? { longitude: Number(row.longitude) } : {}),
+    ...((row.app_places as Row | null)?.["place_url"]
+      ? { placeUrl: String((row.app_places as Row)["place_url"]) }
+      : {}),
     startsAt: String(row.starts_at),
     endsAt: String(row.ends_at),
     bookingClosesAt: String(row.booking_closes_at),
@@ -78,7 +91,7 @@ export async function listGuestOffers(filters?: { region?: string; startsOn?: st
   const now = new Date().toISOString();
   let query = db()
     .from("guest_offers")
-    .select("*, clubs(name)")
+    .select("*, clubs(name), app_places(place_url)")
     .in("status", ["open", "full"])
     .lte("booking_opens_at", now)
     .gte("booking_closes_at", now)
@@ -103,7 +116,7 @@ export async function listGuestOffers(filters?: { region?: string; startsOn?: st
 export async function getGuestOffer(id: string) {
   const { data, error } = await db()
     .from("guest_offers")
-    .select("*, clubs(name)")
+    .select("*, clubs(name), app_places(place_url)")
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
@@ -162,8 +175,8 @@ export async function createGuestOffer(
   input: {
     clubId: string;
     title: string;
-    venueName: string;
-    address: string;
+    place: Place;
+    locationNote?: string;
     startsAt: string;
     endsAt: string;
     bookingOpensAt?: string;
@@ -178,6 +191,7 @@ export async function createGuestOffer(
     cancellationPolicy?: string;
   },
 ) {
+  if (!isValidPlace(input.place)) throw new Error("STRUCTURED_PLACE_REQUIRED");
   const { data: club, error: clubError } = await db()
     .from("clubs")
     .select("id,owner_id")
@@ -198,14 +212,38 @@ export async function createGuestOffer(
       !["owner", "admin"].includes(String((membership as Row | null)?.role)))
   )
     throw new Error("GUEST_OFFER_FORBIDDEN");
+  const { data: canonicalPlace, error: placeError } = await db()
+    .from("app_places")
+    .upsert(
+      {
+        provider: input.place.provider,
+        provider_place_id: input.place.providerPlaceId,
+        name: input.place.name.trim(),
+        road_address: input.place.roadAddress,
+        jibun_address: input.place.jibunAddress,
+        latitude: input.place.latitude,
+        longitude: input.place.longitude,
+        category: input.place.category,
+        place_url: input.place.placeUrl,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "provider,provider_place_id" },
+    )
+    .select("id")
+    .single();
+  if (placeError) throw placeError;
   const { data, error } = await db()
     .from("guest_offers")
     .insert({
       club_id: input.clubId,
       created_by: userId,
       title: input.title.trim(),
-      venue_name: input.venueName.trim(),
-      address: input.address.trim(),
+      venue_name: input.place.name.trim(),
+      address: input.place.roadAddress ?? input.place.jibunAddress ?? input.place.name.trim(),
+      place_id: (canonicalPlace as Row).id,
+      location_note: input.locationNote?.trim() || null,
+      latitude: input.place.latitude,
+      longitude: input.place.longitude,
       starts_at: input.startsAt,
       ends_at: input.endsAt,
       booking_opens_at: input.bookingOpensAt ?? new Date().toISOString(),

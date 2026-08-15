@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { validateCreateClubInput } from "./club-core";
+import type { Place } from "@/lib/places/types";
+import { attachClubPlaceFn, savePlaceFn } from "@/lib/places/places.functions";
 
 export { clubMutationErrorMessage, validateCreateClubInput } from "./club-core";
 
@@ -222,6 +224,8 @@ export type CreateClubInput = {
   isPublic: boolean;
   /** 선택한 프로필 이미지. 동호회 생성 이후 업로드된다. */
   imageFile?: File | null;
+  /** 검색으로 확정한 canonical 장소. 기존 RPC와의 호환을 위해 optional로 전달한다. */
+  place?: Place | null;
 };
 
 /**
@@ -243,6 +247,11 @@ export async function createClub(input: CreateClubInput): Promise<ClubRow> {
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
   let club = normalizeClub(row as Record<string, unknown>);
+
+  if (input.place) {
+    const placeId = await savePlaceFn({ data: { place: input.place } });
+    await attachClubPlaceFn({ data: { clubId: club.id, placeId } });
+  }
 
   if (input.imageFile) {
     // 이미지 실패로 생성된 동호회를 잃지 않도록 여기서는 경고만 남긴다.
