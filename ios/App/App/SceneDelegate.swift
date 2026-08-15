@@ -73,6 +73,7 @@ public final class NativeAuthPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private var currentCall: CAPPluginCall?
     private var currentNonce: String?
+    private var authorizationController: ASAuthorizationController?
 
     @objc public func signInWithApple(_ call: CAPPluginCall) {
         guard currentCall == nil else {
@@ -93,6 +94,7 @@ public final class NativeAuthPlugin: CAPPlugin, CAPBridgedPlugin {
         let controller = ASAuthorizationController(authorizationRequests: [request])
         controller.delegate = self
         controller.presentationContextProvider = self
+        authorizationController = controller
         controller.performRequests()
     }
 
@@ -113,6 +115,7 @@ public final class NativeAuthPlugin: CAPPlugin, CAPBridgedPlugin {
         guard let call = currentCall else { return }
         currentCall = nil
         currentNonce = nil
+        authorizationController = nil
         DispatchQueue.main.async {
             switch result {
             case .success(let data): call.resolve(data)
