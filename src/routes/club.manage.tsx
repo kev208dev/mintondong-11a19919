@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { NoPermission } from "@/components/app/RequireAuth";
 import {
   Copy,
-  GraduationCap,
+  UserRoundPlus,
   LogOut,
   MapPin,
   Plus,
@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/lib/badminton/store";
-import { ATTENDANCE_LABEL, LEVEL_LABEL, WEEKDAY_LABEL } from "@/lib/badminton/types";
+import { ATTENDANCE_LABEL, LEVEL_LABEL } from "@/lib/badminton/types";
 
 export const Route = createFileRoute("/club/manage")({
   head: () => ({
@@ -92,19 +92,14 @@ function ClubPage() {
     leaveClub,
     renameClub,
     setCourtCount,
-    setLessonsEnabled,
-    updateCoach,
     can,
   } = useStore();
   const canSettings = can("MANAGE_CLUB_SETTINGS");
   const canCourts = can("MANAGE_COURTS");
   const canInvite = can("INVITE_MEMBERS");
-  const canLessons = can("MANAGE_LESSONS");
-  const canCoaches = can("MANAGE_COACHES");
   const canViewMembers = can("VIEW_MEMBERS");
   const canViewFinance = can("VIEW_FINANCE");
-  const canManageAnything =
-    canSettings || canCourts || canInvite || canLessons || canCoaches || canViewFinance;
+  const canManageAnything = canSettings || canCourts || canInvite || canViewFinance;
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [code, setCode] = useState("");
@@ -242,19 +237,18 @@ function ClubPage() {
         </Dialog>
       </section>
 
-      {canLessons || canCoaches ? (
+      {canSettings || canInvite || canViewMembers ? (
         <Link
-          to="/club/manage/lessons"
-          search={{ clubId: undefined }}
+          to="/club/manage/guest"
           className="mt-2 flex min-w-0 items-center gap-3 rounded-3xl border border-primary/25 bg-primary/5 p-4 active:scale-[0.99]"
         >
           <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
-            <GraduationCap className="size-5" />
+            <UserRoundPlus className="size-5" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-extrabold text-foreground">레슨 관리</span>
+            <span className="block text-sm font-extrabold text-foreground">게스트 모집</span>
             <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
-              실제 코치·가격·판매 상태를 등록하고 공개해요.
+              동호회 운동에 참여할 게스트 자리를 준비해요.
             </span>
           </span>
         </Link>
@@ -470,119 +464,6 @@ function ClubPage() {
             <FinanceSection embedded />
           </AccordionContent>
         </AccordionItem>
-
-        {canLessons || canCoaches ? (
-          <AccordionItem value="lessons" className="border-b-0">
-            <AccordionTrigger className={triggerClass}>
-              <ItemHeader
-                icon={<GraduationCap className="size-4" />}
-                title="레슨 운영"
-                summary={`${club.lessonsEnabled ? "켜짐" : "꺼짐"} · 코치 ${club.coaches.length}명`}
-              />
-            </AccordionTrigger>
-            <AccordionContent className="px-3 pb-3">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[11px] text-muted-foreground">
-                  코치·요금·가능 시간대를 관리해요.
-                </p>
-                {canLessons ? (
-                  <button
-                    onClick={() => setLessonsEnabled(!club.lessonsEnabled)}
-                    className={`h-8 w-14 shrink-0 rounded-full transition-colors ${club.lessonsEnabled ? "bg-primary" : "bg-secondary"}`}
-                    aria-label="레슨 운영 켜기/끄기"
-                  >
-                    <span
-                      className={`block size-6 rounded-full bg-background transition-transform ${club.lessonsEnabled ? "translate-x-7" : "translate-x-1"}`}
-                    />
-                  </button>
-                ) : null}
-              </div>
-
-              {club.lessonsEnabled && canCoaches ? (
-                <ul className="mt-3 space-y-2">
-                  {club.coaches.map((c) => (
-                    <li key={c.id} className="rounded-2xl bg-secondary p-3">
-                      <p className="text-sm font-extrabold text-secondary-foreground">
-                        {c.name}
-                        <span className="ml-1 text-[11px] font-semibold text-muted-foreground">
-                          {c.specialties.join(" · ")}
-                        </span>
-                      </p>
-                      <div className="mt-2 flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-muted-foreground">회당 요금</span>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            step={5000}
-                            className="h-10 w-28 rounded-xl bg-background text-right"
-                            value={c.price}
-                            onChange={(e) =>
-                              updateCoach(c.id, {
-                                price: Math.max(0, Number(e.target.value) || 0),
-                              })
-                            }
-                          />
-                          <span className="text-xs font-bold">원</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {WEEKDAY_LABEL.map((w, i) => {
-                          const on = c.weekdays.includes(i);
-                          return (
-                            <button
-                              key={w}
-                              onClick={() =>
-                                updateCoach(c.id, {
-                                  weekdays: on
-                                    ? c.weekdays.filter((d) => d !== i)
-                                    : [...c.weekdays, i].sort((a, b) => a - b),
-                                })
-                              }
-                              className={`size-9 rounded-xl text-xs font-bold ${on ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
-                            >
-                              {w}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <div className="mt-2 flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-muted-foreground">가능 시간</span>
-                        <div className="flex items-center gap-1">
-                          <Input
-                            type="number"
-                            className="h-10 w-16 rounded-xl bg-background text-center"
-                            value={c.startHour}
-                            onChange={(e) =>
-                              updateCoach(c.id, {
-                                startHour: Math.min(23, Math.max(0, Number(e.target.value) || 0)),
-                              })
-                            }
-                          />
-                          <span className="text-xs font-bold">시 –</span>
-                          <Input
-                            type="number"
-                            className="h-10 w-16 rounded-xl bg-background text-center"
-                            value={c.endHour}
-                            onChange={(e) =>
-                              updateCoach(c.id, {
-                                endHour: Math.min(24, Math.max(1, Number(e.target.value) || 1)),
-                              })
-                            }
-                          />
-                          <span className="text-xs font-bold">시</span>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-3 rounded-2xl bg-secondary p-3 text-xs text-secondary-foreground">
-                  레슨을 끄면 레슨 탭에서 예약을 받을 수 없어요. 기존 예약 기록은 유지됩니다.
-                </p>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        ) : null}
       </Accordion>
     </>
   );

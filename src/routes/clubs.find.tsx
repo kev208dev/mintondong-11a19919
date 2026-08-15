@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { GraduationCap, MapPin, RotateCw, Search, Users } from "lucide-react";
+import { MapPin, RotateCw, Search, Users } from "lucide-react";
 import { useState } from "react";
 import { ClubRouteBackButton } from "@/components/app/ClubRouteBackButton";
 import { Input } from "@/components/ui/input";
@@ -114,14 +114,6 @@ function FindClubPage() {
                     </span>
                   </span>
                 </span>
-              </Link>
-              <Link
-                to="/clubs/$clubId/lessons"
-                params={{ clubId: club.id }}
-                aria-label={`${club.name} 공개 레슨 보기`}
-                className="flex h-9 shrink-0 items-center gap-1 rounded-xl bg-secondary px-2.5 text-[10px] font-bold text-secondary-foreground active:bg-accent"
-              >
-                <GraduationCap className="size-3.5" /> 레슨
               </Link>
             </li>
           ))}

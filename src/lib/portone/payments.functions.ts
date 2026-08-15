@@ -9,6 +9,12 @@ const ids = z.object({
   lessonId: z.string().uuid(),
 });
 
+const guestPayment = z.object({
+  bookingId: z.string().uuid(),
+  customerName: z.string().trim().min(1).max(50),
+  customerPhone: z.string().trim().refine(isValidKoreanMobilePhone),
+});
+
 export const getCheckoutLesson = createServerFn({ method: "GET" })
   .validator((value) => ids.parse(value))
   .handler(async ({ data }) => {
@@ -30,6 +36,19 @@ export const preparePortOnePayment = createServerFn({ method: "POST" })
     const { preparePayment } = await import("./portone.server");
     const email = typeof context.claims["email"] === "string" ? context.claims["email"] : undefined;
     return preparePayment({
+      ...data,
+      userId: context.userId,
+      ...(email ? { customerEmail: email } : {}),
+    });
+  });
+
+export const prepareGuestPortOnePayment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((value) => guestPayment.parse(value))
+  .handler(async ({ data, context }) => {
+    const { prepareGuestPayment } = await import("./portone.server");
+    const email = typeof context.claims["email"] === "string" ? context.claims["email"] : undefined;
+    return prepareGuestPayment({
       ...data,
       userId: context.userId,
       ...(email ? { customerEmail: email } : {}),

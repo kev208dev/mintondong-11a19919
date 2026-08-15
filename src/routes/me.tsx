@@ -1,11 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Check, Copy, LogOut, Settings, UserRoundCog } from "lucide-react";
 import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useStore } from "@/lib/badminton/store";
 import { ATTENDANCE_LABEL, LEVEL_LABEL } from "@/lib/badminton/types";
+import { listMyGuestBookingsFn } from "@/lib/guest/guest.functions";
+import { requestPortOneCancellation } from "@/lib/portone/payments.functions";
 
 export const Route = createFileRoute("/me")({
   head: () => ({
@@ -44,6 +47,20 @@ function MePage() {
   const { club, clubs, switchClub, meMemberId, isOwner, getMemberRoles } = useStore();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const guestBookings = useQuery({
+    queryKey: ["guest-bookings", user?.id],
+    queryFn: () => listMyGuestBookingsFn(),
+    enabled: Boolean(user),
+  });
+  const cancelGuestBooking = useMutation({
+    mutationFn: (paymentId: string) =>
+      requestPortOneCancellation({ data: { paymentId, reason: "게스트 예약 취소" } }),
+    onSuccess: () => {
+      toast.success("예약 취소를 요청했어요.");
+      void guestBookings.refetch();
+    },
+    onError: () => toast.error("예약을 취소하지 못했어요."),
+  });
 
   if (loading) {
     return <div className="h-40 animate-pulse rounded-3xl bg-secondary" aria-hidden />;
@@ -128,8 +145,8 @@ function MePage() {
       </section>
 
       <section className="grid grid-cols-2 gap-3" aria-label="내 바로가기">
-        <Link to="/lessons" className="rounded-3xl bg-brand-wash p-4 active:bg-brand-soft">
-          <p className="text-base font-bold text-foreground">내 레슨</p>
+        <Link to="/guest" className="rounded-3xl bg-brand-wash p-4 active:bg-brand-soft">
+          <p className="text-base font-bold text-foreground">내 게스트 예약</p>
           <span className="mt-4 flex items-center gap-1 type-caption font-bold text-brand-deep">
             예약 확인 <ArrowRight className="size-3.5" />
           </span>
@@ -140,6 +157,68 @@ function MePage() {
             모임 열기 <ArrowRight className="size-3.5" />
           </span>
         </Link>
+      </section>
+
+      <section className="rounded-3xl bg-card p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-foreground">내 게스트 예약</h2>
+          <Link to="/guest" className="text-xs font-bold text-brand-deep">
+            더 찾아보기
+          </Link>
+        </div>
+        {guestBookings.data?.length ? (
+          <ul className="mt-3 space-y-2">
+            {guestBookings.data.slice(0, 3).map((booking) => (
+              <li
+                key={booking.id}
+                className="flex items-center justify-between rounded-2xl bg-brand-wash p-3 text-sm"
+              >
+                <span>
+                  <strong className="block">{booking.offerTitle ?? "게스트 예약"}</strong>
+                  <span className="text-xs text-muted-foreground">
+                    {booking.startsAt
+                      ? new Date(booking.startsAt).toLocaleString("ko-KR", {
+                          month: "numeric",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })
+                      : `${booking.partySize}명 예약`}
+                  </span>
+                </span>
+                <span className="flex items-end gap-2 font-bold text-brand-deep">
+                  <span>
+                    {booking.status === "confirmed"
+                      ? "예약 확정"
+                      : booking.status === "payment_pending"
+                        ? "결제 대기"
+                        : booking.status === "refunded"
+                          ? "환불 완료"
+                          : booking.status === "cancelled"
+                            ? "취소"
+                            : booking.status === "failed"
+                              ? "실패"
+                              : "처리 중"}
+                  </span>
+                  {booking.status === "confirmed" && booking.paymentId ? (
+                    <button
+                      type="button"
+                      className="min-h-9 rounded-xl bg-destructive/10 px-2 text-xs text-destructive"
+                      disabled={cancelGuestBooking.isPending}
+                      onClick={() => cancelGuestBooking.mutate(booking.paymentId!)}
+                    >
+                      취소
+                    </button>
+                  ) : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 rounded-2xl bg-brand-wash p-4 text-sm text-muted-foreground">
+            아직 게스트 예약이 없어요.
+          </p>
+        )}
       </section>
 
       <section className="rounded-3xl border border-border bg-card p-5">

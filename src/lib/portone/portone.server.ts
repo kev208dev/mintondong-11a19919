@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { portOnePublicConfig } from "@/config/portone";
 import { adminClient } from "@/lib/auth/account.server";
 import { requireServerEnv, serverEnv } from "@/lib/server-env.server";
+import { createUserNotification } from "@/lib/notifications/notifications.server";
 import {
   cancellationDecision,
   createPortOnePaymentId,
@@ -184,6 +185,116 @@ export async function preparePayment(input: {
   };
 }
 
+function guestOrderName(clubName: string, title: string) {
+  const source = `${clubName} ${title} 게스트`;
+  let result = "";
+  for (const character of source) {
+    if (new TextEncoder().encode(result + character).length > 40) break;
+    result += character;
+  }
+  return result || "민턴동 게스트";
+}
+
+export async function prepareGuestPayment(input: {
+  userId: string;
+  bookingId: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+}) {
+  const storeId = expectedStoreId();
+  const channelKey = expectedChannelKey();
+  if (!portOneEnabled() || !storeId || !channelKey) throw new Error("PORTONE_NOT_CONFIGURED");
+  secret();
+  const { data, error } = await db()
+    .from("guest_bookings")
+    .select(
+      "id,user_id,total_amount,status,payment_id,offer_id,guest_offers(title,club_id,clubs(name))",
+    )
+    .eq("id", input.bookingId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data || String((data as Row)["user_id"]) !== input.userId)
+    throw new Error("GUEST_BOOKING_FORBIDDEN");
+  if (!["pending", "payment_pending"].includes(String((data as Row)["status"])))
+    throw new Error("GUEST_BOOKING_NOT_PAYABLE");
+  const row = data as Row;
+  const offer = row["guest_offers"] as Row | null;
+  const club = offer?.["clubs"] as Row | null;
+  const existingPaymentId = row["payment_id"] ? String(row["payment_id"]) : null;
+  if (existingPaymentId) {
+    const { data: existingPayment, error: existingError } = await db()
+      .from("payments")
+      .select("amount,order_name")
+      .eq("portone_payment_id", existingPaymentId)
+      .maybeSingle();
+    if (existingError) throw existingError;
+    if (existingPayment) {
+      return {
+        paymentId: existingPaymentId,
+        amount: Number((existingPayment as Row)["amount"]),
+        orderName: String((existingPayment as Row)["order_name"]),
+        customer: {
+          customerId: input.userId,
+          fullName: input.customerName,
+          phoneNumber: input.customerPhone,
+          email: input.customerEmail || undefined,
+        },
+      };
+    }
+  }
+  const paymentId = createPortOnePaymentId(randomUUID());
+  const orderName = guestOrderName(
+    String(club?.["name"] ?? "민턴동"),
+    String(offer?.["title"] ?? "게스트 운동"),
+  );
+  const { error: paymentError } = await db()
+    .from("payments")
+    .insert({
+      booking_id: null,
+      guest_booking_id: input.bookingId,
+      reference_type: "guest_booking",
+      reference_id: input.bookingId,
+      purpose: "GUEST_BOOKING",
+      club_id: String(offer?.["club_id"] ?? ""),
+      coach_id: null,
+      user_id: input.userId,
+      amount: Number(row["total_amount"]),
+      method: "CARD",
+      status: "PENDING",
+      provider: "PORTONE",
+      transaction_ref: paymentId,
+      order_id: paymentId,
+      portone_payment_id: paymentId,
+      currency: "KRW",
+      order_name: orderName,
+      portone_store_id: storeId,
+      portone_channel_key: channelKey,
+    });
+  if (paymentError) throw paymentError;
+  const { error: bookingError } = await db()
+    .from("guest_bookings")
+    .update({
+      payment_id: paymentId,
+      status: "payment_pending",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.bookingId)
+    .eq("user_id", input.userId);
+  if (bookingError) throw bookingError;
+  return {
+    paymentId,
+    amount: Number(row["total_amount"]),
+    orderName,
+    customer: {
+      customerId: input.userId,
+      fullName: input.customerName,
+      phoneNumber: input.customerPhone,
+      email: input.customerEmail || undefined,
+    },
+  };
+}
+
 type PortOnePayment = {
   status: string;
   id: string;
@@ -237,7 +348,7 @@ async function internalPayment(paymentId: string) {
   const { data, error } = await db()
     .from("payments")
     .select(
-      "id, user_id, club_id, coach_id, amount, currency, order_name, status, provider, portone_payment_id, portone_store_id, portone_channel_key, cancel_idempotency_key",
+      "id, user_id, club_id, coach_id, guest_booking_id, reference_type, reference_id, amount, currency, order_name, status, provider, portone_payment_id, portone_store_id, portone_channel_key, cancel_idempotency_key",
     )
     .eq("portone_payment_id", paymentId)
     .maybeSingle();
@@ -309,6 +420,54 @@ export async function synchronizePayment(paymentId: string, userId?: string) {
     update["cancelled_at"] = remote.statusChangedAt ?? new Date().toISOString();
   const { error } = await db().from("payments").update(update).eq("id", internal["id"]);
   if (error) throw error;
+  const guestBookingId = internal["guest_booking_id"] ? String(internal["guest_booking_id"]) : null;
+  if (guestBookingId) {
+    const bookingStatus =
+      status === "PAID"
+        ? "confirmed"
+        : status === "CANCELLED"
+          ? "cancelled"
+          : status === "FAILED"
+            ? "failed"
+            : undefined;
+    if (bookingStatus) {
+      const { error: bookingError } = await db()
+        .from("guest_bookings")
+        .update({
+          status: bookingStatus,
+          updated_at: new Date().toISOString(),
+          ...(bookingStatus === "cancelled" ? { cancelled_at: new Date().toISOString() } : {}),
+        })
+        .eq("id", guestBookingId);
+      if (bookingError) throw bookingError;
+      if (internal["user_id"]) {
+        const notification =
+          bookingStatus === "confirmed"
+            ? {
+                type: "guest_booking_confirmed",
+                title: "예약이 확정됐어요",
+                body: "게스트 운동 예약과 결제가 확인됐어요.",
+              }
+            : bookingStatus === "cancelled"
+              ? {
+                  type: "guest_booking_cancelled",
+                  title: "게스트 예약이 취소됐어요",
+                  body: "결제가 취소되었거나 예약이 취소됐어요.",
+                }
+              : {
+                  type: "guest_booking_failed",
+                  title: "게스트 예약 결제를 확인하지 못했어요",
+                  body: "결제가 완료되지 않았어요. 예약 상태를 다시 확인해 주세요.",
+                };
+        await createUserNotification({
+          userId: String(internal["user_id"]),
+          ...notification,
+          deepLink: "/me",
+          dedupeKey: `guest-booking:${guestBookingId}:${bookingStatus}`,
+        });
+      }
+    }
+  }
   return { paymentId, status, portoneStatus: remote.status, amount: Number(internal["amount"]) };
 }
 

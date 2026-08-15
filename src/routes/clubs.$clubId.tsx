@@ -19,7 +19,6 @@ export const Route = createFileRoute("/clubs/$clubId")({
 const TABS = [
   { key: "home", label: "홈", to: "/clubs/$clubId" as const, exact: true },
   { key: "schedule", label: "일정", to: "/clubs/$clubId/schedule" as const },
-  { key: "lessons", label: "레슨", to: "/clubs/$clubId/lessons" as const },
   { key: "members", label: "멤버", to: "/clubs/$clubId/members" as const },
 ];
 
@@ -171,16 +170,6 @@ function ClubDetailLayout() {
                   ? "관리 중인 동호회"
                   : "가입한 동호회"}
           </div>
-          {membership.status === "active" &&
-          (membership.role === "owner" || membership.role === "admin") ? (
-            <Link
-              to="/club/manage/lessons"
-              search={{ clubId }}
-              className="flex h-11 items-center justify-center rounded-2xl bg-primary text-xs font-extrabold text-primary-foreground"
-            >
-              레슨 관리
-            </Link>
-          ) : null}
         </div>
       ) : loading ? (
         <div className="h-11 animate-pulse rounded-2xl bg-secondary" />

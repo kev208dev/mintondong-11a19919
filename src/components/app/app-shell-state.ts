@@ -12,7 +12,7 @@ export type NativeChromeState = {
   showsBackButton: boolean;
 };
 
-export const CLUB_SECTION_PREFIXES = ["/club", "/games", "/lessons", "/records"] as const;
+export const CLUB_SECTION_PREFIXES = ["/club", "/games", "/records"] as const;
 
 function normalizedPathname(pathname: string): string {
   if (pathname === "/") return pathname;
@@ -42,9 +42,9 @@ export function pageTitle(pathname: string): string {
   if (pathname.startsWith("/clubs/new")) return "동호회 만들기";
   if (pathname.startsWith("/clubs/")) return "동호회";
   if (pathname.startsWith("/games")) return "경기";
-  if (pathname.startsWith("/lessons")) return "레슨";
+  if (pathname.startsWith("/lessons")) return "게스트";
   if (pathname.startsWith("/guest")) return "게스트";
-  if (pathname.startsWith("/payments/toss")) return "레슨 결제";
+  if (pathname.startsWith("/payments/toss")) return "이전 결제";
   if (pathname.startsWith("/terms")) return "이용약관";
   if (pathname.startsWith("/privacy")) return "개인정보처리방침";
   if (pathname.startsWith("/refund-policy")) return "취소 및 환불 정책";

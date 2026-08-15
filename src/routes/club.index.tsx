@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   CalendarDays,
   ClipboardList,
-  GraduationCap,
   MapPin,
   Megaphone,
   Plus,
@@ -25,10 +24,10 @@ export const Route = createFileRoute("/club/")({
       { title: "동호회 홈 – 민턴동" },
       {
         name: "description",
-        content: "선택한 동호회의 출석·경기·레슨·회비·회원 현황을 한 화면에서 확인해요.",
+        content: "선택한 동호회의 출석·경기·게스트 모집·회비·회원 현황을 한 화면에서 확인해요.",
       },
       { property: "og:title", content: "동호회 홈 – 민턴동" },
-      { property: "og:description", content: "동호회 출석·경기·레슨·회비 현황 요약." },
+      { property: "og:description", content: "동호회 출석·경기·게스트 모집·회비 현황 요약." },
     ],
   }),
   component: ClubIndexPage,
@@ -37,7 +36,7 @@ export const Route = createFileRoute("/club/")({
 const QUICK = [
   { to: "/club/attendance", label: "출석 체크", icon: UserCheck },
   { to: "/games", label: "경기 배정", icon: Zap },
-  { to: "/lessons", label: "레슨 예약", icon: GraduationCap },
+  { to: "/guest", label: "게스트 모집", icon: Users },
   { to: "/records", label: "활동 기록", icon: ClipboardList },
 ] as const;
 

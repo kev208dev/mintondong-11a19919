@@ -5,7 +5,7 @@ import { isClubSection } from "./app-shell-state";
 const SECTIONS = [
   { to: "/club", label: "동호회 홈", exact: true },
   { to: "/games", label: "경기" },
-  { to: "/lessons", label: "레슨" },
+  { to: "/guest", label: "게스트" },
   { to: "/club/schedule", label: "일정" },
   { to: "/club/ranking", label: "랭킹" },
   { to: "/club/more", label: "더보기" },

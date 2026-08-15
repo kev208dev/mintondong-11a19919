@@ -2,12 +2,13 @@ import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router"
 import { Capacitor } from "@capacitor/core";
 import { Bell, Home, Trophy, User, UserRoundPlus, Users } from "lucide-react";
 import { memo, useEffect } from "react";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { ClubSectionNav } from "./ClubSectionNav";
 import { ClubSwitcher } from "./ClubSwitcher";
 import { PublicFooter } from "./PublicFooter";
 import { ClubRouteBackButton } from "./ClubRouteBackButton";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { unreadNotificationCountFn } from "@/lib/notifications/notifications.functions";
 import {
   hidesBottomNavigation,
   getNativeChromeState,
@@ -36,8 +37,6 @@ function isTabActive(to: string, pathname: string) {
 function showsPublicFooter(pathname: string) {
   return (
     pathname === "/" ||
-    pathname === "/lessons" ||
-    (pathname.startsWith("/clubs/") && pathname.includes("/lessons")) ||
     pathname === "/terms" ||
     pathname === "/privacy" ||
     pathname === "/refund-policy" ||
@@ -80,6 +79,11 @@ const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
 
 export function AppShell() {
   const { user, loading: authLoading } = useAuth();
+  const unread = useQuery({
+    queryKey: ["notifications-unread", user?.id],
+    queryFn: () => unreadNotificationCountFn(),
+    enabled: Boolean(user) && !authLoading,
+  });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const title = pageTitle(pathname);
   const router = useRouter();
@@ -124,14 +128,18 @@ export function AppShell() {
             </Link>
             <ClubSwitcher />
             <div className="ml-auto flex shrink-0 items-center gap-1">
-              <button
-                type="button"
+              <Link
+                to="/notifications"
                 aria-label="알림"
-                onClick={() => toast.info("새로운 알림이 없어요.")}
-                className="grid size-9 place-items-center rounded-full text-muted-foreground active:bg-accent"
+                className="relative grid size-9 place-items-center rounded-full text-muted-foreground active:bg-accent"
               >
                 <Bell className="size-[18px]" />
-              </button>
+                {(unread.data ?? 0) > 0 ? (
+                  <span className="absolute right-0.5 top-0.5 min-w-3.5 rounded-full bg-brand-lime px-1 text-center text-[10px] font-bold leading-3 text-brand-deep">
+                    {(unread.data ?? 0) > 99 ? "99+" : unread.data}
+                  </span>
+                ) : null}
+              </Link>
             </div>
           </div>
         </header>
@@ -166,14 +174,18 @@ export function AppShell() {
               </Link>
               <ClubSwitcher />
               <div className="ml-auto flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
+                <Link
+                  to="/notifications"
                   aria-label="알림"
-                  onClick={() => toast.info("새로운 알림이 없어요.")}
-                  className="grid size-9 place-items-center rounded-full text-muted-foreground active:bg-accent"
+                  className="relative grid size-9 place-items-center rounded-full text-muted-foreground active:bg-accent"
                 >
                   <Bell className="size-[18px]" />
-                </button>
+                  {(unread.data ?? 0) > 0 ? (
+                    <span className="absolute right-0.5 top-0.5 min-w-3.5 rounded-full bg-brand-lime px-1 text-center text-[10px] font-bold leading-3 text-brand-deep">
+                      {(unread.data ?? 0) > 99 ? "99+" : unread.data}
+                    </span>
+                  ) : null}
+                </Link>
               </div>
             </div>
           ) : null}

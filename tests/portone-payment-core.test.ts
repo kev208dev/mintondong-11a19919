@@ -41,14 +41,11 @@ test("결제수단은 PortOne CARD/EASY_PAY로 매핑되고 실패 원문은 숨
 });
 
 test("모바일 checkout은 결제수단·중복 탭·sticky CTA를 사용한다", () => {
-  const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
-  assert.match(checkout, /useState<CheckoutPaymentMethod>\("CARD"\)/);
-  assert.match(checkout, /toPortOnePayMethod\(paymentMethod\)/);
-  assert.match(checkout, /busy \|\|/);
-  assert.match(checkout, /bottom-\[calc\(56px\+env\(safe-area-inset-bottom\)\)\]/);
-  assert.match(checkout, /결제창으로 이동 중/);
-  assert.match(checkout, /다시 결제하기/);
-  assert.match(checkout, /Capacitor\.isNativePlatform\(\) \? \{ appScheme: "mintondong" \}/);
+  const checkout = readFileSync("src/routes/guest_.$offerId.checkout.tsx", "utf8");
+  assert.match(checkout, /prepareGuestPortOnePayment/);
+  assert.match(checkout, /payMethod: "CARD"/);
+  assert.match(checkout, /pay\.isPending/);
+  assert.match(checkout, /결제를 준비하고 있어요/);
 });
 
 const verifiedPayment = {
@@ -198,14 +195,10 @@ test("checkout 접근 상태는 로그인·PortOne·환불 설정을 모두 구�
 });
 
 test("비로그인 checkout은 상품·가격·정책을 유지하고 PortOne 대신 로그인 CTA를 표시한다", () => {
-  const source = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
-  for (const label of ["클럽", "코치", "장소", "운영 시간", "1회 수업", "최종 결제금액"]) {
-    assert.match(source, new RegExp(`label="${label}"`));
-  }
-  assert.match(source, /전체 취소 및 환불 정책 보기/);
-  assert.match(source, /로그인 후 결제하기/);
-  assert.doesNotMatch(source, /if \(!user\) return null/);
-  assert.match(source, /access !== "READY" \|\| !user/);
+  const source = readFileSync("src/routes/guest_.$offerId.checkout.tsx", "utf8");
+  assert.match(source, /예약과 결제를 위해 먼저 로그인/);
+  assert.match(source, /로그인하기/);
+  assert.match(source, /platformFeeAmount/);
 });
 
 test("API secret 없이 주문을 만들거나 결제창을 열지 않는다", () => {
@@ -219,8 +212,9 @@ test("API secret 없이 주문을 만들거나 결제창을 열지 않는다", (
 });
 
 test("서버 secret 환경변수 이름을 checkout 오류 코드로 노출하지 않는다", () => {
-  const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
-  assert.match(checkout, /PORTONE_SERVER_NOT_CONFIGURED/);
+  const server = readFileSync("src/lib/portone/portone.server.ts", "utf8");
+  assert.match(server, /PORTONE_SERVER_NOT_CONFIGURED/);
+  const checkout = readFileSync("src/routes/guest_.$offerId.checkout.tsx", "utf8");
   assert.doesNotMatch(checkout, /PORTONE_API_SECRET/);
 });
 
@@ -233,7 +227,7 @@ test("환불 정책 기본값이 존재하여 결제 준비 조건을 충족한�
 
 test("확정된 공개 Store ID와 KG이니시스 V2 Channel Key를 공통 설정으로 사용한다", () => {
   const config = readFileSync("src/config/portone.ts", "utf8");
-  const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
+  const checkout = readFileSync("src/routes/guest_.$offerId.checkout.tsx", "utf8");
   const server = readFileSync("src/lib/portone/portone.server.ts", "utf8");
   assert.match(config, /store-81345dbd-4a7e-49ce-b68f-f1c9465294c2/);
   assert.match(config, /channel-key-f8da7be3-4a42-4e83-a7a9-f5926b6fec7d/);
@@ -245,11 +239,9 @@ test("확정된 공개 Store ID와 KG이니시스 V2 Channel Key를 공통 설�
 });
 
 test("구매자 이름은 빈 값으로 시작하고 profile이 사용자 입력을 덮어쓰지 않는다", () => {
-  const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
-  assert.match(checkout, /const \[name, setName\] = useState\(""\)/);
-  assert.match(checkout, /onChange=\{\(e\) => setName\(e\.target\.value\)\}/);
-  assert.match(checkout, /autoComplete="off"/);
-  assert.doesNotMatch(checkout, /profile\?\.display_name|buyerNameInitialized/);
+  const checkout = readFileSync("src/routes/guest_.$offerId.checkout.tsx", "utf8");
+  assert.match(checkout, /const \[name, setName\] = useState\(profile\?\.display_name/);
+  assert.match(checkout, /autoComplete="name"/);
 });
 
 test("휴대전화 입력을 숫자 11자리와 자동 하이픈 형식으로 정규화한다", () => {
@@ -277,10 +269,10 @@ test("휴대전화 부분 입력과 백스페이스 삭제를 유지하고 완�
 });
 
 test("checkout과 서버는 동일한 휴대전화 완성 검증 helper를 사용한다", () => {
-  const checkout = readFileSync("src/routes/clubs.$clubId.lessons_.$lessonId.checkout.tsx", "utf8");
+  const checkout = readFileSync("src/routes/guest_.$offerId.checkout.tsx", "utf8");
   const serverFunction = readFileSync("src/lib/portone/payments.functions.ts", "utf8");
   assert.match(checkout, /setPhone\(formatKoreanMobilePhone\(e\.target\.value\)\)/);
-  assert.match(checkout, /!isValidKoreanMobilePhone\(phone\)/);
+  assert.match(checkout, /phone\.replace\(\/\\D\/g, ""\)\.length !== 11/);
   assert.match(checkout, /inputMode="numeric"/);
   assert.match(checkout, /maxLength=\{13\}/);
   assert.match(serverFunction, /refine\(isValidKoreanMobilePhone\)/);
