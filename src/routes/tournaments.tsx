@@ -100,15 +100,9 @@ function TournamentsPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <section className="px-1">
-        <h1 className="type-page-title tracking-tight text-foreground">전국 배드민턴 대회</h1>
-        <p className="mt-2 type-body font-semibold text-foreground">
-          접수 일정과 장소를 한눈에 확인하세요
-        </p>
-        <p className="mt-0.5 type-secondary text-muted-foreground">
-          원본 사이트에서 신청하고 최신 안내를 확인하세요.
-        </p>
+    <div className="space-y-6">
+      <section className="pt-3">
+        <h1 className="page-heading">대회</h1>
       </section>
 
       <div className="relative">
@@ -118,7 +112,7 @@ function TournamentsPage() {
           onChange={(event) => setInput(event.target.value)}
           placeholder="대회명, 지역, 경기장 검색"
           aria-label="대회 검색"
-          className="h-11 rounded-xl bg-card pl-9 text-sm"
+          className="h-13 rounded-2xl border-0 bg-secondary pl-10 text-base shadow-none"
         />
       </div>
 
@@ -130,9 +124,7 @@ function TournamentsPage() {
               type="button"
               onClick={() => setStatus(value)}
               className={`h-10 rounded-full px-4 text-xs font-bold ${
-                status === value
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground"
+                status === value ? "bg-foreground text-background" : "bg-secondary text-foreground"
               }`}
             >
               {label}
@@ -141,24 +133,20 @@ function TournamentsPage() {
         </div>
       </div>
 
-      <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none]">
-        <div className="flex w-max gap-1.5 pb-1">
+      <label className="flex h-13 items-center justify-between rounded-2xl bg-secondary px-4 text-base font-bold">
+        지역
+        <select
+          value={region}
+          onChange={(event) => setRegion(event.target.value as (typeof REGIONS)[number])}
+          className="bg-transparent text-right outline-none"
+        >
           {REGIONS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setRegion(value)}
-              className={`h-9 rounded-xl border px-3 text-xs font-bold ${
-                region === value
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-card text-muted-foreground"
-              }`}
-            >
-              {value === "ALL" ? "지역 전체" : value}
-            </button>
+            <option key={value} value={value}>
+              {value === "ALL" ? "전국" : value}
+            </option>
           ))}
-        </div>
-      </div>
+        </select>
+      </label>
 
       {tournaments.isLoading ? (
         <div className="space-y-3" aria-label="대회 목록을 불러오는 중">

@@ -49,8 +49,8 @@ function showsPublicFooter(pathname: string) {
 
 const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
   return (
-    <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
-      <ul className="grid grid-cols-5">
+    <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
+      <ul className="grid grid-cols-5 gap-1 px-2 pt-1.5">
         {TABS.map(({ to, label, icon: Icon }) => {
           const active = isTabActive(to, pathname);
           const atDestination = isExactBottomTabDestination(pathname, to);
@@ -62,8 +62,8 @@ const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
                 preloadDelay={0}
                 disabled={atDestination}
                 aria-current={atDestination ? "page" : undefined}
-                className={`relative flex h-14 touch-manipulation select-none flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition-[color,background-color,transform] duration-75 active:scale-[0.96] active:bg-accent ${
-                  active ? "text-primary" : "text-muted-foreground"
+                className={`relative mx-auto flex h-12 w-full max-w-[68px] touch-manipulation select-none flex-col items-center justify-center gap-0.5 rounded-[18px] text-xs font-bold transition-[color,background-color,transform] duration-150 active:scale-[0.96] ${
+                  active ? "bg-foreground text-background" : "text-muted-foreground"
                 }`}
               >
                 <Icon className="size-5" strokeWidth={active ? 2.6 : 2} />
@@ -98,6 +98,13 @@ export function AppShell() {
     !pathname.startsWith("/clubs/find") &&
     !pathname.startsWith("/clubs/new") &&
     !pathname.startsWith("/tournaments/");
+  const pageOwnsHeading =
+    pathname === "/" ||
+    pathname === "/club" ||
+    pathname === "/guest" ||
+    pathname === "/tournaments" ||
+    pathname === "/me" ||
+    pathname === "/notifications";
 
   useEffect(() => {
     const run = () => {
@@ -194,7 +201,7 @@ export function AppShell() {
           !(isExactBottomTabDestination(pathname, "/club") && (!user || authLoading)) ? (
             <ClubSectionNav pathname={pathname} />
           ) : null}
-          {authFlow || usesUIKitChrome ? null : (
+          {authFlow || usesUIKitChrome || pageOwnsHeading ? null : (
             <h1 className="mt-1 mb-3 text-[17px] font-extrabold tracking-tight text-foreground">
               {title}
             </h1>

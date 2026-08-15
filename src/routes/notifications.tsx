@@ -38,12 +38,12 @@ function NotificationsPage() {
     },
   });
 
-  if (loading) return <div className="h-40 animate-pulse rounded-3xl bg-muted" />;
+  if (loading) return <div className="h-40 animate-pulse rounded-[20px] bg-secondary" />;
   if (!user && !loading)
     return (
       <section className="py-16 text-center">
         <Bell className="mx-auto size-10 text-brand-green" />
-        <h1 className="mt-4 type-page-title">알림은 로그인 후 확인할 수 있어요</h1>
+        <h1 className="mt-4 page-heading">알림은 로그인 후 확인할 수 있어요</h1>
         <Button asChild className="mt-6 h-11 rounded-2xl">
           <Link to="/auth" search={{ next: "/notifications" }}>
             로그인하기
@@ -53,7 +53,7 @@ function NotificationsPage() {
     );
   const notifications = query.data ?? [];
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -64,11 +64,11 @@ function NotificationsPage() {
         >
           <ChevronLeft />
         </Button>
-        <h1 className="type-page-title">알림</h1>
+        <h1 className="page-heading">알림</h1>
         <Button
           variant="ghost"
           size="sm"
-          className="ml-auto gap-1 text-brand-deep"
+          className="ml-auto gap-1 text-sm font-bold text-foreground"
           onClick={() => markAll.mutate()}
           disabled={!notifications.some((n) => !n.readAt)}
         >
@@ -77,34 +77,34 @@ function NotificationsPage() {
         </Button>
       </div>
       {query.isLoading ? (
-        <div className="h-32 animate-pulse rounded-3xl bg-muted" />
+        <div className="h-32 animate-pulse rounded-[20px] bg-secondary" />
       ) : notifications.length === 0 ? (
-        <div className="rounded-3xl bg-brand-wash p-8 text-center">
+        <div className="surface-card p-8 text-center">
           <Bell className="mx-auto size-8 text-brand-green" />
           <p className="mt-3 font-bold">새 알림이 없어요</p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="surface-card divide-y divide-border overflow-hidden">
           {notifications.map((notification) => (
             <li key={notification.id}>
               <button
                 type="button"
-                className={`flex w-full items-start gap-3 rounded-2xl p-4 text-left transition ${notification.readAt ? "bg-card" : "bg-brand-wash"}`}
+                className={`flex w-full items-start gap-3 p-4 text-left transition active:bg-secondary ${notification.readAt ? "bg-white" : "bg-brand-wash/40"}`}
                 onClick={async () => {
                   if (!notification.readAt) await markRead.mutateAsync(notification.id);
                   if (notification.deepLink?.startsWith("/"))
                     await navigate({ to: notification.deepLink as never });
                 }}
               >
-                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-brand-green">
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-secondary text-foreground">
                   <Bell className="size-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <strong className="block text-sm font-bold">{notification.title}</strong>
-                  <span className="mt-1 block text-sm text-muted-foreground">
+                  <strong className="block text-base font-bold">{notification.title}</strong>
+                  <span className="mt-1 block text-sm leading-6 text-muted-foreground">
                     {notification.body}
                   </span>
-                  <time className="mt-2 block text-xs text-muted-foreground">
+                  <time className="mt-2 block text-sm text-muted-foreground">
                     {new Date(notification.createdAt).toLocaleString("ko-KR", {
                       month: "numeric",
                       day: "numeric",

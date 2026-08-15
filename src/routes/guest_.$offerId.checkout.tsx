@@ -92,8 +92,8 @@ function GuestCheckoutPage() {
   const price = calculateGuestBookingPrice({ partySize, unitPrice: item.pricePerPerson });
   if (result)
     return (
-      <section className="py-16 text-center">
-        <div className="mx-auto grid size-16 place-items-center rounded-full bg-brand-wash text-brand-green">
+      <section className="surface-card py-16 text-center">
+        <div className="mx-auto grid size-16 place-items-center rounded-full bg-brand-wash text-2xl font-extrabold text-brand-green">
           ✓
         </div>
         <h1 className="mt-5 type-page-title">{result}</h1>
@@ -106,29 +106,29 @@ function GuestCheckoutPage() {
       </section>
     );
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <Link
         to="/guest/$offerId"
         params={{ offerId }}
-        className="inline-flex min-h-11 items-center gap-1 text-sm font-bold text-brand-deep"
+        className="inline-flex min-h-11 items-center gap-1 text-sm font-bold text-foreground"
       >
         <ArrowLeft className="size-4" />
         게스트 상세
       </Link>
       <div>
-        <p className="text-sm font-bold text-brand-deep">{item.clubName}</p>
-        <h1 className="mt-1 type-page-title">예약과 결제를 확인해 주세요</h1>
+        <p className="text-sm font-bold text-brand-green">{item.clubName}</p>
+        <h1 className="mt-2 page-heading">예약 확인</h1>
       </div>
-      <section className="rounded-3xl bg-card p-5">
-        <h2 className="font-bold">{item.title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <section className="surface-card p-5">
+        <h2 className="text-xl font-extrabold">{item.title}</h2>
+        <p className="mt-2 text-base text-muted-foreground">
           {new Date(item.startsAt).toLocaleString("ko-KR", {
             dateStyle: "medium",
             timeStyle: "short",
           })}
         </p>
-        <div className="mt-5 flex items-center justify-between rounded-2xl bg-brand-wash p-4">
-          <span className="font-bold">예약 인원</span>
+        <div className="mt-6 flex items-center justify-between rounded-2xl bg-secondary p-4">
+          <span className="text-base font-bold">예약 인원</span>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -168,7 +168,7 @@ function GuestCheckoutPage() {
             className="h-12 rounded-2xl"
           />
         </div>
-        <dl className="mt-5 space-y-3 text-sm">
+        <dl className="mt-6 space-y-4 text-base">
           <div className="flex justify-between">
             <dt className="text-muted-foreground">1인 가격</dt>
             <dd>{price.unitPrice.toLocaleString()}원</dd>
@@ -181,9 +181,9 @@ function GuestCheckoutPage() {
             <dt className="text-muted-foreground">플랫폼 수수료</dt>
             <dd>{price.platformFeeAmount.toLocaleString()}원</dd>
           </div>
-          <div className="flex justify-between border-t border-border pt-3 text-base font-bold">
+          <div className="flex justify-between border-t border-border pt-4 text-lg font-extrabold">
             <dt>총 결제액</dt>
-            <dd className="text-brand-deep">{price.totalAmount.toLocaleString()}원</dd>
+            <dd className="price-text">{price.totalAmount.toLocaleString()}원</dd>
           </div>
         </dl>
       </section>
@@ -191,7 +191,7 @@ function GuestCheckoutPage() {
         결제 진행 시 이용약관 및 모집별 취소·환불 정책에 동의합니다.
       </p>
       <Button
-        className="h-13 w-full rounded-2xl text-base font-bold"
+        className="h-13 w-full rounded-2xl bg-brand-green text-base font-extrabold text-foreground hover:bg-brand-green-light"
         disabled={
           pay.isPending ||
           complete.isPending ||

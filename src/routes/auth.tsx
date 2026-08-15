@@ -10,12 +10,12 @@ export const Route = createFileRoute("/auth")({
 
 function AuthLayout() {
   return (
-    <div className="space-y-3">
-      <header className="flex flex-col items-center gap-1.5 text-center">
-        <img src="/mintondong-icon.png" alt="" className="size-12 rounded-2xl" />
-        <h1 className="text-[17px] font-extrabold text-foreground">민턴동에 로그인</h1>
-        <p className="text-xs text-muted-foreground">
-          동호회 출석·경기 기록을 여러 기기에서 이어서 사용할 수 있어요.
+    <div className="space-y-6">
+      <header className="flex flex-col items-center gap-3 pt-8 text-center">
+        <img src="/mintondong-icon.png" alt="" className="size-16 rounded-[20px]" />
+        <h1 className="page-heading">민턴동에 로그인</h1>
+        <p className="text-base font-medium text-muted-foreground">
+          배드민턴을 더 가볍게 시작하세요.
         </p>
       </header>
       <Outlet />

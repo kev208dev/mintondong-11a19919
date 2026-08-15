@@ -117,23 +117,20 @@ function ClubHomePage() {
   });
 
   return (
-    <div className="space-y-3">
-      <section className="px-1 pb-1">
-        <h1 className="type-page-title tracking-tight text-foreground">동호회</h1>
-        <p className="mt-1 type-secondary text-muted-foreground">
-          내 모임과 운동을 한눈에 관리해요.
-        </p>
+    <div className="space-y-6">
+      <section className="pt-3">
+        <h1 className="page-heading">동호회</h1>
       </section>
-      <div className="flex items-center gap-2">
+      <div className="grid grid-cols-2 gap-3">
         <Link
           to="/clubs/new"
-          className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-primary-foreground"
+          className="surface-card flex min-h-24 flex-col items-start justify-between p-4 text-base font-extrabold active:scale-[0.98]"
         >
           <Plus className="size-4" /> 동호회 만들기
         </Link>
         <Link
           to="/clubs/find"
-          className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-secondary text-xs font-bold text-secondary-foreground"
+          className="surface-card flex min-h-24 flex-col items-start justify-between p-4 text-base font-extrabold active:scale-[0.98]"
         >
           <Search className="size-4" /> 동호회 찾기
         </Link>
@@ -141,16 +138,14 @@ function ClubHomePage() {
 
       {(myClubs.data?.length ?? 0) > 0 ? (
         <section>
-          <h2 className="px-1 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
-            내 동호회
-          </h2>
-          <ul className="mt-1.5 divide-y divide-border">
+          <h2 className="mb-3 text-xl font-extrabold tracking-tight">내 동호회</h2>
+          <ul className="surface-card divide-y divide-border overflow-hidden">
             {myClubs.data!.map((c) => (
               <li key={c.id}>
                 <Link
                   to="/clubs/$clubId"
                   params={{ clubId: c.id }}
-                  className="flex items-center gap-3 py-2.5 active:opacity-70"
+                  className="flex items-center gap-3 p-4 active:bg-secondary"
                 >
                   <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-secondary text-sm font-bold text-secondary-foreground">
                     {c.name.slice(0, 1)}
@@ -159,7 +154,7 @@ function ClubHomePage() {
                     <span className="block truncate text-sm font-bold text-foreground">
                       {c.name}
                     </span>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-sm text-muted-foreground">
                       멤버 {c.member_count} · {c.region ?? "지역 미등록"}
                     </span>
                   </span>
@@ -169,14 +164,14 @@ function ClubHomePage() {
           </ul>
         </section>
       ) : null}
-      <section className="rounded-2xl border border-border bg-card p-3.5">
+      <section className="surface-card p-5">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent text-base font-extrabold text-accent-foreground">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-wash text-lg font-extrabold text-brand-green">
             {club.club.name.slice(0, 1)}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] font-extrabold text-foreground">{club.club.name}</p>
-            <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <p className="truncate text-lg font-extrabold text-foreground">{club.club.name}</p>
+            <p className="flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="size-3 shrink-0" />
               <span className="truncate">
                 {club.club.location === "장소 미설정" ? "운동 장소 미등록" : club.club.location}
@@ -184,29 +179,27 @@ function ClubHomePage() {
             </p>
           </div>
         </div>
-        <dl className="mt-3 grid grid-cols-4 gap-1.5 text-center">
+        <dl className="mt-5 grid grid-cols-2 gap-2 text-center">
           {[
             { k: "회원", v: club.members.length },
             { k: "오늘 참석", v: coming.length },
             { k: "코트", v: club.courtCount },
             { k: "진행 경기", v: live },
           ].map((s) => (
-            <div key={s.k} className="rounded-xl bg-secondary py-2">
-              <dt className="text-[10.5px] font-semibold text-muted-foreground">{s.k}</dt>
-              <dd className="text-base font-extrabold tabular-nums text-secondary-foreground">
-                {s.v}
-              </dd>
+            <div key={s.k} className="rounded-2xl bg-secondary py-3">
+              <dt className="text-sm font-bold text-muted-foreground">{s.k}</dt>
+              <dd className="mt-1 text-2xl font-extrabold tabular-nums text-brand-green">{s.v}</dd>
             </div>
           ))}
         </dl>
       </section>
 
-      <section className="grid grid-cols-4 gap-1.5">
+      <section className="grid grid-cols-2 gap-3">
         {QUICK.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
-            className="flex flex-col items-center gap-1.5 rounded-2xl border border-border bg-card py-3 text-[11px] font-bold text-foreground active:bg-accent"
+            className="surface-card flex min-h-24 flex-col items-center justify-center gap-2 text-base font-bold text-foreground active:bg-secondary"
           >
             <Icon className="size-4 text-primary" />
             {label}
@@ -214,29 +207,27 @@ function ClubHomePage() {
         ))}
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-3.5">
-        <h2 className="text-[13px] font-extrabold text-foreground">다가오는 일정</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
+      <section className="surface-card p-5">
+        <h2 className="text-xl font-extrabold text-foreground">다가오는 일정</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
           {club.sessionLabel} · {club.sessionTime}
         </p>
         <Link
           to="/club/schedule"
-          className="mt-2.5 flex h-9 items-center justify-center rounded-xl bg-secondary text-xs font-bold text-secondary-foreground"
+          className="mt-4 flex h-12 items-center justify-center rounded-2xl bg-foreground text-base font-bold text-background"
         >
           <CalendarDays className="mr-1 size-3.5" /> 일정 보기
         </Link>
       </section>
 
       <section>
-        <h2 className="px-1 text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
-          더보기
-        </h2>
-        <ul className="mt-1.5 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+        <h2 className="mb-3 text-xl font-extrabold tracking-tight">더보기</h2>
+        <ul className="surface-card divide-y divide-border overflow-hidden">
           {MORE.map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <Link
                 to={to}
-                className="flex items-center gap-2.5 px-3.5 py-3 text-sm font-bold text-foreground active:bg-accent"
+                className="flex min-h-14 items-center gap-3 px-4 text-base font-bold text-foreground active:bg-secondary"
               >
                 <Icon className="size-4 text-primary" />
                 {label}

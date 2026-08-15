@@ -156,19 +156,19 @@ function TournamentDetailPage() {
           className="max-h-72 w-full rounded-2xl bg-secondary object-contain"
         />
       ) : null}
-      <section className="rounded-3xl border border-border bg-card p-5 card-soft">
+      <section className="surface-card p-5">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex flex-wrap gap-1.5">
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-sm">
                 {item.scope === "NATIONAL" ? "전국대회" : "지역대회"}
               </Badge>
-              <Badge className="text-[10px]">{tournamentStatusLabel(item.status)}</Badge>
-              <Badge variant="secondary" className="text-xs font-bold text-brand-deep">
+              <Badge className="text-sm">{tournamentStatusLabel(item.status)}</Badge>
+              <Badge variant="secondary" className="text-sm font-bold text-brand-deep">
                 {dday}
               </Badge>
             </div>
-            <h2 className="break-keep type-page-title text-foreground">{item.title}</h2>
+            <h2 className="break-keep page-heading text-foreground">{item.title}</h2>
           </div>
           <button
             type="button"
@@ -194,16 +194,20 @@ function TournamentDetailPage() {
               <dt className="flex items-center gap-1.5 font-bold text-muted-foreground">
                 <Icon className="size-3.5" /> {label}
               </dt>
-              <dd className="min-w-0 break-words font-semibold text-foreground">{value}</dd>
+              <dd
+                className={`min-w-0 break-words font-semibold ${label === "참가비" ? "price-text text-lg" : "text-foreground"}`}
+              >
+                {value}
+              </dd>
             </div>
           ))}
         </dl>
       </section>
 
       {item.description ? (
-        <section className="rounded-2xl border border-border bg-card p-4">
-          <h3 className="text-sm font-extrabold">대회 설명</h3>
-          <p className="mt-2 whitespace-pre-wrap break-words text-xs leading-6 text-muted-foreground">
+        <section className="surface-card p-5">
+          <h3 className="text-xl font-extrabold">대회 설명</h3>
+          <p className="mt-3 whitespace-pre-wrap break-words text-base leading-7 text-muted-foreground">
             {item.description}
           </p>
         </section>
@@ -218,8 +222,8 @@ function TournamentDetailPage() {
         {resultUrl ? <ExternalButton href={resultUrl} label="경기 결과 보기" /> : null}
       </section>
 
-      <section className="rounded-2xl bg-secondary/60 p-3.5 text-[10.5px] leading-5 text-muted-foreground">
-        <p className="font-bold text-foreground">대회 정보 출처</p>
+      <section className="surface-card p-5 text-sm leading-6 text-muted-foreground">
+        <p className="text-base font-extrabold text-foreground">대회 정보 출처</p>
         <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
           {item.sources.map((source) => {
             const sourceUrl = safeUrl(source.sourceUrl);
@@ -266,8 +270,8 @@ function ExternalButton({
       rel="noreferrer"
       className={`flex h-11 items-center justify-center rounded-xl text-xs font-extrabold ${
         primary
-          ? "bg-primary text-primary-foreground"
-          : "border border-border bg-card text-foreground"
+          ? "bg-brand-green text-foreground hover:bg-brand-green-light"
+          : "bg-foreground text-background"
       }`}
     >
       {label} <ExternalLink className="ml-1.5 size-3.5" />

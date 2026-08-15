@@ -40,7 +40,7 @@ function GuestOfferPage() {
     [offer.shuttlecockIncluded, "셔틀콕 포함", Ticket],
   ] as const;
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <button
         type="button"
         onClick={() =>
@@ -49,37 +49,39 @@ function GuestOfferPage() {
             search: { partySize: 4, startsOn: undefined, region: undefined },
           })
         }
-        className="flex min-h-11 items-center gap-1 text-sm font-bold text-brand-deep"
+        className="flex min-h-11 items-center gap-1 text-sm font-bold text-foreground"
       >
         <ChevronLeft className="size-5" />
         게스트
       </button>
-      <section className="brand-gradient rounded-[28px] p-5 text-primary-foreground">
-        <p className="text-sm font-bold text-white/85">{offer.clubName}</p>
-        <h1 className="mt-2 type-page-title">{offer.title}</h1>
-        <p className="mt-3 text-sm text-white/85">
+      <section className="pt-2">
+        <p className="text-sm font-bold text-brand-green">{offer.clubName}</p>
+        <h1 className="mt-2 page-heading">{offer.title}</h1>
+        <p className="mt-3 text-base font-medium text-muted-foreground">
           {new Date(offer.startsAt).toLocaleString("ko-KR", {
             dateStyle: "medium",
             timeStyle: "short",
           })}
         </p>
       </section>
-      <section className="space-y-4 rounded-3xl bg-card p-5">
+      <section className="surface-card space-y-5 p-5">
         <div className="flex items-start gap-3">
-          <MapPin className="mt-0.5 size-5 text-brand-green" />
+          <MapPin className="mt-0.5 size-5 text-foreground" />
           <div>
             <p className="font-bold">{offer.venueName}</p>
             <p className="text-sm text-muted-foreground">{offer.address}</p>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="rounded-2xl bg-brand-wash p-3">
-            <p className="text-muted-foreground">남은 자리</p>
-            <strong className="mt-1 block text-lg">{offer.remainingCapacity}명</strong>
+          <div className="rounded-2xl bg-secondary p-4">
+            <p className="text-sm font-bold text-muted-foreground">남은 자리</p>
+            <strong className="mt-2 block text-2xl text-brand-green">
+              {offer.remainingCapacity}명
+            </strong>
           </div>
-          <div className="rounded-2xl bg-brand-wash p-3">
-            <p className="text-muted-foreground">1인 게스트비</p>
-            <strong className="mt-1 block text-lg">
+          <div className="rounded-2xl bg-secondary p-4">
+            <p className="text-sm font-bold text-muted-foreground">1인 게스트비</p>
+            <strong className="price-text mt-2 block">
               {offer.pricePerPerson.toLocaleString()}원
             </strong>
           </div>
@@ -90,7 +92,7 @@ function GuestOfferPage() {
             .map(([, label, Icon]) => (
               <span
                 key={label}
-                className="inline-flex items-center gap-1 rounded-full bg-brand-wash px-3 py-1.5 text-xs font-bold text-brand-deep"
+                className="inline-flex items-center gap-1 rounded-full bg-brand-wash px-3 py-2 text-sm font-bold text-brand-deep"
               >
                 <Icon className="size-3.5" />
                 {label}
@@ -118,7 +120,7 @@ function GuestOfferPage() {
         ) : null}
       </section>
       <Button
-        className="h-13 w-full rounded-2xl text-base font-bold"
+        className="h-13 w-full rounded-2xl bg-brand-green text-base font-extrabold text-foreground hover:bg-brand-green-light"
         disabled={offer.remainingCapacity < 2 || offer.status === "closed"}
         onClick={() =>
           user

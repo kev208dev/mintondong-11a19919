@@ -1,11 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, Heart, MapPin, Trophy } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Heart } from "lucide-react";
 import {
-  formatTournamentPeriod,
   getTournamentDDay,
   registrationDeadlineLabel,
   tournamentStatusLabel,
+  formatTournamentPeriod,
 } from "@/lib/tournaments/format";
 import type { Tournament } from "@/lib/tournaments/types";
 
@@ -18,82 +17,68 @@ export function TournamentCard({
   favorite: boolean;
   onFavorite: () => void;
 }) {
-  const deadline = registrationDeadlineLabel(tournament.registrationEndDate);
   const dday = getTournamentDDay(tournament.startDate, tournament.endDate);
-  const ddayTone =
+  const deadline = registrationDeadlineLabel(tournament.registrationEndDate);
+  const status = tournamentStatusLabel(tournament.status);
+  const badge =
     dday === "종료"
-      ? "bg-muted text-muted-foreground"
+      ? "bg-secondary text-muted-foreground"
       : dday === "진행중" || dday === "D-DAY"
-        ? "bg-primary text-primary-foreground"
+        ? "bg-brand-green text-foreground"
         : Number(dday.slice(2)) <= 3
-          ? "bg-brand-lime text-ink"
-          : "bg-brand-soft text-brand-deep";
-  const statusTone =
-    tournament.status === "REGISTERING"
-      ? "bg-primary/10 text-primary"
-      : tournament.status === "ONGOING"
-        ? "bg-destructive/10 text-destructive"
-        : "bg-secondary text-secondary-foreground";
+          ? "bg-brand-lime text-foreground"
+          : "bg-brand-wash text-brand-deep";
 
   return (
-    <article className="relative overflow-hidden rounded-2xl border border-border bg-card p-3.5 card-soft">
-      <div className="flex items-start gap-3">
+    <article className="surface-card relative p-5">
+      <div className="flex items-start justify-between gap-3">
         <Link
           to="/tournaments/$tournamentId"
           params={{ tournamentId: tournament.id }}
           className="min-w-0 flex-1"
         >
-          <div className="mb-2 flex flex-wrap items-center gap-1.5">
-            <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
-              {tournament.scope === "NATIONAL" ? "전국대회" : "지역대회"}
-            </Badge>
-            <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-extrabold ${statusTone}`}>
-              {tournamentStatusLabel(tournament.status)}
-            </span>
-          </div>
-          <h2 className="break-keep pr-1 text-[17px] font-bold leading-6 text-foreground">
+          <p className="text-sm font-bold text-muted-foreground">
+            {tournament.region ?? "전국"} · {status}
+          </p>
+          <h2 className="mt-2 break-keep text-lg font-extrabold leading-7 text-foreground">
             {tournament.title}
           </h2>
         </Link>
         <div className="flex shrink-0 flex-col items-end gap-2">
-          <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${ddayTone}`}>{dday}</span>
+          <span className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${badge}`}>{dday}</span>
           <button
             type="button"
             aria-label={favorite ? "관심 대회 취소" : "관심 대회 저장"}
             aria-pressed={favorite}
             onClick={onFavorite}
-            className="grid size-9 place-items-center rounded-full bg-secondary text-muted-foreground active:scale-95"
+            className="grid size-10 place-items-center rounded-full bg-secondary active:scale-95"
           >
-            <Heart className={`size-4 ${favorite ? "fill-primary text-primary" : ""}`} />
+            <Heart
+              className={`size-5 ${favorite ? "fill-brand-green text-brand-green" : "text-muted-foreground"}`}
+            />
           </button>
         </div>
       </div>
-
       <Link
         to="/tournaments/$tournamentId"
         params={{ tournamentId: tournament.id }}
-        className="mt-3 grid gap-1.5 text-[13px] leading-5 text-muted-foreground"
+        className="mt-4 block space-y-1 text-sm font-medium text-muted-foreground"
       >
-        <span className="flex items-center gap-1.5">
-          <CalendarDays className="size-3.5 shrink-0 text-primary" />
-          {formatTournamentPeriod(tournament.startDate, tournament.endDate)}
-        </span>
-        <span className="flex min-w-0 items-center gap-1.5">
-          <MapPin className="size-3.5 shrink-0 text-primary" />
-          <span className="truncate">
-            {[tournament.region, tournament.city].filter(Boolean).join(" ") || "지역 정보 없음"}
-          </span>
-        </span>
-        {tournament.venue ? (
-          <span className="flex min-w-0 items-center gap-1.5">
-            <Trophy className="size-3.5 shrink-0 text-primary" />
-            <span className="truncate">{tournament.venue}</span>
-          </span>
+        <p>
+          {formatTournamentPeriod(tournament.startDate, tournament.endDate)} ·{" "}
+          {tournament.venue ?? tournament.city ?? "장소 확인"}
+        </p>
+        {tournament.entryFeeWon ? (
+          <p className="flex items-center justify-between pt-2">
+            <span>참가비</span>
+            <strong className="price-text text-lg">
+              {tournament.entryFeeWon.toLocaleString()}원
+            </strong>
+          </p>
         ) : null}
       </Link>
-
       {deadline ? (
-        <p className="mt-3 border-t border-border pt-2 text-[11px] font-extrabold text-primary">
+        <p className="mt-4 border-t border-border pt-3 text-sm font-bold text-brand-green">
           {deadline}
         </p>
       ) : null}

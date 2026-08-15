@@ -1,357 +1,261 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Check, Copy, LogOut, Settings, UserRoundCog } from "lucide-react";
+import { ArrowRight, Bell, Copy, LogOut, Settings, Check } from "lucide-react";
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useStore } from "@/lib/badminton/store";
-import { ATTENDANCE_LABEL, LEVEL_LABEL } from "@/lib/badminton/types";
 import { listMyGuestBookingsFn } from "@/lib/guest/guest.functions";
 import { requestPortOneCancellation } from "@/lib/portone/payments.functions";
 
 export const Route = createFileRoute("/me")({
-  head: () => ({
-    meta: [
-      { title: "마이 – 민턴동 배드민턴 클럽" },
-      {
-        name: "description",
-        content: "로그인한 계정, 현재 모임과 내 역할, 최근 활동 기록을 한 화면에서 확인하세요.",
-      },
-      { property: "og:title", content: "마이 – 민턴동" },
-      { property: "og:description", content: "내 계정과 모임 정보를 한눈에 확인해요." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "마이 – 민턴동" }] }),
   component: MePage,
 });
 
 function providerLabel(provider?: string) {
-  switch (provider) {
-    case "kakao":
-      return "카카오";
-    case "apple":
-      return "Apple";
-    case "google":
-      return "Google";
-    case "email":
-      return "이메일";
-    default:
-      return provider ?? "이메일";
-  }
+  return provider === "apple"
+    ? "Apple"
+    : provider === "google"
+      ? "Google"
+      : provider === "kakao"
+        ? "카카오"
+        : "이메일";
+}
+
+function bookingLabel(status: string) {
+  return status === "confirmed"
+    ? "예약 확정"
+    : status === "payment_pending"
+      ? "결제 대기"
+      : status === "refunded"
+        ? "환불 완료"
+        : status === "cancelled"
+          ? "취소"
+          : status === "failed"
+            ? "실패"
+            : "처리 중";
 }
 
 function MePage() {
   const { user, profile, loading, signOut } = useAuth();
-  const { club, clubs, switchClub, meMemberId, isOwner, getMemberRoles } = useStore();
+  const { club, clubs } = useStore();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
-  const guestBookings = useQuery({
+  const bookings = useQuery({
     queryKey: ["guest-bookings", user?.id],
     queryFn: () => listMyGuestBookingsFn(),
     enabled: Boolean(user),
   });
-  const cancelGuestBooking = useMutation({
+  const cancel = useMutation({
     mutationFn: (paymentId: string) =>
       requestPortOneCancellation({ data: { paymentId, reason: "게스트 예약 취소" } }),
     onSuccess: () => {
       toast.success("예약 취소를 요청했어요.");
-      void guestBookings.refetch();
+      void bookings.refetch();
     },
     onError: () => toast.error("예약을 취소하지 못했어요."),
   });
 
-  if (loading) {
-    return <div className="h-40 animate-pulse rounded-3xl bg-secondary" aria-hidden />;
-  }
-
-  if (!user) {
+  if (loading) return <div className="h-40 animate-pulse rounded-[20px] bg-secondary" />;
+  if (!user)
     return (
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <h2 className="text-base font-extrabold text-foreground">로그인이 필요해요</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          로그인하면 내 계정과 모임 정보를 여러 기기에서 확인할 수 있어요.
+      <section className="surface-card mt-8 p-6 text-center">
+        <h1 className="page-heading">로그인이 필요해요</h1>
+        <p className="mt-3 text-base text-muted-foreground">
+          로그인하고 내 예약과 동호회를 확인하세요.
         </p>
         <Link
           to="/auth"
           search={{ next: "/me" }}
-          className="mt-4 flex h-12 w-full items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground active:scale-95"
+          className="mt-6 flex h-13 items-center justify-center rounded-2xl bg-brand-green text-base font-extrabold text-foreground"
         >
           로그인하기
         </Link>
       </section>
     );
-  }
 
   const name = profile?.display_name ?? user.email?.split("@")[0] ?? "나";
-  const provider = providerLabel(user.app_metadata?.provider as string | undefined);
-  const shortId = `${user.id.slice(0, 6)}…${user.id.slice(-4)}`;
-  const myRoles = getMemberRoles(meMemberId);
-  const me = club.members.find((m) => m.id === meMemberId);
-  const stat = club.stats[meMemberId] ?? { games: 0, wins: 0 };
-  const losses = Math.max(0, stat.games - stat.wins);
-  const winRate = stat.games > 0 ? Math.round((stat.wins / stat.games) * 100) : 0;
-
+  const bookingsCount = bookings.data?.length ?? 0;
   return (
-    <div className="space-y-4">
-      <section className="px-1">
-        <h1 className="type-page-title tracking-tight text-foreground">마이</h1>
-        <p className="mt-1 type-secondary text-muted-foreground">계정과 활동 정보를 관리해요.</p>
-      </section>
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <div className="flex items-center gap-3">
-          {profile?.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt=""
-              className="size-14 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <span className="brand-gradient grid size-14 shrink-0 place-items-center rounded-full text-lg font-extrabold text-primary-foreground">
-              {name.slice(0, 1)}
-            </span>
-          )}
-          <div className="min-w-0">
-            <p className="truncate text-base font-extrabold text-foreground">{name}</p>
-            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-            <span className="mt-1 inline-block rounded-full bg-secondary px-2 py-0.5 text-[10.5px] font-bold text-secondary-foreground">
-              {provider} 로그인
-            </span>
-          </div>
-        </div>
-        <div className="mt-4 flex items-center justify-between rounded-2xl bg-secondary px-3 py-2">
-          <span className="text-[11px] font-bold text-muted-foreground">계정 ID</span>
-          <div className="flex items-center gap-2">
-            <code className="text-[11px] font-semibold text-foreground">{shortId}</code>
-            <button
-              aria-label="계정 ID 복사"
-              className="grid size-7 place-items-center rounded-full bg-card active:scale-95"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(user.id);
-                  setCopied(true);
-                  toast.success("계정 ID를 복사했어요.");
-                  window.setTimeout(() => setCopied(false), 1500);
-                } catch {
-                  toast.error("복사에 실패했어요.");
-                }
-              }}
-            >
-              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-            </button>
-          </div>
-        </div>
-      </section>
+    <div className="space-y-8">
+      <header className="pt-3">
+        <h1 className="page-heading">마이</h1>
+      </header>
 
-      <section className="grid grid-cols-2 gap-3" aria-label="내 바로가기">
-        <Link to="/guest" className="rounded-3xl bg-brand-wash p-4 active:bg-brand-soft">
-          <p className="text-base font-bold text-foreground">내 게스트 예약</p>
-          <span className="mt-4 flex items-center gap-1 type-caption font-bold text-brand-deep">
-            예약 확인 <ArrowRight className="size-3.5" />
+      <section className="surface-card flex items-center gap-4 p-5">
+        {profile?.avatar_url ? (
+          <img src={profile.avatar_url} alt="" className="size-16 rounded-full object-cover" />
+        ) : (
+          <span className="grid size-16 place-items-center rounded-full bg-brand-green text-2xl font-extrabold text-foreground">
+            {name.slice(0, 1)}
           </span>
-        </Link>
-        <Link to="/club" className="rounded-3xl bg-cool-white p-4 active:bg-brand-wash">
-          <p className="text-base font-bold text-foreground">내 동호회</p>
-          <span className="mt-4 flex items-center gap-1 type-caption font-bold text-brand-deep">
-            모임 열기 <ArrowRight className="size-3.5" />
-          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xl font-extrabold">{name}</p>
+          <p className="mt-1 truncate text-sm text-muted-foreground">{user.email}</p>
+          <p className="mt-2 text-sm font-bold text-brand-green">
+            {providerLabel(user.app_metadata?.provider as string | undefined)} 로그인
+          </p>
+        </div>
+        <Link
+          to="/account-deletion"
+          aria-label="계정 설정"
+          className="grid size-11 place-items-center rounded-full bg-secondary"
+        >
+          <Settings className="size-5" />
         </Link>
       </section>
 
-      <section className="rounded-3xl bg-card p-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground">내 게스트 예약</h2>
-          <Link to="/guest" className="text-xs font-bold text-brand-deep">
-            더 찾아보기
+      <section>
+        <h2 className="mb-3 text-xl font-extrabold">내 활동</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <Link to="/guest" className="surface-card p-5 active:scale-[0.98]">
+            <span className="text-sm font-bold text-muted-foreground">내 예약</span>
+            <strong className="mt-3 block text-3xl font-extrabold text-brand-green">
+              {bookingsCount}
+            </strong>
+          </Link>
+          <Link to="/club" className="surface-card p-5 active:scale-[0.98]">
+            <span className="text-sm font-bold text-muted-foreground">내 동호회</span>
+            <strong className="mt-3 block text-3xl font-extrabold text-brand-green">
+              {clubs.length}
+            </strong>
           </Link>
         </div>
-        {guestBookings.data?.length ? (
-          <ul className="mt-3 space-y-2">
-            {guestBookings.data.slice(0, 3).map((booking) => (
-              <li
-                key={booking.id}
-                className="flex items-center justify-between rounded-2xl bg-brand-wash p-3 text-sm"
-              >
-                <span>
-                  <strong className="block">{booking.offerTitle ?? "게스트 예약"}</strong>
-                  <span className="text-xs text-muted-foreground">
-                    {booking.startsAt
-                      ? new Date(booking.startsAt).toLocaleString("ko-KR", {
-                          month: "numeric",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })
-                      : `${booking.partySize}명 예약`}
-                  </span>
-                </span>
-                <span className="flex items-end gap-2 font-bold text-brand-deep">
-                  <span>
-                    {booking.status === "confirmed"
-                      ? "예약 확정"
-                      : booking.status === "payment_pending"
-                        ? "결제 대기"
-                        : booking.status === "refunded"
-                          ? "환불 완료"
-                          : booking.status === "cancelled"
-                            ? "취소"
-                            : booking.status === "failed"
-                              ? "실패"
-                              : "처리 중"}
-                  </span>
-                  {booking.status === "confirmed" && booking.paymentId ? (
-                    <button
-                      type="button"
-                      className="min-h-9 rounded-xl bg-destructive/10 px-2 text-xs text-destructive"
-                      disabled={cancelGuestBooking.isPending}
-                      onClick={() => cancelGuestBooking.mutate(booking.paymentId!)}
-                    >
-                      취소
-                    </button>
-                  ) : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-3 rounded-2xl bg-brand-wash p-4 text-sm text-muted-foreground">
-            아직 게스트 예약이 없어요.
-          </p>
-        )}
       </section>
 
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <h2 className="text-sm font-extrabold text-foreground">현재 모임</h2>
-        <p className="mt-2 text-base font-extrabold text-foreground">
-          {club.club.emoji} {club.club.name}
-        </p>
-        <p className="text-xs text-muted-foreground">{club.club.location}</p>
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {isOwner ? (
-            <span className="rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground">
-              클럽 소유자
-            </span>
-          ) : null}
-          {myRoles.map((r) => (
-            <span
-              key={r.id}
-              className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-bold text-secondary-foreground"
-            >
-              {r.name}
-            </span>
-          ))}
-          {me ? (
-            <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-bold text-secondary-foreground">
-              레벨 {me.level} · {LEVEL_LABEL[me.level]}
-            </span>
-          ) : null}
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-xl font-extrabold">최근 예약</h2>
+          <Link to="/guest" className="text-sm font-bold">
+            더보기 <ArrowRight className="inline size-4" />
+          </Link>
         </div>
-      </section>
-
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-extrabold text-foreground">내 활동</h2>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <span className="rounded-full bg-secondary px-2 py-0.5 text-[10.5px] font-bold text-secondary-foreground">
-              오늘 {ATTENDANCE_LABEL[club.attendance[meMemberId] ?? "NONE"]}
-            </span>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[10.5px] font-bold ${
-                club.checkedIn.includes(meMemberId)
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground"
-              }`}
-            >
-              {club.checkedIn.includes(meMemberId) ? "체크인 완료" : "체크인 전"}
-            </span>
-          </div>
-        </div>
-        <div className="mt-3 grid grid-cols-4 gap-2">
-          {[
-            { label: "경기", value: `${stat.games}` },
-            { label: "승", value: `${stat.wins}` },
-            { label: "패", value: `${losses}` },
-            { label: "승률", value: `${winRate}%` },
-          ].map((s) => (
-            <div key={s.label} className="rounded-2xl bg-secondary px-2 py-3 text-center">
-              <p className="text-base font-extrabold text-foreground">{s.value}</p>
-              <p className="mt-0.5 text-[11px] font-bold text-muted-foreground">{s.label}</p>
+        <div className="surface-card divide-y divide-border overflow-hidden">
+          {bookings.data?.slice(0, 3).map((booking) => (
+            <div key={booking.id} className="flex items-center gap-3 p-4">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-extrabold">
+                  {booking.offerTitle ?? "게스트 예약"}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {booking.startsAt
+                    ? new Date(booking.startsAt).toLocaleString("ko-KR", {
+                        month: "numeric",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })
+                    : `${booking.partySize}명 예약`}
+                </p>
+              </div>
+              <div className="text-right">
+                <p
+                  className={`text-sm font-extrabold ${booking.status === "confirmed" ? "text-brand-green" : "text-muted-foreground"}`}
+                >
+                  {bookingLabel(booking.status)}
+                </p>
+                {booking.status === "confirmed" && booking.paymentId ? (
+                  <button
+                    type="button"
+                    onClick={() => cancel.mutate(booking.paymentId!)}
+                    className="mt-2 text-sm font-bold text-destructive"
+                    disabled={cancel.isPending}
+                  >
+                    취소
+                  </button>
+                ) : null}
+              </div>
             </div>
           ))}
+          {!bookings.data?.length ? (
+            <p className="p-5 text-base text-muted-foreground">예약 없음</p>
+          ) : null}
         </div>
       </section>
 
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <h2 className="text-sm font-extrabold text-foreground">내 모임 {clubs.length}개</h2>
-        <ul className="mt-3 space-y-2">
-          {clubs.map((c) => {
-            const active = c.club.id === club.club.id;
-            const roles = getMemberRoles(`${c.club.id}-m0`, c.club.id);
-            return (
-              <li key={c.club.id}>
-                <button
-                  className={`flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left active:scale-[0.99] ${
-                    active ? "border-primary bg-accent" : "border-border bg-card"
-                  }`}
-                  onClick={() => {
-                    if (!active) {
-                      switchClub(c.club.id);
-                      toast.success(`${c.club.name}(으)로 전환했어요.`);
-                    }
-                  }}
-                >
-                  <span className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm">
-                    {c.club.emoji}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold text-foreground">
-                      {c.club.name}
-                    </span>
-                    <span className="block truncate text-[11px] text-muted-foreground">
-                      {c.club.location}
-                      {roles.length ? ` · ${roles.map((r) => r.name).join(", ")}` : ""}
-                    </span>
-                  </span>
-                  {active ? (
-                    <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10.5px] font-bold text-primary-foreground">
-                      현재
-                    </span>
-                  ) : null}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+      <section>
+        <h2 className="mb-3 text-xl font-extrabold">설정</h2>
+        <div className="surface-card divide-y divide-border overflow-hidden">
+          <Link
+            to="/notifications"
+            className="flex min-h-14 items-center gap-3 px-4 text-base font-bold"
+          >
+            <Bell className="size-5 text-brand-green" /> 알림{" "}
+            <ArrowRight className="ml-auto size-4 text-muted-foreground" />
+          </Link>
+          <Link
+            to="/account-deletion"
+            className="flex min-h-14 items-center gap-3 px-4 text-base font-bold"
+          >
+            <Settings className="size-5" /> 계정 정보{" "}
+            <ArrowRight className="ml-auto size-4 text-muted-foreground" />
+          </Link>
+          <Link to="/support" className="flex min-h-14 items-center px-4 text-base font-bold">
+            고객지원 <ArrowRight className="ml-auto size-4 text-muted-foreground" />
+          </Link>
+          <Link to="/terms" className="flex min-h-14 items-center px-4 text-base font-bold">
+            이용약관 <ArrowRight className="ml-auto size-4 text-muted-foreground" />
+          </Link>
+        </div>
       </section>
 
-      {profile?.role === "ADMIN" ? (
-        <Link
-          to="/admin/tournaments"
-          className="flex h-12 items-center justify-center rounded-2xl border border-primary/30 bg-primary/5 text-sm font-extrabold text-primary"
+      <section className="surface-card p-5">
+        <p className="text-sm font-bold text-muted-foreground">계정 ID</p>
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <code className="truncate text-sm">{user.id}</code>
+          <button
+            type="button"
+            aria-label="계정 ID 복사"
+            className="grid size-11 shrink-0 place-items-center rounded-xl bg-secondary"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(user.id);
+                setCopied(true);
+                toast.success("계정 ID를 복사했어요.");
+                window.setTimeout(() => setCopied(false), 1500);
+              } catch {
+                toast.error("복사에 실패했어요.");
+              }
+            }}
+          >
+            {copied ? <Check className="size-5 text-brand-green" /> : <Copy className="size-5" />}
+          </button>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <ButtonLike
+          onClick={async () => {
+            await signOut();
+            toast.success("로그아웃했어요.");
+            void navigate({ to: "/" });
+          }}
         >
-          <Settings className="mr-2 size-4" /> 대회 관리자 페이지
+          <LogOut className="size-5" /> 로그아웃
+        </ButtonLike>
+        <Link
+          to="/account-deletion"
+          className="flex h-13 items-center justify-center rounded-2xl bg-secondary text-base font-bold text-destructive"
+        >
+          계정 삭제
         </Link>
-      ) : null}
-
-      <Link
-        to="/account-deletion"
-        className="flex h-12 items-center justify-center rounded-2xl border border-border bg-card text-sm font-bold text-foreground active:scale-[0.99]"
-      >
-        <UserRoundCog className="mr-2 size-4" /> 계정 설정
-      </Link>
-
-      <Button
-        variant="secondary"
-        className="h-12 w-full rounded-2xl font-bold"
-        onClick={async () => {
-          await signOut();
-          toast.success("로그아웃했어요.");
-          void navigate({ to: "/" });
-        }}
-      >
-        <LogOut className="size-4" /> 로그아웃
-      </Button>
+      </section>
+      <p className="text-center text-sm text-muted-foreground">현재 모임 · {club.club.name}</p>
     </div>
+  );
+}
+
+function ButtonLike({ children, onClick }: { children: ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-foreground text-base font-extrabold text-background active:scale-[0.98]"
+    >
+      {children}
+    </button>
   );
 }

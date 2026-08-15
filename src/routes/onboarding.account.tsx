@@ -100,14 +100,14 @@ function OnboardingAccountPage() {
   }
 
   return (
-    <section className="rounded-3xl border border-border bg-card p-5">
-      <h2 className="text-base font-extrabold text-foreground">민턴동 아이디 만들기</h2>
-      <p className="mt-1 text-xs text-muted-foreground">
+    <section className="surface-card p-6">
+      <h2 className="page-heading text-foreground">민턴동 아이디 만들기</h2>
+      <p className="mt-2 text-base text-muted-foreground">
         민턴동에서 사용할 고유 아이디를 정해주세요.
       </p>
       <div className="mt-4 space-y-2">
         <Input
-          className="h-12 rounded-2xl"
+          className="h-13 rounded-2xl bg-secondary text-base shadow-none"
           placeholder="아이디 (영문 소문자·숫자·_ 4~20자)"
           autoCapitalize="none"
           value={username}
@@ -117,13 +117,17 @@ function OnboardingAccountPage() {
           }}
         />
         <Input
-          className="h-12 rounded-2xl"
+          className="h-13 rounded-2xl bg-secondary text-base shadow-none"
           placeholder="닉네임 (2~20자)"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
         />
         {note ? <p className="px-1 text-[11px] font-semibold text-destructive">{note}</p> : null}
-        <Button className="h-12 w-full rounded-2xl font-bold" disabled={busy} onClick={submit}>
+        <Button
+          className="h-13 w-full rounded-2xl bg-brand-green text-base font-extrabold text-foreground hover:bg-brand-green-light"
+          disabled={busy}
+          onClick={submit}
+        >
           {busy ? "저장 중..." : "다음"}
         </Button>
       </div>

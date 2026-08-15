@@ -57,33 +57,31 @@ function ClubOnboardingPage() {
 
   return (
     <section className="space-y-4">
-      <div className="rounded-3xl bg-primary/10 px-5 py-5">
-        <span className="grid size-9 place-items-center rounded-2xl bg-primary text-primary-foreground">
+      <div className="surface-card px-5 py-6">
+        <span className="grid size-11 place-items-center rounded-2xl bg-brand-green text-foreground">
           <Sparkles className="size-4" />
         </span>
-        <h2 className="mt-3 text-xl font-extrabold tracking-tight text-foreground">
-          동호회 하나만 연결하면 준비 끝
-        </h2>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+        <h2 className="mt-4 page-heading text-foreground">동호회 하나만 연결하면 준비 끝</h2>
+        <p className="mt-2 text-base leading-7 text-muted-foreground">
           이미 활동 중인 동호회에 가입하거나, 직접 새 동호회를 만들 수 있어요. 둘 중 하나만 완료하면
           다음부터는 이 화면이 나오지 않아요.
         </p>
       </div>
 
-      <div className="grid gap-2.5">
+      <div className="grid gap-3">
         <Link
           to="/clubs/find"
           onClick={() => logOnboardingNavigation("/onboarding", "/clubs/find")}
-          className="flex min-h-24 items-center gap-4 rounded-3xl border border-border bg-card px-4 py-4 active:bg-accent"
+          className="surface-card flex min-h-28 items-center gap-4 px-5 py-4 active:bg-secondary"
         >
-          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary text-primary">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-wash text-brand-green">
             <Search className="size-5" />
           </span>
           <span className="min-w-0">
-            <span className="block text-sm font-extrabold text-foreground">
+            <span className="block text-lg font-extrabold text-foreground">
               동호회 찾아서 가입하기
             </span>
-            <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">
+            <span className="mt-1 block text-sm leading-6 text-muted-foreground">
               이름이나 지역으로 공개 동호회를 찾아 바로 가입할 수 있어요.
             </span>
           </span>
@@ -92,14 +90,14 @@ function ClubOnboardingPage() {
         <Link
           to="/clubs/new"
           onClick={() => logOnboardingNavigation("/onboarding", "/clubs/new")}
-          className="flex min-h-24 items-center gap-4 rounded-3xl border border-border bg-card px-4 py-4 active:bg-accent"
+          className="surface-card flex min-h-28 items-center gap-4 px-5 py-4 active:bg-secondary"
         >
-          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-secondary text-primary">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-secondary text-foreground">
             <PlusCircle className="size-5" />
           </span>
           <span className="min-w-0">
-            <span className="block text-sm font-extrabold text-foreground">새 동호회 만들기</span>
-            <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">
+            <span className="block text-lg font-extrabold text-foreground">새 동호회 만들기</span>
+            <span className="mt-1 block text-sm leading-6 text-muted-foreground">
               운영할 동호회가 있다면 기본 정보만 입력하고 바로 시작해요.
             </span>
           </span>

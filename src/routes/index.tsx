@@ -1,34 +1,28 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarDays, ChevronRight, Megaphone, Search, UserCheck, Zap } from "lucide-react";
+import { Bell, CalendarDays, ChevronRight, Search, UserCheck, UsersRound } from "lucide-react";
 import { HomeTournamentSection } from "@/components/tournaments/HomeTournamentSection";
-import { Capacitor } from "@capacitor/core";
 import { useStore, useTodayPlayers } from "@/lib/badminton/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "민턴동 – 배드민턴 동호회와 게스트 운동" },
-      {
-        name: "description",
-        content: "동호회 활동과 주변 게스트 운동을 한 곳에서 찾아보는 민턴동.",
-      },
-      { property: "og:title", content: "민턴동 – 배드민턴 동호회와 게스트 운동" },
-      {
-        property: "og:description",
-        content: "배드민턴 동호회와 게스트 운동을 한 곳에서.",
-      },
+      { name: "description", content: "동호회 활동과 주변 게스트 운동을 한 곳에서." },
     ],
   }),
   component: HomePage,
 });
 
-function SectionHeader({ title, to, cta }: { title: string; to?: string; cta?: string }) {
+function SectionHeader({ title, to }: { title: string; to?: string }) {
   return (
-    <div className="mb-1.5 flex items-center justify-between px-1">
-      <h2 className="type-section-title text-foreground">{title}</h2>
+    <div className="mb-3 flex items-center justify-between">
+      <h2 className="text-xl font-extrabold tracking-tight text-foreground">{title}</h2>
       {to ? (
-        <Link to={to} className="flex items-center text-[11px] font-bold text-primary">
-          {cta ?? "더보기"} <ChevronRight className="size-3" />
+        <Link
+          to={to}
+          className="inline-flex min-h-11 items-center gap-0.5 text-sm font-bold text-foreground"
+        >
+          전체보기 <ChevronRight className="size-4" />
         </Link>
       ) : null}
     </div>
@@ -37,191 +31,102 @@ function SectionHeader({ title, to, cta }: { title: string; to?: string; cta?: s
 
 function HomePage() {
   const { club, can } = useStore();
-  const { coming, counts } = useTodayPlayers();
-  const liveMatches = club.matches.filter((m) => m.status === "LIVE");
-  const doneCount = club.matches.filter((m) => m.status === "DONE").length;
-  const checkedIn = club.checkedIn.length;
-  const canSettings = can("MANAGE_CLUB_SETTINGS");
+  const { coming } = useTodayPlayers();
   const placeUnset = !club.club.location || club.club.location === "장소 미설정";
   const scheduleUnset = club.sessionLabel === "운동 일정 미설정";
+  const canSettings = can("MANAGE_CLUB_SETTINGS");
 
   return (
-    <div className="space-y-4">
-      <section className="rounded-[24px] bg-brand-green p-5 text-white">
-        {Capacitor.getPlatform() === "ios" ? (
-          <div className="mb-3 flex items-center gap-2">
-            <img
-              src="/mintondong-logo.png"
-              alt="민턴동"
-              width={40}
-              height={40}
-              className="size-10 rounded-xl object-contain"
-            />
-            <span className="text-sm font-extrabold tracking-tight">민턴동</span>
-          </div>
-        ) : null}
-        <h1 className="type-display tracking-tight">배드민턴 동호회 운영을 더 간편하게</h1>
-        <p className="mt-1 type-secondary opacity-80">
-          출석 · 경기 배정 · 회원 관리 · 게스트 모집 · 일정 관리
-        </p>
-      </section>
-
+    <div className="space-y-8">
+      <header className="pt-3">
+        <p className="text-sm font-bold text-brand-green">민턴동</p>
+        <h1 className="mt-2 page-heading">오늘 어디서 칠까요?</h1>
+      </header>
       <section className="grid grid-cols-2 gap-3" aria-label="빠른 실행">
-        <Link to="/guest" className="rounded-3xl bg-brand-wash p-4 active:bg-brand-soft">
-          <UserCheck className="size-5 text-brand-green" />
-          <p className="mt-4 text-base font-bold text-foreground">게스트 예약</p>
-          <p className="mt-1 type-caption text-muted-foreground">함께 칠 사람 찾기</p>
-        </Link>
-        <Link to="/clubs/find" className="rounded-3xl bg-cool-white p-4 active:bg-brand-wash">
-          <Search className="size-5 text-brand-green" />
-          <p className="mt-4 text-base font-bold text-foreground">동호회 찾기</p>
-          <p className="mt-1 type-caption text-muted-foreground">새 모임 둘러보기</p>
-        </Link>
-      </section>
-
-      <Link
-        to="/guest"
-        className="flex items-center gap-3 rounded-3xl bg-brand-wash p-4 active:bg-brand-soft"
-      >
-        <span className="grid size-10 place-items-center rounded-2xl bg-white text-brand-green">
-          <UserCheck className="size-5" />
-        </span>
-        <span className="flex-1">
-          <strong className="block text-base">오늘 가까운 게스트를 찾아보세요</strong>
-          <span className="mt-1 block text-sm text-muted-foreground">
-            가격과 거리, 시간을 비교해 예약할 수 있어요.
+        <Link
+          to="/guest"
+          className="surface-card flex min-h-32 flex-col justify-between p-4 active:scale-[0.98]"
+        >
+          <UserCheck className="size-6 text-brand-green" />
+          <span>
+            <strong className="block text-lg font-extrabold">게스트 찾기</strong>
+            <span className="text-sm text-muted-foreground">함께 칠 사람</span>
           </span>
-        </span>
-        <ChevronRight className="size-5 text-brand-deep" />
-      </Link>
-
-      <section className="rounded-2xl bg-brand-deep p-4 text-white">
-        <p className="text-[11px] font-semibold opacity-75">오늘 운동 요약</p>
-        <p className="mt-0.5 truncate text-[15px] font-extrabold">{club.club.name}</p>
-        <p className="text-[11px] opacity-80">
-          {scheduleUnset
-            ? "정기 운동 일정이 아직 없어요"
-            : `${club.sessionLabel} · ${club.sessionTime}`}
-        </p>
-        <dl className="mt-3 grid grid-cols-4 gap-1.5 text-center">
-          {[
-            { k: "참석", v: coming.length },
-            { k: "체크인", v: checkedIn },
-            { k: "미정", v: counts.MAYBE },
-            { k: "완료 경기", v: doneCount },
-          ].map((s) => (
-            <div key={s.k} className="rounded-xl bg-white/15 py-2">
-              <dd className="text-base font-extrabold tabular-nums">{s.v}</dd>
-              <dt className="text-[10.5px] opacity-80">{s.k}</dt>
-            </div>
-          ))}
-        </dl>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <Link
-            to="/club/attendance"
-            className="flex h-10 items-center justify-center rounded-xl bg-white text-xs font-extrabold text-brand-deep"
-          >
-            <UserCheck className="mr-1 size-4" /> 출석 체크
-          </Link>
-          <Link
-            to="/games"
-            className="flex h-10 items-center justify-center rounded-xl bg-white/20 text-xs font-extrabold"
-          >
-            <Zap className="mr-1 size-4" /> 경기 배정
-          </Link>
-        </div>
+        </Link>
+        <Link
+          to="/clubs/find"
+          className="surface-card flex min-h-32 flex-col justify-between p-4 active:scale-[0.98]"
+        >
+          <Search className="size-6 text-foreground" />
+          <span>
+            <strong className="block text-lg font-extrabold">동호회 찾기</strong>
+            <span className="text-sm text-muted-foreground">새 모임 둘러보기</span>
+          </span>
+        </Link>
       </section>
-
+      <section>
+        <SectionHeader title="오늘 운동" to="/club/schedule" />
+        <Link to="/club/schedule" className="surface-card block p-5 active:scale-[0.99]">
+          {scheduleUnset ? (
+            <p className="text-lg font-extrabold">오늘 일정 없음</p>
+          ) : (
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-3xl font-extrabold tracking-tight text-brand-green">
+                  {club.sessionTime}
+                </p>
+                <p className="mt-2 text-lg font-extrabold">{club.club.name}</p>
+                <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                  <CalendarDays className="size-4" /> {club.sessionLabel}
+                </p>
+              </div>
+              <span className="text-sm font-bold text-muted-foreground">
+                자세히 <ChevronRight className="inline size-4" />
+              </span>
+            </div>
+          )}
+          {!scheduleUnset ? (
+            <p className="mt-4 text-sm text-muted-foreground">참가 {coming.length}명</p>
+          ) : null}
+        </Link>
+      </section>
+      <section>
+        <SectionHeader title="근처 게스트" to="/guest" />
+        <Link to="/guest" className="surface-card flex items-center gap-4 p-5 active:scale-[0.99]">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-wash text-brand-green">
+            <UsersRound className="size-6" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <strong className="block text-lg font-extrabold">가까운 운동 찾기</strong>
+            <span className="text-sm text-muted-foreground">가격과 시간 비교</span>
+          </span>
+          <ChevronRight className="size-5 text-foreground" />
+        </Link>
+      </section>
+      <HomeTournamentSection />
       {placeUnset ? (
-        <section className="rounded-2xl border border-border bg-card p-3.5">
-          <p className="text-xs font-bold text-foreground">
-            오늘 운동 장소가 아직 설정되지 않았어요
-          </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            {canSettings
-              ? "장소를 등록하면 회원들이 모임 위치를 바로 확인할 수 있어요."
-              : "운영진이 장소를 등록하면 여기에 표시돼요."}
-          </p>
+        <section className="surface-card p-5">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-secondary">
+              <Bell className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-extrabold">운동 장소 없음</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {canSettings ? "장소를 등록해 주세요." : "운영진이 장소를 등록하면 표시돼요."}
+              </p>
+            </div>
+          </div>
           {canSettings ? (
             <Link
               to="/club/manage"
-              className="mt-2.5 flex h-9 items-center justify-center rounded-xl bg-secondary text-xs font-bold text-secondary-foreground"
+              className="mt-4 flex h-12 items-center justify-center rounded-2xl bg-foreground text-base font-bold text-background"
             >
-              장소 설정하기
+              장소 설정
             </Link>
           ) : null}
         </section>
       ) : null}
-
-      <section>
-        <SectionHeader title="진행 중인 경기" to="/games" cta="경기" />
-        {liveMatches.length > 0 ? (
-          <ul className="space-y-2">
-            {liveMatches.map((m) => (
-              <li
-                key={m.id}
-                className="flex items-center gap-2 rounded-2xl border border-destructive/40 bg-card p-3"
-              >
-                <span className="flex shrink-0 items-center gap-1 rounded-full bg-destructive px-2 py-0.5 text-[10px] font-extrabold text-destructive-foreground">
-                  <span className="size-1.5 rounded-full bg-destructive-foreground" /> LIVE
-                </span>
-                <span className="min-w-0 flex-1 truncate text-xs font-bold text-foreground">
-                  코트 {m.courtIndex + 1}
-                </span>
-                <span className="shrink-0 text-sm font-extrabold tabular-nums text-foreground">
-                  {m.scoreA} : {m.scoreB}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="rounded-2xl border border-border bg-card p-4 text-center">
-            <Zap className="mx-auto size-4 text-muted-foreground" />
-            <p className="mt-1.5 text-xs font-bold text-foreground">지금 진행 중인 경기가 없어요</p>
-            <Link to="/games" className="mt-1 inline-block text-[11px] font-bold text-primary">
-              경기 배정 시작하기
-            </Link>
-          </div>
-        )}
-      </section>
-
-      <section>
-        <SectionHeader title="다가오는 일정" to="/club/schedule" cta="일정" />
-        <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-          <li className="flex items-center gap-2.5 px-3.5 py-3">
-            <CalendarDays className="size-4 shrink-0 text-primary" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-xs font-bold text-foreground">
-                {scheduleUnset ? "등록된 운동 일정이 없어요" : club.sessionLabel}
-              </span>
-              <span className="block truncate text-[11px] text-muted-foreground">
-                {scheduleUnset
-                  ? canSettings
-                    ? "정기 운동 요일과 시간을 등록해 보세요."
-                    : "운영진이 일정을 등록하면 알려드려요."
-                  : club.sessionTime}
-              </span>
-            </span>
-          </li>
-        </ul>
-      </section>
-
-      <HomeTournamentSection />
-
-      <section>
-        <SectionHeader title="최근 공지" to="/club/notices" />
-        <div className="rounded-2xl border border-border bg-card p-4 text-center">
-          <Megaphone className="mx-auto size-4 text-muted-foreground" />
-          <p className="mt-1.5 text-xs text-muted-foreground">아직 등록된 공지가 없어요.</p>
-        </div>
-      </section>
-
-      <Link
-        to="/clubs/find"
-        className="flex h-11 items-center justify-center rounded-2xl bg-secondary text-xs font-bold text-secondary-foreground active:bg-accent"
-      >
-        <Search className="mr-1.5 size-4" /> 동호회와 게스트 찾기
-      </Link>
     </div>
   );
 }
