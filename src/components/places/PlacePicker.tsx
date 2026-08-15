@@ -6,7 +6,6 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -82,7 +81,7 @@ export function PlacePicker({
           ) : (
             <>
               <span className="block text-sm font-extrabold text-foreground">
-                {legacyLabel ? `기존 장소: ${legacyLabel}` : "장소를 선택해 주세요"}
+                {legacyLabel ? `기존 장소: ${legacyLabel}` : "장소 선택"}
               </span>
               <span className="mt-0.5 block text-xs text-muted-foreground">
                 {legacyLabel ? "정확한 장소 지정" : "검색 결과에서 실제 장소를 선택합니다"}
@@ -124,7 +123,6 @@ export function PlacePicker({
             </DrawerClose>
             <div className="min-w-0 flex-1">
               <DrawerTitle className="text-xl font-extrabold">장소 찾기</DrawerTitle>
-              <DrawerDescription>검색 결과에서 정확한 장소를 선택하세요.</DrawerDescription>
             </div>
             <button
               type="button"

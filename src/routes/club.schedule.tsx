@@ -19,12 +19,12 @@ function SchedulePage() {
 
   return (
     <div className="space-y-3">
-      <section className="rounded-2xl border border-border bg-card p-3.5">
+      <section className="rounded-3xl bg-card p-4 shadow-soft">
         <p className="text-[11px] font-bold text-muted-foreground">정기 운동</p>
         <p className="mt-1 text-[15px] font-extrabold text-foreground">{club.sessionLabel}</p>
         <p className="text-xs text-muted-foreground">
           {club.sessionTime} ·{" "}
-          {club.club.location === "장소 미설정" ? "운동 장소 미등록" : club.club.location}
+          {club.club.location === "장소 미설정" ? "장소 미정" : club.club.location}
         </p>
         <Link
           to="/club/attendance"
@@ -34,11 +34,8 @@ function SchedulePage() {
         </Link>
       </section>
 
-      <section className="rounded-2xl border border-dashed border-border p-6 text-center">
+      <section className="rounded-3xl bg-muted/30 p-6 text-center">
         <p className="text-sm font-bold text-foreground">등록된 다음 일정이 없어요</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          정기 운동 외 일정이 추가되면 이곳에서 확인할 수 있어요.
-        </p>
       </section>
     </div>
   );

@@ -59,9 +59,10 @@ export function pageTitle(pathname: string): string {
   if (pathname.startsWith("/club/members")) return "회원";
   if (pathname.startsWith("/club/notices")) return "공지";
   if (pathname.startsWith("/club/finance")) return "회비 · 재정";
+  if (pathname.startsWith("/club/manage/guest")) return "게스트 모집";
   if (pathname.startsWith("/club/manage")) return "동호회 관리";
-  if (pathname.startsWith("/club/more")) return "더보기";
-  if (pathname.startsWith("/club")) return "동호회 홈";
+  if (pathname.startsWith("/club/more")) return "동호회 메뉴";
+  if (pathname.startsWith("/club")) return "동호회";
   if (pathname.startsWith("/tournaments")) return "대회";
   if (pathname.startsWith("/auth")) return "로그인";
   if (pathname.startsWith("/me")) return "마이페이지";

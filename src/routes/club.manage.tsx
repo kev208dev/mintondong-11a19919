@@ -251,9 +251,6 @@ function ClubPage() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-extrabold text-foreground">게스트 모집</span>
-            <span className="mt-0.5 block text-[11px] leading-relaxed text-muted-foreground">
-              동호회 운동에 참여할 게스트 자리를 준비해요.
-            </span>
           </span>
         </Link>
       ) : null}
@@ -270,7 +267,7 @@ function ClubPage() {
               <ItemHeader
                 icon={<Users className="size-4" />}
                 title={`내 클럽 ${clubs.length}개 · 전환`}
-                summary="가입한 클럽을 전환하거나 탈퇴해요"
+                summary="동호회 전환 및 탈퇴"
               />
             </AccordionTrigger>
             <AccordionContent className="px-3 pb-3">

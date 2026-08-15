@@ -7,12 +7,12 @@ import { useStore, useTodayPlayers } from "@/lib/badminton/store";
 export const Route = createFileRoute("/club/")({
   head: () => ({
     meta: [
-      { title: "동호회 홈 – 민턴동" },
+      { title: "동호회 – 민턴동" },
       {
         name: "description",
         content: "선택한 동호회의 출석·경기·게스트 모집·회비·회원 현황을 한 화면에서 확인해요.",
       },
-      { property: "og:title", content: "동호회 홈 – 민턴동" },
+      { property: "og:title", content: "동호회 – 민턴동" },
       { property: "og:description", content: "동호회 출석·경기·게스트 모집·회비 현황 요약." },
     ],
   }),

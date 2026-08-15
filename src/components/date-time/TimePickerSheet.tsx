@@ -4,7 +4,6 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -50,7 +49,7 @@ export function TimePickerSheet({
           <span
             className={`mt-1 block text-sm font-extrabold ${/^\d{2}:\d{2}$/.test(value) ? "text-foreground" : "text-muted-foreground"}`}
           >
-            {/^\d{2}:\d{2}$/.test(value) ? formatKoreanTime(value) : "시간을 선택해 주세요"}
+            {/^\d{2}:\d{2}$/.test(value) ? formatKoreanTime(value) : "시간 선택"}
           </span>
         </span>
         <ChevronRight className="size-5 text-muted-foreground" />
@@ -60,7 +59,6 @@ export function TimePickerSheet({
           <DrawerHeader className="flex flex-row items-center gap-2 px-5 pb-2 pt-4 text-left">
             <div className="min-w-0 flex-1">
               <DrawerTitle className="text-xl font-extrabold">{label} 선택</DrawerTitle>
-              <DrawerDescription>24시간제로 시간을 선택하세요.</DrawerDescription>
             </div>
             <DrawerClose asChild>
               <button

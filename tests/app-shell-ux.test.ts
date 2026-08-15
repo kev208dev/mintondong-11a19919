@@ -26,6 +26,28 @@ test("동호회 root는 secondary navigation 없이 상태와 핵심 행동만 �
   assert.doesNotMatch(clubRoot, /동호회 만들기|동호회 찾기|더보기/);
 });
 
+test("동호회 하위 route는 legacy 6개 chip과 중복 상위 UI를 렌더링하지 않는다", () => {
+  const routeFiles = [
+    "src/routes/club.attendance.tsx",
+    "src/routes/club.finance.tsx",
+    "src/routes/club.manage.tsx",
+    "src/routes/club.manage_.guest.tsx",
+    "src/routes/club.members.tsx",
+    "src/routes/club.more.tsx",
+    "src/routes/club.notices.tsx",
+    "src/routes/club.ranking.tsx",
+    "src/routes/club.schedule.tsx",
+    "src/routes/games.tsx",
+    "src/routes/records.tsx",
+  ];
+  for (const file of routeFiles) {
+    const source = readFileSync(file, "utf8");
+    assert.doesNotMatch(source, /동호회 홈|ClubSubnav|ClubTabs|ClubNavigation/);
+  }
+  const guestManagement = readFileSync("src/routes/club.manage_.guest.tsx", "utf8");
+  assert.doesNotMatch(guestManagement, /동호회 운동에 참여할 자리를/);
+});
+
 test("인증과 온보딩 route에서는 BottomNav를 숨긴다", () => {
   for (const pathname of [
     "/auth",
@@ -70,6 +92,8 @@ test("iOS native는 CSS glass nav 대신 UIKit chrome을 사용한다", () => {
   assert.match(shell, /hideBottomNav \|\| usesUIKitChrome/);
   assert.match(shell, /authFlow \|\| usesUIKitChrome/);
   assert.match(shell, /!pathname\.startsWith\("\/tournaments\/"\)/);
+  assert.match(shell, /isClubSubroute/);
+  assert.match(shell, /<AppPageHeader title=\{title\} backLabel="동호회" fallback="\/club"/);
   assert.match(footer, /nativeTabBar/);
   assert.doesNotMatch(shell, /ios-liquid-tabbar|floating/);
   assert.doesNotMatch(styles, /ios-liquid-tabbar|blur\(24px\) saturate\(180%\)/);
@@ -105,12 +129,16 @@ test("iOS는 상단 native navigation bar 없이 tab과 back 메타데이터만 
   assert.equal(pageTitle("/onboarding/account"), "계정 설정");
 });
 
-test("iOS shell은 표준 UIKit bar와 공식 Capacitor local plugin containment를 사용한다", () => {
+test("iOS shell은 안정적인 UIKit native bar와 공식 Capacitor local plugin containment를 사용한다", () => {
   const native = readFileSync("ios/App/App/SceneDelegate.swift", "utf8");
   assert.match(native, /MintondongShellViewController/);
-  assert.match(native, /MintondongTabBar\(\)/);
-  assert.match(native, /selectionIndicatorImage/);
-  assert.match(native, /control\.backgroundColor = control\.isSelected \? \.black/);
+  assert.match(native, /private let tabBar = UIView\(\)/);
+  assert.match(native, /private let tabStack = UIStackView\(\)/);
+  assert.match(native, /backgroundColor = isSelected \? \.black : \.clear/);
+  assert.match(native, /baseForegroundColor = isSelected \? \.white : \.label/);
+  assert.match(native, /tabButtonTapped/);
+  assert.doesNotMatch(native, /allControls\(in:/);
+  assert.doesNotMatch(native, /control\.backgroundColor = control\.isSelected/);
   assert.match(native, /UIImage\(systemName: tab\.systemImageName\)/);
   assert.match(native, /CAPPlugin, CAPBridgedPlugin/);
   assert.match(native, /override func capacitorDidLoad\(\)/);
@@ -152,6 +180,17 @@ test("알림은 자체 페이지 헤더 하나만 소유하고 빠른 실패를 
   assert.match(notifications, /retry: 0/);
   assert.match(notifications, /알림을 불러오지 못했어요/);
   assert.doesNotMatch(notifications, /ChevronLeft/);
+});
+
+test("날짜·시간 picker는 자명한 설명문 없이 제목과 선택 UI만 제공한다", () => {
+  const datePicker = readFileSync("src/components/date-time/DatePickerSheet.tsx", "utf8");
+  const timePicker = readFileSync("src/components/date-time/TimePickerSheet.tsx", "utf8");
+  const placePicker = readFileSync("src/components/places/PlacePicker.tsx", "utf8");
+  assert.doesNotMatch(datePicker, /한국 시간 기준|날짜를 선택하세요/);
+  assert.doesNotMatch(timePicker, /24시간제로 시간을 선택하세요|시간을 선택하세요/);
+  assert.doesNotMatch(placePicker, /검색 결과에서 정확한 장소를 선택하세요/);
+  assert.match(datePicker, /DrawerTitle/);
+  assert.match(timePicker, /DrawerTitle/);
 });
 
 test("native tab navigation은 취소된 이동을 전역 오류로 재전파하지 않는다", () => {

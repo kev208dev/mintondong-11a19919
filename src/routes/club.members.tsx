@@ -35,7 +35,7 @@ function MembersPage() {
         <p className="px-1 text-[11px] font-bold text-muted-foreground">
           회원 {club.members.length}명 · 게스트 {club.guests.length}명
         </p>
-        <ul className="mt-1.5 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+        <ul className="mt-1.5 divide-y divide-border overflow-hidden rounded-3xl bg-card shadow-soft">
           {people.map((m) => (
             <li key={m.id} className="flex items-center gap-3 px-3.5 py-2.5">
               <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-secondary text-sm font-bold text-secondary-foreground">
@@ -45,10 +45,10 @@ function MembersPage() {
                 <p className="truncate text-sm font-bold text-foreground">
                   {m.name}
                   {m.isGuest ? (
-                    <span className="ml-1 text-[10px] text-muted-foreground">게스트</span>
+                    <span className="ml-1 text-xs text-muted-foreground">게스트</span>
                   ) : null}
                 </p>
-                <p className="truncate text-[11px] text-muted-foreground">
+                <p className="truncate text-xs text-muted-foreground">
                   {LEVEL_LABEL[m.level]} · {ATTENDANCE_LABEL[club.attendance[m.id] ?? "NONE"]}
                 </p>
                 {m.isGuest ? null : <RoleBadges memberId={m.id} />}

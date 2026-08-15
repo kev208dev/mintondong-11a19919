@@ -25,11 +25,8 @@ function RankingPage() {
   return (
     <div className="space-y-3">
       {rows.length === 0 ? (
-        <section className="rounded-2xl border border-dashed border-border p-6 text-center">
+        <section className="rounded-3xl bg-muted/30 p-6 text-center">
           <p className="text-sm font-bold text-foreground">아직 랭킹 데이터가 없어요</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-경기를 기록하면 참여·승수 기준 순위가 여기에 표시돼요.
-          </p>
           <Link
             to="/games"
             className="mt-3 inline-flex h-9 items-center rounded-xl bg-secondary px-4 text-xs font-bold text-secondary-foreground"
@@ -39,9 +36,7 @@ function RankingPage() {
         </section>
       ) : (
         <>
-          <p className="px-1 text-[11px] text-muted-foreground">
-            승수 기준 순위
-          </p>
+          <p className="px-1 text-xs font-bold text-muted-foreground">승수 기준</p>
           <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
             {rows.map((r, i) => (
               <li key={r.p.id} className="flex items-center gap-3 px-3.5 py-2.5">

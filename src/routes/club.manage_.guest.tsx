@@ -104,8 +104,6 @@ function GuestOfferManagementPage() {
     return <p className="py-12 text-center">관리할 동호회를 찾지 못했어요.</p>;
   return (
     <div className="space-y-4">
-      <h1 className="type-page-title">게스트 모집 만들기</h1>
-      <p className="text-sm text-muted-foreground">{club.club.name} 운동에 참여할 자리를 열어요.</p>
       <section className="space-y-3 rounded-3xl bg-card p-5">
         <Input
           value={title}

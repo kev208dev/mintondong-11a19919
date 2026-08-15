@@ -6,7 +6,7 @@ export function InlineBackButton({
   fallback,
   label = "뒤로",
 }: {
-  fallback: "/tournaments" | "/";
+  fallback: "/tournaments" | "/club" | "/";
   label?: string;
 }) {
   const navigate = useNavigate();

@@ -16,12 +16,9 @@ export const Route = createFileRoute("/club/notices")({
 function NoticesPage() {
   return (
     <div className="space-y-3">
-      <section className="rounded-2xl border border-dashed border-border p-6 text-center">
+      <section className="rounded-3xl bg-muted/30 p-6 text-center">
         <Megaphone className="mx-auto size-5 text-muted-foreground" />
         <p className="mt-2 text-sm font-bold text-foreground">등록된 공지가 없어요</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          새로운 소식이 등록되면 이곳에 표시돼요.
-        </p>
         <Link
           to="/club/manage"
           className="mt-3 inline-flex h-9 items-center rounded-xl bg-secondary px-4 text-xs font-bold text-secondary-foreground"

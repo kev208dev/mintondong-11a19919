@@ -3,10 +3,21 @@ import { CheckCircle2, Clock, HelpCircle, MapPin, Plus, UserPlus, XCircle } from
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RoleBadges } from "@/components/app/RolesSection";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useStore, useTodayPlayers } from "@/lib/badminton/store";
-import { ATTENDANCE_LABEL, LEVEL_LABEL, type AttendanceStatus, type Level } from "@/lib/badminton/types";
+import {
+  ATTENDANCE_LABEL,
+  LEVEL_LABEL,
+  type AttendanceStatus,
+  type Level,
+} from "@/lib/badminton/types";
 
 export const Route = createFileRoute("/club/attendance")({
   head: () => ({
@@ -20,7 +31,8 @@ export const Route = createFileRoute("/club/attendance")({
       { property: "og:title", content: "출석 체크 – 민턴동 동호회" },
       {
         property: "og:description",
-        content: "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱.",
+        content:
+          "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱.",
       },
     ],
   }),
@@ -49,7 +61,9 @@ function AttendancePage() {
     return (
       <section className="rounded-3xl border border-border bg-card shadow-soft p-6 text-center">
         <p className="text-base font-bold text-foreground">출석 현황을 볼 권한이 없어요</p>
-        <p className="mt-1 text-xs text-muted-foreground">클럽 운영자에게 출석 보기 권한을 요청해 주세요.</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          클럽 운영자에게 출석 보기 권한을 요청해 주세요.
+        </p>
       </section>
     );
   }
@@ -59,27 +73,27 @@ function AttendancePage() {
 
   return (
     <>
-      <section className="brand-gradient card-soft rounded-3xl p-5 text-primary-foreground">
-        <p className="text-xs font-semibold opacity-70">오늘 참석 예정</p>
-        <p className="mt-1 text-4xl font-extrabold tracking-tight">
-          {coming.length}
-          <span className="ml-1 text-lg font-bold opacity-70">명</span>
+      <section className="rounded-3xl bg-card p-5 shadow-soft">
+        <p className="text-sm font-bold text-muted-foreground">오늘 참석 예정</p>
+        <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground">
+          <span className="text-primary">{coming.length}</span>
+          <span className="ml-1 text-lg font-bold text-muted-foreground">명</span>
         </p>
-        <div className="mt-3 flex items-center gap-1.5 text-xs opacity-80">
-          <MapPin className="size-3.5" />
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <MapPin className="size-3.5 text-primary" />
           {club.club.location}
         </div>
         <div className="mt-4 grid grid-cols-4 gap-2 text-center">
           {STATES.map((s) => (
-            <div key={s.key} className="rounded-2xl bg-primary-foreground/10 py-2">
-              <p className="text-lg font-extrabold">{counts[s.key]}</p>
-              <p className="text-[11px] opacity-75">{s.label}</p>
+            <div key={s.key} className="rounded-2xl bg-muted/40 py-2">
+              <p className="text-lg font-extrabold text-foreground">{counts[s.key]}</p>
+              <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
             </div>
           ))}
         </div>
-        <div className="mt-3 flex items-center justify-between rounded-2xl bg-primary-foreground/10 px-3 py-2.5 text-sm">
-          <span className="font-semibold">현장 체크인</span>
-          <span className="font-extrabold">
+        <div className="mt-3 flex items-center justify-between rounded-2xl bg-muted/40 px-3 py-2.5 text-sm">
+          <span className="font-semibold text-foreground">현장 체크인</span>
+          <span className="font-extrabold text-primary">
             {checkedInCount} / {coming.length}
           </span>
         </div>
@@ -89,50 +103,50 @@ function AttendancePage() {
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-foreground">게스트 {guests.length}명</h2>
           {canManageMembers ? (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="secondary" className="h-9 rounded-full font-bold">
-                <UserPlus className="mr-1 size-4" /> 게스트 추가
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[340px] rounded-3xl">
-              <DialogHeader>
-                <DialogTitle>게스트 추가</DialogTitle>
-              </DialogHeader>
-              <Input
-                placeholder="이름"
-                value={guestName}
-                onChange={(e) => setGuestName(e.target.value)}
-                className="h-12 rounded-2xl"
-              />
-              <div className="flex gap-2">
-                {([1, 2, 3, 4, 5] as Level[]).map((lv) => (
-                  <button
-                    key={lv}
-                    onClick={() => setGuestLevel(lv)}
-                    className={`h-10 flex-1 rounded-xl text-xs font-bold ${
-                      guestLevel === lv
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground"
-                    }`}
-                  >
-                    {LEVEL_LABEL[lv]}
-                  </button>
-                ))}
-              </div>
-              <Button
-                className="h-12 rounded-2xl font-bold"
-                disabled={!guestName.trim()}
-                onClick={() => {
-                  addGuest(guestName.trim(), guestLevel);
-                  setGuestName("");
-                  setOpen(false);
-                }}
-              >
-                <Plus className="mr-1 size-4" /> 추가하고 바로 체크인
-              </Button>
-            </DialogContent>
-          </Dialog>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="secondary" className="h-9 rounded-full font-bold">
+                  <UserPlus className="mr-1 size-4" /> 게스트 추가
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-[340px] rounded-3xl">
+                <DialogHeader>
+                  <DialogTitle>게스트 추가</DialogTitle>
+                </DialogHeader>
+                <Input
+                  placeholder="이름"
+                  value={guestName}
+                  onChange={(e) => setGuestName(e.target.value)}
+                  className="h-12 rounded-2xl"
+                />
+                <div className="flex gap-2">
+                  {([1, 2, 3, 4, 5] as Level[]).map((lv) => (
+                    <button
+                      key={lv}
+                      onClick={() => setGuestLevel(lv)}
+                      className={`h-10 flex-1 rounded-xl text-xs font-bold ${
+                        guestLevel === lv
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      {LEVEL_LABEL[lv]}
+                    </button>
+                  ))}
+                </div>
+                <Button
+                  className="h-12 rounded-2xl font-bold"
+                  disabled={!guestName.trim()}
+                  onClick={() => {
+                    addGuest(guestName.trim(), guestLevel);
+                    setGuestName("");
+                    setOpen(false);
+                  }}
+                >
+                  <Plus className="mr-1 size-4" /> 추가하고 바로 체크인
+                </Button>
+              </DialogContent>
+            </Dialog>
           ) : null}
         </div>
         {guests.length > 0 ? (
@@ -144,13 +158,13 @@ function AttendancePage() {
               >
                 {g.name} · {LEVEL_LABEL[g.level]}
                 {canManageMembers ? (
-                <button
-                  onClick={() => removeGuest(g.id)}
-                  className="text-muted-foreground"
-                  aria-label={`${g.name} 삭제`}
-                >
-                  <XCircle className="size-4" />
-                </button>
+                  <button
+                    onClick={() => removeGuest(g.id)}
+                    className="text-muted-foreground"
+                    aria-label={`${g.name} 삭제`}
+                  >
+                    <XCircle className="size-4" />
+                  </button>
                 ) : null}
               </li>
             ))}
@@ -176,9 +190,7 @@ function AttendancePage() {
                     <p className="truncate text-sm font-bold text-foreground">
                       {m.name}
                       {m.isGuest ? (
-                        <span className="ml-1 text-[10px] font-bold text-muted-foreground">
-                          게스트
-                        </span>
+                        <span className="ml-1 text-xs font-bold text-muted-foreground">게스트</span>
                       ) : null}
                     </p>
                     <p className="text-[11px] text-muted-foreground">

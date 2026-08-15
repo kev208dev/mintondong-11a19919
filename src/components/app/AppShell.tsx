@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ClubSwitcher } from "./ClubSwitcher";
 import { PublicFooter } from "./PublicFooter";
 import { ClubRouteBackButton } from "./ClubRouteBackButton";
+import { AppPageHeader } from "./AppPageHeader";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { unreadNotificationCountFn } from "@/lib/notifications/notifications.functions";
 import {
@@ -94,9 +95,11 @@ export function AppShell() {
   const authFlow = pathname === "/auth" || pathname.startsWith("/auth/");
   const usesUIKitChrome = usesNativeUIKitChrome(Capacitor.getPlatform());
   const showNativePrimaryControls = usesUIKitChrome && showsNativePrimaryControls(pathname);
+  const isClubSubroute = isClubSection(pathname) && !isExactBottomTabDestination(pathname, "/club");
   const showNativeInlineBack =
     usesUIKitChrome &&
     getNativeChromeState(pathname).showsBackButton &&
+    !isClubSubroute &&
     !pathname.startsWith("/clubs/") &&
     !pathname.startsWith("/tournaments/") &&
     !pathname.startsWith("/notifications");
@@ -198,8 +201,12 @@ export function AppShell() {
               </div>
             </div>
           ) : null}
-          {showNativeInlineBack ? <ClubRouteBackButton /> : null}
-          {authFlow || usesUIKitChrome || pageOwnsHeading ? null : (
+          {isClubSubroute ? (
+            <AppPageHeader title={title} backLabel="동호회" fallback="/club" />
+          ) : showNativeInlineBack ? (
+            <ClubRouteBackButton />
+          ) : null}
+          {authFlow || usesUIKitChrome || pageOwnsHeading || isClubSubroute ? null : (
             <h1 className="mt-1 mb-3 text-[17px] font-extrabold tracking-tight text-foreground">
               {title}
             </h1>

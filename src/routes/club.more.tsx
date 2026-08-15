@@ -1,19 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ClipboardList,
-  Megaphone,
-  Settings2,
-  UserCheck,
-  Users,
-  Wallet,
-} from "lucide-react";
+import { ClipboardList, Megaphone, Settings2, UserCheck, Users, Wallet } from "lucide-react";
 
 export const Route = createFileRoute("/club/more")({
   head: () => ({
     meta: [
-      { title: "동호회 더보기 – 민턴동" },
-      { name: "description", content: "회원, 공지, 회비/재정, 동호회 관리로 이동해요." },
-      { property: "og:title", content: "동호회 더보기 – 민턴동" },
+      { title: "동호회 메뉴 – 민턴동" },
+      { name: "description", content: "회원, 공지, 회비/재정, 동호회 관리 메뉴." },
+      { property: "og:title", content: "동호회 메뉴 – 민턴동" },
       { property: "og:description", content: "회원·공지·회비·관리 메뉴." },
     ],
   }),

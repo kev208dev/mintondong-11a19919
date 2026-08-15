@@ -4,7 +4,6 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -61,7 +60,7 @@ export function DatePickerSheet({
           <span
             className={`mt-1 block text-sm font-extrabold ${parts ? "text-foreground" : "text-muted-foreground"}`}
           >
-            {parts ? formatKoreanDate(value) : "날짜를 선택해 주세요"}
+            {parts ? formatKoreanDate(value) : "날짜 선택"}
           </span>
         </span>
         <ChevronRight className="size-5 text-muted-foreground" />
@@ -71,7 +70,6 @@ export function DatePickerSheet({
           <DrawerHeader className="flex flex-row items-center gap-2 px-5 pb-2 pt-4 text-left">
             <div className="min-w-0 flex-1">
               <DrawerTitle className="text-xl font-extrabold">{label} 선택</DrawerTitle>
-              <DrawerDescription>한국 시간 기준으로 날짜를 선택하세요.</DrawerDescription>
             </div>
             <DrawerClose asChild>
               <button
