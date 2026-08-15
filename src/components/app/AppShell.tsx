@@ -197,8 +197,7 @@ export function AppShell() {
             </div>
           ) : null}
           {showNativeInlineBack ? <ClubRouteBackButton /> : null}
-          {isClubSection(pathname) &&
-          !(isExactBottomTabDestination(pathname, "/club") && (!user || authLoading)) ? (
+          {isClubSection(pathname) && !isExactBottomTabDestination(pathname, "/club") ? (
             <ClubSectionNav pathname={pathname} />
           ) : null}
           {authFlow || usesUIKitChrome || pageOwnsHeading ? null : (

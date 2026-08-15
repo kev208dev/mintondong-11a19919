@@ -14,6 +14,20 @@ test("하단 탭은 홈·동호회·게스트·대회·마이 5개를 유지한�
   assert.deepEqual(BOTTOM_TAB_ROUTES, ["/", "/club", "/guest", "/tournaments", "/me"]);
 });
 
+test("동호회 root는 secondary navigation 없이 상태와 핵심 행동만 보여준다", () => {
+  const shell = readFileSync("src/components/app/AppShell.tsx", "utf8");
+  const clubRoot = readFileSync("src/routes/club.index.tsx", "utf8");
+  assert.match(
+    shell,
+    /isClubSection\(pathname\) && !isExactBottomTabDestination\(pathname, "\/club"\)/,
+  );
+  assert.match(clubRoot, /오늘 운동/);
+  assert.match(clubRoot, /QUICK_ACTIONS/);
+  assert.match(clubRoot, /게스트 모집/);
+  assert.match(clubRoot, /to="\/club\/manage"/);
+  assert.doesNotMatch(clubRoot, /동호회 만들기|동호회 찾기|더보기/);
+});
+
 test("인증과 온보딩 route에서는 BottomNav를 숨긴다", () => {
   for (const pathname of [
     "/auth",
@@ -96,7 +110,9 @@ test("iOS는 상단 native navigation bar 없이 tab과 back 메타데이터만 
 test("iOS shell은 표준 UIKit bar와 공식 Capacitor local plugin containment를 사용한다", () => {
   const native = readFileSync("ios/App/App/SceneDelegate.swift", "utf8");
   assert.match(native, /MintondongShellViewController/);
-  assert.match(native, /UITabBar\(\)/);
+  assert.match(native, /MintondongTabBar\(\)/);
+  assert.match(native, /selectionIndicatorImage/);
+  assert.match(native, /control\.backgroundColor = control\.isSelected \? \.black/);
   assert.match(native, /UIImage\(systemName: tab\.systemImageName\)/);
   assert.match(native, /CAPPlugin, CAPBridgedPlugin/);
   assert.match(native, /override func capacitorDidLoad\(\)/);

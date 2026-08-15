@@ -250,7 +250,28 @@ private final class MintondongShellViewController: UIViewController,
         }
     }
 
-    private let tabBar = UITabBar()
+    private final class MintondongTabBar: UITabBar {
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            // iOS 26's default tab selection background is light gray. Keep the
+            // native UITabBar, but give its selected item the same ink treatment
+            // as the web tab bar.
+            for control in allControls(in: self) where control.bounds.height >= 40 {
+                control.backgroundColor = control.isSelected ? .black : .clear
+                control.layer.cornerRadius = 18
+                control.layer.masksToBounds = true
+            }
+        }
+
+        private func allControls(in view: UIView) -> [UIControl] {
+            view.subviews.flatMap { subview in
+                let nested = allControls(in: subview)
+                return (subview as? UIControl).map { [$0] + nested } ?? nested
+            }
+        }
+    }
+
+    private let tabBar = MintondongTabBar()
     private let bridgeViewController = MintondongBridgeViewController()
     private var bridgeTopToSafeArea: NSLayoutConstraint!
     private var tabBarHeight: NSLayoutConstraint!
@@ -302,8 +323,29 @@ private final class MintondongShellViewController: UIViewController,
         tabBar.delegate = self
         // Web/native chrome share the same hierarchy: selected is ink-black,
         // while green remains reserved for actions and transaction values.
-        tabBar.tintColor = .label
-        tabBar.unselectedItemTintColor = .secondaryLabel
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .white
+        appearance.backgroundEffect = nil
+        appearance.selectionIndicatorTintColor = .black
+        appearance.selectionIndicatorImage = Self.makeSelectionIndicatorImage()
+        for itemAppearance in [
+            appearance.stackedLayoutAppearance,
+            appearance.inlineLayoutAppearance,
+            appearance.compactInlineLayoutAppearance,
+        ] {
+            itemAppearance.normal.iconColor = .label
+            itemAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.label]
+            itemAppearance.selected.iconColor = .white
+            itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor.white]
+        }
+        tabBar.standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            tabBar.scrollEdgeAppearance = appearance
+        }
+        tabBar.selectionIndicatorImage = Self.makeSelectionIndicatorImage()
+        tabBar.tintColor = .white
+        tabBar.unselectedItemTintColor = .label
         tabBar.items = Tab.allCases.map { tab in
             let item = UITabBarItem(
                 title: tab.title,
@@ -323,6 +365,21 @@ private final class MintondongShellViewController: UIViewController,
             tabBar.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             tabBarHeight
         ])
+    }
+
+    private static func makeSelectionIndicatorImage() -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 64, height: 44))
+        let image = renderer.image { _ in
+            UIColor.black.setFill()
+            UIBezierPath(
+                roundedRect: CGRect(x: 1, y: 1, width: 62, height: 42),
+                cornerRadius: 18
+            ).fill()
+        }
+        return image.resizableImage(
+            withCapInsets: UIEdgeInsets(top: 18, left: 18, bottom: 18, right: 18),
+            resizingMode: .stretch
+        )
     }
 
     private func configureKeyboardObservers() {
