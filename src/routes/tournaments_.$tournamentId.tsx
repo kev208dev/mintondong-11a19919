@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InlineBackButton } from "@/components/app/InlineBackButton";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import {
   listTournamentFavoriteIds,
@@ -24,6 +25,7 @@ import {
   formatKoreanDate,
   formatTournamentPeriod,
   formatWon,
+  getTournamentDDay,
   tournamentStatusLabel,
 } from "@/lib/tournaments/format";
 
@@ -126,6 +128,7 @@ function TournamentDetailPage() {
   const resultUrl =
     safeUrl(item.resultUrl) ?? item.sources.map((s) => safeUrl(s.resultUrl)).find(Boolean) ?? null;
   const posterUrl = safeUrl(item.posterUrl);
+  const dday = getTournamentDDay(item.startDate, item.endDate);
   const detailRows = [
     ["대회 기간", formatTournamentPeriod(item.startDate, item.endDate), CalendarDays],
     [
@@ -145,6 +148,7 @@ function TournamentDetailPage() {
 
   return (
     <div className="space-y-4">
+      <InlineBackButton fallback="/tournaments" label="대회" />
       {posterUrl ? (
         <img
           src={posterUrl}
@@ -152,7 +156,7 @@ function TournamentDetailPage() {
           className="max-h-72 w-full rounded-2xl bg-secondary object-contain"
         />
       ) : null}
-      <section className="rounded-2xl border border-border bg-card p-4 card-soft">
+      <section className="rounded-3xl border border-border bg-card p-5 card-soft">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex flex-wrap gap-1.5">
@@ -160,10 +164,11 @@ function TournamentDetailPage() {
                 {item.scope === "NATIONAL" ? "전국대회" : "지역대회"}
               </Badge>
               <Badge className="text-[10px]">{tournamentStatusLabel(item.status)}</Badge>
+              <Badge variant="secondary" className="text-xs font-bold text-brand-deep">
+                {dday}
+              </Badge>
             </div>
-            <h2 className="break-keep text-lg font-extrabold leading-7 text-foreground">
-              {item.title}
-            </h2>
+            <h2 className="break-keep type-page-title text-foreground">{item.title}</h2>
           </div>
           <button
             type="button"

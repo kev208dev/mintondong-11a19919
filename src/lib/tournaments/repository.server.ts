@@ -5,12 +5,14 @@ import { normalizeCollectedTournament, validCollectedTournament } from "./normal
 import { syncCourtxSource } from "./sources/courtx.server";
 import { syncFacecockSource } from "./sources/facecock.server";
 import { SourceDisabledError } from "./sources/source-utils.server";
-import type { CollectedTournament, NormalizedTournament, TournamentSource } from "./types";
+import type { NormalizedTournament, SourceCollection, TournamentSource } from "./types";
 
 type SourceSyncResult = {
   success: boolean;
   fetched: number;
   imported: number;
+  failed: number;
+  pageCount: number;
   error?: string;
 };
 
@@ -145,6 +147,8 @@ async function recordRun(
     success: result.success,
     fetched_count: result.fetched,
     imported_count: result.imported,
+    failed_count: result.failed,
+    page_count: result.pageCount,
     error_code: result.error?.slice(0, 160) ?? null,
     started_at: startedAt,
     finished_at: new Date().toISOString(),
@@ -154,17 +158,24 @@ async function recordRun(
 
 async function runSource(
   source: TournamentSource,
-  collect: () => Promise<CollectedTournament[]>,
+  collect: () => Promise<SourceCollection>,
 ): Promise<SourceSyncResult> {
   const startedAt = new Date().toISOString();
   const client = db();
   try {
-    const collected = await collect();
+    const collection = await collect();
+    const collected = collection.items;
     const normalized = collected.map(normalizeCollectedTournament).filter(validCollectedTournament);
     let imported = 0;
     for (const group of deduplicateCollected(normalized))
       imported += await persistGroup(client, group);
-    const result = { success: true, fetched: collected.length, imported };
+    const result = {
+      success: true,
+      fetched: collected.length,
+      imported,
+      failed: collected.length - normalized.length,
+      pageCount: collection.pageCount,
+    };
     await recordRun(client, source, startedAt, result);
     return result;
   } catch (error) {
@@ -173,6 +184,8 @@ async function runSource(
       success: false,
       fetched: 0,
       imported: 0,
+      failed: 1,
+      pageCount: 0,
       error: error instanceof SourceDisabledError ? "SOURCE_DISABLED_PENDING_PERMISSION" : code,
     };
     await recordRun(client, source, startedAt, result);
@@ -182,7 +195,7 @@ async function runSource(
 
 export async function syncAllTournaments(): Promise<TournamentSyncResult> {
   // 같은 대회가 두 source에 동시에 나타날 때 canonical INSERT race를 피하도록 순차 저장한다.
-  // 외부 요청은 source당 목록 1회뿐이며 한 source 실패는 다음 source 실행을 막지 않는다.
+  // 각 adapter가 정한 bounded page만 요청하며 한 source 실패는 다음 source 실행을 막지 않는다.
   const facecock = await runSource("FACECOCK", syncFacecockSource);
   const courtx = await runSource("COURTX", syncCourtxSource);
   return { facecock, courtx };

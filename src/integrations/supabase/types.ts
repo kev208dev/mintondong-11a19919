@@ -993,9 +993,11 @@ export type Database = {
         Row: {
           error_code: string | null;
           fetched_count: number;
+          failed_count: number;
           finished_at: string;
           id: string;
           imported_count: number;
+          page_count: number;
           source: string;
           started_at: string;
           success: boolean;
@@ -1003,9 +1005,11 @@ export type Database = {
         Insert: {
           error_code?: string | null;
           fetched_count?: number;
+          failed_count?: number;
           finished_at?: string;
           id?: string;
           imported_count?: number;
+          page_count?: number;
           source: string;
           started_at: string;
           success: boolean;
@@ -1013,9 +1017,11 @@ export type Database = {
         Update: {
           error_code?: string | null;
           fetched_count?: number;
+          failed_count?: number;
           finished_at?: string;
           id?: string;
           imported_count?: number;
+          page_count?: number;
           source?: string;
           started_at?: string;
           success?: boolean;

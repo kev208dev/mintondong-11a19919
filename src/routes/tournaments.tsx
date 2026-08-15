@@ -102,12 +102,12 @@ function TournamentsPage() {
   return (
     <div className="space-y-4">
       <section className="px-1">
-        <h1 className="text-xl font-extrabold tracking-tight text-foreground">대회</h1>
-        <p className="mt-2 text-[15px] font-extrabold text-foreground">
-          전국 배드민턴 대회를 한곳에서
+        <h1 className="type-page-title tracking-tight text-foreground">전국 배드민턴 대회</h1>
+        <p className="mt-2 type-body font-semibold text-foreground">
+          접수 일정과 장소를 한눈에 확인하세요
         </p>
-        <p className="mt-0.5 text-[11.5px] text-muted-foreground">
-          접수 일정과 장소를 확인하고 원본 사이트에서 신청하세요.
+        <p className="mt-0.5 type-secondary text-muted-foreground">
+          원본 사이트에서 신청하고 최신 안내를 확인하세요.
         </p>
       </section>
 
@@ -129,7 +129,7 @@ function TournamentsPage() {
               key={value}
               type="button"
               onClick={() => setStatus(value)}
-              className={`h-8 rounded-full px-3 text-[11px] font-bold ${
+              className={`h-10 rounded-full px-4 text-xs font-bold ${
                 status === value
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground"
@@ -148,7 +148,7 @@ function TournamentsPage() {
               key={value}
               type="button"
               onClick={() => setRegion(value)}
-              className={`h-7 rounded-lg border px-2.5 text-[10.5px] font-bold ${
+              className={`h-9 rounded-xl border px-3 text-xs font-bold ${
                 region === value
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border bg-card text-muted-foreground"
@@ -163,7 +163,7 @@ function TournamentsPage() {
       {tournaments.isLoading ? (
         <div className="space-y-3" aria-label="대회 목록을 불러오는 중">
           {[0, 1, 2].map((item) => (
-            <Skeleton key={item} className="h-44 rounded-2xl" />
+            <Skeleton key={item} className="h-36 rounded-3xl" />
           ))}
         </div>
       ) : tournaments.isError ? (

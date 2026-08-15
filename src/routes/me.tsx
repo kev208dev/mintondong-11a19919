@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Check, Copy, LogOut, Settings, UserRoundCog } from "lucide-react";
+import { ArrowRight, Check, Copy, LogOut, Settings, UserRoundCog } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -79,8 +79,8 @@ function MePage() {
   return (
     <div className="space-y-4">
       <section className="px-1">
-        <h1 className="text-xl font-extrabold tracking-tight text-foreground">마이</h1>
-        <p className="mt-1 text-xs text-muted-foreground">계정과 활동 정보를 관리해요.</p>
+        <h1 className="type-page-title tracking-tight text-foreground">마이</h1>
+        <p className="mt-1 type-secondary text-muted-foreground">계정과 활동 정보를 관리해요.</p>
       </section>
       <section className="rounded-3xl border border-border bg-card p-5">
         <div className="flex items-center gap-3">
@@ -125,6 +125,21 @@ function MePage() {
             </button>
           </div>
         </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-3" aria-label="내 바로가기">
+        <Link to="/lessons" className="rounded-3xl bg-brand-wash p-4 active:bg-brand-soft">
+          <p className="text-base font-bold text-foreground">내 레슨</p>
+          <span className="mt-4 flex items-center gap-1 type-caption font-bold text-brand-deep">
+            예약 확인 <ArrowRight className="size-3.5" />
+          </span>
+        </Link>
+        <Link to="/club" className="rounded-3xl bg-cool-white p-4 active:bg-brand-wash">
+          <p className="text-base font-bold text-foreground">내 동호회</p>
+          <span className="mt-4 flex items-center gap-1 type-caption font-bold text-brand-deep">
+            모임 열기 <ArrowRight className="size-3.5" />
+          </span>
+        </Link>
       </section>
 
       <section className="rounded-3xl border border-border bg-card p-5">

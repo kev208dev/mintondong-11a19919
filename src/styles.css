@@ -20,7 +20,8 @@
 
 @theme inline {
   --font-sans:
-    "Noto Sans KR", ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+    "Spoqa Han Sans Neo", "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -223,4 +224,46 @@
 
 @utility card-soft {
   box-shadow: var(--shadow-card);
+}
+
+@utility type-display {
+  font-size: 30px;
+  line-height: 1.22;
+  font-weight: 800;
+}
+
+@utility type-page-title {
+  font-size: 24px;
+  line-height: 1.3;
+  font-weight: 800;
+}
+
+@utility type-section-title {
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+@utility type-card-title {
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+@utility type-body {
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+
+@utility type-secondary {
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+@utility type-caption {
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 500;
 }

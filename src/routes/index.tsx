@@ -39,7 +39,7 @@ export const Route = createFileRoute("/")({
 function SectionHeader({ title, to, cta }: { title: string; to?: string; cta?: string }) {
   return (
     <div className="mb-1.5 flex items-center justify-between px-1">
-      <h2 className="text-[13px] font-extrabold text-foreground">{title}</h2>
+      <h2 className="type-section-title text-foreground">{title}</h2>
       {to ? (
         <Link to={to} className="flex items-center text-[11px] font-bold text-primary">
           {cta ?? "더보기"} <ChevronRight className="size-3" />
@@ -75,7 +75,7 @@ function HomePage() {
 
   return (
     <div className="space-y-4">
-      <section className="px-1">
+      <section className="rounded-[24px] bg-brand-green p-5 text-white">
         {Capacitor.getPlatform() === "ios" ? (
           <div className="mb-3 flex items-center gap-2">
             <img
@@ -85,15 +85,26 @@ function HomePage() {
               height={40}
               className="size-10 rounded-xl object-contain"
             />
-            <span className="text-sm font-extrabold tracking-tight text-foreground">민턴동</span>
+            <span className="text-sm font-extrabold tracking-tight">민턴동</span>
           </div>
         ) : null}
-        <h1 className="text-xl font-extrabold tracking-tight text-foreground">
-          배드민턴 동호회 운영을 더 간편하게
-        </h1>
-        <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+        <h1 className="type-display tracking-tight">배드민턴 동호회 운영을 더 간편하게</h1>
+        <p className="mt-1 type-secondary opacity-80">
           출석 · 경기 배정 · 회원 관리 · 일정 관리 · 레슨 예약
         </p>
+      </section>
+
+      <section className="grid grid-cols-2 gap-3" aria-label="빠른 실행">
+        <Link to="/guest" className="rounded-3xl bg-brand-wash p-4 active:bg-brand-soft">
+          <UserCheck className="size-5 text-brand-green" />
+          <p className="mt-4 text-base font-bold text-foreground">게스트 예약</p>
+          <p className="mt-1 type-caption text-muted-foreground">함께 칠 사람 찾기</p>
+        </Link>
+        <Link to="/clubs/find" className="rounded-3xl bg-cool-white p-4 active:bg-brand-wash">
+          <Search className="size-5 text-brand-green" />
+          <p className="mt-4 text-base font-bold text-foreground">동호회 찾기</p>
+          <p className="mt-1 type-caption text-muted-foreground">새 모임 둘러보기</p>
+        </Link>
       </section>
 
       <Link

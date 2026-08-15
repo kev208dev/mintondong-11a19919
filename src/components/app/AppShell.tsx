@@ -1,10 +1,9 @@
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import { Capacitor } from "@capacitor/core";
-import { Bell, Home, Trophy, User, Users } from "lucide-react";
+import { Bell, Home, Trophy, User, UserRoundPlus, Users } from "lucide-react";
 import { memo, useEffect } from "react";
 import { toast } from "sonner";
 import { ClubSectionNav } from "./ClubSectionNav";
-import { AccountButton } from "./AccountButton";
 import { ClubSwitcher } from "./ClubSwitcher";
 import { PublicFooter } from "./PublicFooter";
 import { ClubRouteBackButton } from "./ClubRouteBackButton";
@@ -22,6 +21,7 @@ import {
 const TABS = [
   { to: "/", label: "홈", icon: Home },
   { to: "/club", label: "동호회", icon: Users },
+  { to: "/guest", label: "게스트", icon: UserRoundPlus },
   { to: "/tournaments", label: "대회", icon: Trophy },
   { to: "/me", label: "마이", icon: User },
 ] as const;
@@ -29,6 +29,7 @@ const TABS = [
 function isTabActive(to: string, pathname: string) {
   if (to === "/") return pathname === "/" || pathname.startsWith("/clubs/find");
   if (to === "/club") return isClubSection(pathname);
+  if (to === "/guest") return pathname === "/guest" || pathname.startsWith("/guest/");
   return pathname === to || pathname.startsWith(`${to}/`);
 }
 
@@ -50,7 +51,7 @@ function showsPublicFooter(pathname: string) {
 const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
   return (
     <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-5">
         {TABS.map(({ to, label, icon: Icon }) => {
           const active = isTabActive(to, pathname);
           const atDestination = isExactBottomTabDestination(pathname, to);
@@ -91,7 +92,8 @@ export function AppShell() {
     usesUIKitChrome &&
     getNativeChromeState(pathname).showsBackButton &&
     !pathname.startsWith("/clubs/find") &&
-    !pathname.startsWith("/clubs/new");
+    !pathname.startsWith("/clubs/new") &&
+    !pathname.startsWith("/tournaments/");
 
   useEffect(() => {
     const run = () => {
@@ -130,7 +132,6 @@ export function AppShell() {
               >
                 <Bell className="size-[18px]" />
               </button>
-              <AccountButton />
             </div>
           </div>
         </header>
@@ -173,7 +174,6 @@ export function AppShell() {
                 >
                   <Bell className="size-[18px]" />
                 </button>
-                <AccountButton />
               </div>
             </div>
           ) : null}

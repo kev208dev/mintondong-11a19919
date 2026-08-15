@@ -43,6 +43,20 @@ export function registrationDeadlineLabel(endDate: string | null, now = new Date
   return days === 0 ? "접수마감 D-Day" : `접수마감 D-${days}`;
 }
 
+export function getTournamentDDay(startDate: string, endDate: string, now = new Date()): string {
+  const today = koreaDateOnly(now);
+  if (today > endDate) return "종료";
+  if (today === startDate) return "D-DAY";
+  if (today > startDate && today <= endDate) return "진행중";
+
+  const toUtcDay = (value: string) => {
+    const [year, month, day] = value.split("-").map(Number);
+    return Date.UTC(year!, month! - 1, day!);
+  };
+  const days = Math.round((toUtcDay(startDate) - toUtcDay(today)) / 86_400_000);
+  return days === 0 ? "D-DAY" : `D-${days}`;
+}
+
 export function formatWon(value: number | null) {
   return value == null ? "정보 없음" : `${value.toLocaleString("ko-KR")}원`;
 }

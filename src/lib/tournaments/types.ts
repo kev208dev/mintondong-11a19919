@@ -72,6 +72,11 @@ export type CollectedTournament = {
   rawData?: Record<string, unknown>;
 };
 
+export type SourceCollection = {
+  items: CollectedTournament[];
+  pageCount: number;
+};
+
 export type NormalizedTournament = Omit<CollectedTournament, "title" | "endDate"> & {
   title: string;
   normalizedTitle: string;

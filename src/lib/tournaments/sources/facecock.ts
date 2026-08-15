@@ -4,6 +4,17 @@ import { htmlText, parseDateRange } from "./source-parser.ts";
 
 const ORIGIN = "https://facecock.co.kr";
 export const FACECOCK_LIST_URL = `${ORIGIN}/page/?pid=game`;
+export const FACECOCK_MAX_PAGES = 5;
+
+export function facecockPageUrl(page: number) {
+  if (page <= 1) return FACECOCK_LIST_URL;
+  return `${FACECOCK_LIST_URL}&page=${page}`;
+}
+
+export function parseFacecockPageCount(html: string): number {
+  const pages = [...html.matchAll(/[?&]page=(\d+)/g)].map((match) => Number(match[1]));
+  return Math.max(1, ...pages.filter((page) => Number.isFinite(page)));
+}
 
 export function parseFacecockTournamentList(html: string): CollectedTournament[] {
   const $ = load(html);

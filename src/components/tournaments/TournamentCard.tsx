@@ -3,6 +3,7 @@ import { CalendarDays, Heart, MapPin, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   formatTournamentPeriod,
+  getTournamentDDay,
   registrationDeadlineLabel,
   tournamentStatusLabel,
 } from "@/lib/tournaments/format";
@@ -18,6 +19,15 @@ export function TournamentCard({
   onFavorite: () => void;
 }) {
   const deadline = registrationDeadlineLabel(tournament.registrationEndDate);
+  const dday = getTournamentDDay(tournament.startDate, tournament.endDate);
+  const ddayTone =
+    dday === "종료"
+      ? "bg-muted text-muted-foreground"
+      : dday === "진행중" || dday === "D-DAY"
+        ? "bg-primary text-primary-foreground"
+        : Number(dday.slice(2)) <= 3
+          ? "bg-brand-lime text-ink"
+          : "bg-brand-soft text-brand-deep";
   const statusTone =
     tournament.status === "REGISTERING"
       ? "bg-primary/10 text-primary"
@@ -41,25 +51,28 @@ export function TournamentCard({
               {tournamentStatusLabel(tournament.status)}
             </span>
           </div>
-          <h2 className="break-keep pr-1 text-[14px] font-extrabold leading-5 text-foreground">
+          <h2 className="break-keep pr-1 text-[17px] font-bold leading-6 text-foreground">
             {tournament.title}
           </h2>
         </Link>
-        <button
-          type="button"
-          aria-label={favorite ? "관심 대회 취소" : "관심 대회 저장"}
-          aria-pressed={favorite}
-          onClick={onFavorite}
-          className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground active:scale-95"
-        >
-          <Heart className={`size-4 ${favorite ? "fill-primary text-primary" : ""}`} />
-        </button>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${ddayTone}`}>{dday}</span>
+          <button
+            type="button"
+            aria-label={favorite ? "관심 대회 취소" : "관심 대회 저장"}
+            aria-pressed={favorite}
+            onClick={onFavorite}
+            className="grid size-9 place-items-center rounded-full bg-secondary text-muted-foreground active:scale-95"
+          >
+            <Heart className={`size-4 ${favorite ? "fill-primary text-primary" : ""}`} />
+          </button>
+        </div>
       </div>
 
       <Link
         to="/tournaments/$tournamentId"
         params={{ tournamentId: tournament.id }}
-        className="mt-3 grid gap-1.5 text-[11px] text-muted-foreground"
+        className="mt-3 grid gap-1.5 text-[13px] leading-5 text-muted-foreground"
       >
         <span className="flex items-center gap-1.5">
           <CalendarDays className="size-3.5 shrink-0 text-primary" />

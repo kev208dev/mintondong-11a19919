@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BusinessInfoRouteImport } from './routes/business-info'
 import { Route as ClubRouteImport } from './routes/club'
 import { Route as GamesRouteImport } from './routes/games'
+import { Route as GuestRouteImport } from './routes/guest'
 import { Route as LessonsRouteImport } from './routes/lessons'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -84,6 +85,11 @@ const ClubRoute = ClubRouteImport.update({
 const GamesRoute = GamesRouteImport.update({
   id: '/games',
   path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuestRoute = GuestRouteImport.update({
+  id: '/guest',
+  path: '/guest',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LessonsRoute = LessonsRouteImport.update({
@@ -295,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/business-info': typeof BusinessInfoRoute
   '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
+  '/guest': typeof GuestRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -341,6 +348,7 @@ export interface FileRoutesByTo {
   '/account-deletion': typeof AccountDeletionRoute
   '/business-info': typeof BusinessInfoRoute
   '/games': typeof GamesRoute
+  '/guest': typeof GuestRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/privacy': typeof PrivacyRoute
@@ -388,6 +396,7 @@ export interface FileRoutesById {
   '/business-info': typeof BusinessInfoRoute
   '/club': typeof ClubRouteWithChildren
   '/games': typeof GamesRoute
+  '/guest': typeof GuestRoute
   '/lessons': typeof LessonsRoute
   '/me': typeof MeRoute
   '/onboarding': typeof OnboardingRouteWithChildren
@@ -438,6 +447,7 @@ export interface FileRouteTypes {
     | '/business-info'
     | '/club'
     | '/games'
+    | '/guest'
     | '/lessons'
     | '/me'
     | '/onboarding'
@@ -484,6 +494,7 @@ export interface FileRouteTypes {
     | '/account-deletion'
     | '/business-info'
     | '/games'
+    | '/guest'
     | '/lessons'
     | '/me'
     | '/privacy'
@@ -530,6 +541,7 @@ export interface FileRouteTypes {
     | '/business-info'
     | '/club'
     | '/games'
+    | '/guest'
     | '/lessons'
     | '/me'
     | '/onboarding'
@@ -579,6 +591,7 @@ export interface RootRouteChildren {
   BusinessInfoRoute: typeof BusinessInfoRoute
   ClubRoute: typeof ClubRouteWithChildren
   GamesRoute: typeof GamesRoute
+  GuestRoute: typeof GuestRoute
   LessonsRoute: typeof LessonsRoute
   MeRoute: typeof MeRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
@@ -642,6 +655,13 @@ declare module '@tanstack/react-router' {
       path: '/games'
       fullPath: '/games'
       preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guest': {
+      id: '/guest'
+      path: '/guest'
+      fullPath: '/guest'
+      preLoaderRoute: typeof GuestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lessons': {
@@ -1013,6 +1033,7 @@ const rootRouteChildren: RootRouteChildren = {
   BusinessInfoRoute: BusinessInfoRoute,
   ClubRoute: ClubRouteWithChildren,
   GamesRoute: GamesRoute,
+  GuestRoute: GuestRoute,
   LessonsRoute: LessonsRoute,
   MeRoute: MeRoute,
   OnboardingRoute: OnboardingRouteWithChildren,

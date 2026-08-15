@@ -107,7 +107,7 @@ function ClubDetailLayout() {
             className="h-32 w-full object-cover"
           />
         ) : (
-          <div className="h-24 w-full bg-gradient-to-br from-primary/25 to-secondary" />
+          <div className="h-24 w-full bg-brand-wash" />
         )}
       </div>
 

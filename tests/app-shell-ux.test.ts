@@ -2,12 +2,17 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
+  BOTTOM_TAB_ROUTES,
   getNativeChromeState,
   hidesBottomNavigation,
   isExactBottomTabDestination,
   pageTitle,
   usesNativeUIKitChrome,
 } from "../src/components/app/app-shell-state.ts";
+
+test("하단 탭은 홈·동호회·게스트·대회·마이 5개를 유지한다", () => {
+  assert.deepEqual(BOTTOM_TAB_ROUTES, ["/", "/club", "/guest", "/tournaments", "/me"]);
+});
 
 test("인증과 온보딩 route에서는 BottomNav를 숨긴다", () => {
   for (const pathname of [
@@ -19,7 +24,7 @@ test("인증과 온보딩 route에서는 BottomNav를 숨긴다", () => {
   ]) {
     assert.equal(hidesBottomNavigation(pathname), true, pathname);
   }
-  for (const pathname of ["/", "/club", "/tournaments", "/me", "/clubs/find"]) {
+  for (const pathname of ["/", "/club", "/guest", "/tournaments", "/me", "/clubs/find"]) {
     assert.equal(hidesBottomNavigation(pathname), false, pathname);
   }
 });
@@ -52,6 +57,7 @@ test("iOS native는 CSS glass nav 대신 UIKit chrome을 사용한다", () => {
   assert.match(shell, /usesNativeUIKitChrome/);
   assert.match(shell, /hideBottomNav \|\| usesUIKitChrome/);
   assert.match(shell, /authFlow \|\| usesUIKitChrome/);
+  assert.match(shell, /!pathname\.startsWith\("\/tournaments\/"\)/);
   assert.match(footer, /nativeTabBar/);
   assert.doesNotMatch(shell, /ios-liquid-tabbar|floating/);
   assert.doesNotMatch(styles, /ios-liquid-tabbar|blur\(24px\) saturate\(180%\)/);
@@ -71,6 +77,8 @@ test("iOS는 상단 native navigation bar 없이 tab과 back 메타데이터만 
     showsBackButton: false,
   });
   assert.equal(getNativeChromeState("/club").selectedTab, "club");
+  assert.equal(getNativeChromeState("/guest").selectedTab, "guest");
+  assert.equal(getNativeChromeState("/guest").title, "게스트");
   assert.equal(getNativeChromeState("/tournaments/abc").selectedTab, "tournaments");
   assert.equal(getNativeChromeState("/tournaments/abc").showsBackButton, true);
   assert.equal(getNativeChromeState("/tournaments/abc").showsNavigationBar, false);
