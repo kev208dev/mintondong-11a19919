@@ -61,91 +61,109 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  /* 민턴동 브랜드 색 (로고에서 추출) */
+  /* 민턴동 브랜드 색: fresh green palette */
+  --color-brand-green: var(--brand-green);
+  --color-brand-green-light: var(--brand-green-light);
   --color-brand-teal: var(--brand-teal);
   --color-brand-deep: var(--brand-deep);
+  --color-brand-dark: var(--brand-dark);
   --color-brand-mint: var(--brand-mint);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-wash: var(--brand-wash);
+  --color-brand-lime: var(--brand-lime);
+  --color-ink: var(--ink);
+  --color-off-white: var(--off-white);
+  --color-cool-white: var(--cool-white);
   --shadow-soft: var(--shadow-soft);
   --shadow-card: var(--shadow-card);
 }
 
 :root {
   --radius: 1rem;
-  /* 페이지 배경: 아주 옅은 민트/블루 */
-  --background: oklch(0.986 0.005 205);
-  --foreground: oklch(0.208 0.04 265.8);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.208 0.04 265.8);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.208 0.04 265.8);
-  --primary: oklch(0.6 0.105 203);
-  --primary-foreground: oklch(0.995 0.005 200);
-  --secondary: oklch(0.968 0.012 200);
-  --secondary-foreground: oklch(0.35 0.055 220);
-  --muted: oklch(0.968 0.008 220);
-  --muted-foreground: oklch(0.554 0.041 257.4);
-  --accent: oklch(0.959 0.028 194);
-  --accent-foreground: oklch(0.42 0.085 210);
+  --background: oklch(0.9823 0.0041 157.2);
+  --foreground: oklch(0.1978 0.011 151.1);
+  --card: oklch(1 0 89.9);
+  --card-foreground: oklch(0.1978 0.011 151.1);
+  --popover: oklch(1 0 89.9);
+  --popover-foreground: oklch(0.1978 0.011 151.1);
+  --primary: oklch(0.7213 0.1657 157.6);
+  /* #17C37B + white is only 2.30:1; Ink gives 7.89:1 for small labels/buttons. */
+  --primary-foreground: oklch(0.1978 0.011 151.1);
+  --secondary: oklch(0.9683 0.0281 165.5);
+  --secondary-foreground: oklch(0.5262 0.1223 157);
+  --muted: oklch(0.9672 0 89.9);
+  --muted-foreground: oklch(0.5493 0.0189 162.3);
+  --accent: oklch(0.9158 0.0718 164.6);
+  --accent-foreground: oklch(0.3669 0.0762 161.7);
   --destructive: oklch(0.55 0.17 25);
   --destructive-foreground: oklch(0.99 0.005 250);
-  --border: oklch(0.929 0.013 255.5);
-  --input: oklch(0.929 0.013 255.5);
-  --ring: oklch(0.6 0.105 203);
-  --brand-teal: oklch(0.615 0.105 206.4);
-  --brand-deep: oklch(0.44 0.115 249);
-  --brand-mint: oklch(0.828 0.119 178.9);
-  --brand-soft: oklch(0.959 0.028 194);
-  --shadow-soft: 0 1px 2px oklch(0.44 0.115 249 / 0.04);
-  --shadow-card: 0 4px 16px -12px oklch(0.44 0.115 249 / 0.14);
-  --chart-1: oklch(0.615 0.105 206.4);
-  --chart-2: oklch(0.828 0.119 178.9);
-  --chart-3: oklch(0.44 0.115 249);
-  --chart-4: oklch(0.755 0.122 196.2);
-  --chart-5: oklch(0.53 0.14 248.6);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.208 0.04 265.8);
-  --sidebar-primary: oklch(0.6 0.105 203);
-  --sidebar-primary-foreground: oklch(0.995 0.005 200);
-  --sidebar-accent: oklch(0.959 0.028 194);
-  --sidebar-accent-foreground: oklch(0.42 0.085 210);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.6 0.105 203);
+  --border: oklch(0.923 0.0158 160.6);
+  --input: oklch(0.923 0.0158 160.6);
+  --ring: oklch(0.7213 0.1657 157.6);
+  /* Public palette values, represented in OKLCH. */
+  --brand-green: oklch(0.7213 0.1657 157.6); /* #17C37B */
+  --brand-green-light: oklch(0.79 0.1603 158.9); /* #43D994 */
+  --brand-mint: oklch(0.8526 0.1236 162.8); /* #7BE8B7 */
+  --brand-soft: oklch(0.9158 0.0718 164.6); /* #B7F3D7 */
+  --brand-wash: oklch(0.9683 0.0281 165.5); /* #E4FBF0 */
+  --brand-lime: oklch(0.9428 0.1929 121.2); /* #D9FF57 */
+  --brand-deep: oklch(0.5262 0.1223 157); /* #0B7F4D */
+  --brand-dark: oklch(0.3669 0.0762 161.7); /* #094B32 */
+  /* Legacy names remain available to existing screens, but no longer mean teal/navy. */
+  --brand-teal: var(--brand-green);
+  --ink: oklch(0.1978 0.011 151.1); /* #121713 */
+  --off-white: oklch(0.9672 0 89.9); /* #F4F4F4 */
+  --cool-white: oklch(0.9823 0.0041 157.2); /* #F7FAF8 */
+  --shadow-soft: 0 1px 2px oklch(0.3669 0.0762 161.7 / 0.04);
+  --shadow-card: 0 4px 16px -12px oklch(0.3669 0.0762 161.7 / 0.14);
+  --chart-1: var(--brand-green);
+  --chart-2: var(--brand-mint);
+  --chart-3: var(--brand-deep);
+  --chart-4: var(--brand-green-light);
+  --chart-5: var(--brand-lime);
+  --sidebar: oklch(0.9823 0.0041 157.2);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--brand-green);
+  --sidebar-primary-foreground: var(--ink);
+  --sidebar-accent: var(--brand-wash);
+  --sidebar-accent-foreground: var(--brand-dark);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--brand-green);
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
+  --background: oklch(0.18 0.03 155);
+  --foreground: oklch(0.984 0.003 160);
+  --card: oklch(0.24 0.035 155);
+  --card-foreground: oklch(0.984 0.003 160);
+  --popover: oklch(0.24 0.035 155);
+  --popover-foreground: oklch(0.984 0.003 160);
+  --primary: oklch(0.7213 0.1657 157.6);
+  --primary-foreground: oklch(0.1978 0.011 151.1);
+  --secondary: oklch(0.29 0.04 160);
+  --secondary-foreground: oklch(0.95 0.04 160);
+  --muted: oklch(0.29 0.04 160);
+  --muted-foreground: oklch(0.75 0.04 160);
+  --accent: oklch(0.35 0.07 160);
+  --accent-foreground: oklch(0.95 0.04 160);
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
+  --ring: oklch(0.7213 0.1657 157.6);
+  --chart-1: var(--brand-green);
+  --chart-2: var(--brand-mint);
+  --chart-3: var(--brand-lime);
+  --chart-4: var(--brand-green-light);
+  --chart-5: var(--brand-deep);
+  --sidebar: oklch(0.208 0.04 155);
+  --sidebar-foreground: oklch(0.984 0.003 160);
+  --sidebar-primary: var(--brand-green);
+  --sidebar-primary-foreground: var(--ink);
+  --sidebar-accent: oklch(0.35 0.07 160);
+  --sidebar-accent-foreground: oklch(0.95 0.04 160);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --sidebar-ring: var(--brand-green);
 }
 
 @layer base {
@@ -196,16 +214,11 @@
 
 /* 민턴동 브랜드 유틸리티 */
 @utility brand-header {
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--brand-mint) 22%, var(--card)) 0%,
-    color-mix(in oklab, var(--brand-soft) 55%, var(--card)) 42%,
-    var(--card) 100%
-  );
+  background-color: var(--brand-wash);
 }
 
 @utility brand-gradient {
-  background-image: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-deep) 100%);
+  background-color: var(--brand-green);
 }
 
 @utility card-soft {

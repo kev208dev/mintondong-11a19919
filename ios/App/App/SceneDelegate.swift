@@ -279,7 +279,8 @@ private final class MintondongShellViewController: UIViewController,
     private func configureTabBar() {
         tabBar.translatesAutoresizingMaskIntoConstraints = false
         tabBar.delegate = self
-        tabBar.tintColor = .systemTeal
+        // 민턴동 primary (#17C37B); keep the native UITabBar/material appearance.
+        tabBar.tintColor = UIColor(red: 0.0902, green: 0.7647, blue: 0.4824, alpha: 1)
         tabBar.items = Tab.allCases.map { tab in
             let item = UITabBarItem(
                 title: tab.title,

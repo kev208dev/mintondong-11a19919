@@ -183,7 +183,7 @@ function HomePage() {
         )}
       </section>
 
-      <section className="rounded-2xl bg-brand-deep p-4 text-primary-foreground">
+      <section className="rounded-2xl bg-brand-deep p-4 text-white">
         <p className="text-[11px] font-semibold opacity-75">오늘 운동 요약</p>
         <p className="mt-0.5 truncate text-[15px] font-extrabold">{club.club.name}</p>
         <p className="text-[11px] opacity-80">
@@ -198,7 +198,7 @@ function HomePage() {
             { k: "미정", v: counts.MAYBE },
             { k: "완료 경기", v: doneCount },
           ].map((s) => (
-            <div key={s.k} className="rounded-xl bg-primary-foreground/15 py-2">
+            <div key={s.k} className="rounded-xl bg-white/15 py-2">
               <dd className="text-base font-extrabold tabular-nums">{s.v}</dd>
               <dt className="text-[10.5px] opacity-80">{s.k}</dt>
             </div>
@@ -207,13 +207,13 @@ function HomePage() {
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Link
             to="/club/attendance"
-            className="flex h-10 items-center justify-center rounded-xl bg-primary-foreground text-xs font-extrabold text-primary"
+            className="flex h-10 items-center justify-center rounded-xl bg-white text-xs font-extrabold text-brand-deep"
           >
             <UserCheck className="mr-1 size-4" /> 출석 체크
           </Link>
           <Link
             to="/games"
-            className="flex h-10 items-center justify-center rounded-xl bg-primary-foreground/20 text-xs font-extrabold"
+            className="flex h-10 items-center justify-center rounded-xl bg-white/20 text-xs font-extrabold"
           >
             <Zap className="mr-1 size-4" /> 경기 배정
           </Link>
