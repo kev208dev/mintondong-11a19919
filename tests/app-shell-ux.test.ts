@@ -9,6 +9,7 @@ import {
   pageTitle,
   usesNativeUIKitChrome,
 } from "../src/components/app/app-shell-state.ts";
+import { isNavigationCancellation } from "../src/lib/navigation/navigation-errors.ts";
 
 test("하단 탭은 홈·동호회·게스트·대회·마이 5개를 유지한다", () => {
   assert.deepEqual(BOTTOM_TAB_ROUTES, ["/", "/club", "/guest", "/tournaments", "/me"]);
@@ -17,10 +18,7 @@ test("하단 탭은 홈·동호회·게스트·대회·마이 5개를 유지한�
 test("동호회 root는 secondary navigation 없이 상태와 핵심 행동만 보여준다", () => {
   const shell = readFileSync("src/components/app/AppShell.tsx", "utf8");
   const clubRoot = readFileSync("src/routes/club.index.tsx", "utf8");
-  assert.match(
-    shell,
-    /isClubSection\(pathname\) && !isExactBottomTabDestination\(pathname, "\/club"\)/,
-  );
+  assert.doesNotMatch(shell, /ClubSectionNav/);
   assert.match(clubRoot, /오늘 운동/);
   assert.match(clubRoot, /QUICK_ACTIONS/);
   assert.match(clubRoot, /게스트 모집/);
@@ -144,4 +142,30 @@ test("ClubSwitcher는 seed store가 아닌 Supabase active club query를 유지�
   const source = readFileSync("src/components/app/ClubSwitcher.tsx", "utf8");
   assert.match(source, /listMyClubs/);
   assert.doesNotMatch(source, /useStore|SEED_STATE/);
+});
+
+test("알림은 자체 페이지 헤더 하나만 소유하고 빠른 실패를 사용한다", () => {
+  const shell = readFileSync("src/components/app/AppShell.tsx", "utf8");
+  const notifications = readFileSync("src/routes/notifications.tsx", "utf8");
+  assert.match(shell, /!pathname\.startsWith\("\/notifications"\)/);
+  assert.match(notifications, /<AppPageHeader[\s\S]*title="알림"/);
+  assert.match(notifications, /retry: 0/);
+  assert.match(notifications, /알림을 불러오지 못했어요/);
+  assert.doesNotMatch(notifications, /ChevronLeft/);
+});
+
+test("native tab navigation은 취소된 이동을 전역 오류로 재전파하지 않는다", () => {
+  const bridge = readFileSync("src/components/native/NativeRuntimeBridge.tsx", "utf8");
+  assert.match(bridge, /isNavigationCancellation/);
+  assert.match(bridge, /tab navigation failed/);
+  assert.match(bridge, /back navigation failed/);
+});
+
+test("AbortError와 TanStack CancelledError는 navigation 취소로 분류한다", () => {
+  assert.equal(
+    isNavigationCancellation(Object.assign(new Error("aborted"), { name: "AbortError" })),
+    true,
+  );
+  assert.equal(isNavigationCancellation(new Error("CancelledError")), true);
+  assert.equal(isNavigationCancellation(new Error("Supabase permission denied")), false);
 });

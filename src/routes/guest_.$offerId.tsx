@@ -1,13 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import {
-  Check,
-  ChevronLeft,
-  MapPin,
-  ParkingCircle,
-  ShowerHead,
-  Ticket,
-  UsersRound,
-} from "lucide-react";
+import { Check, MapPin, ParkingCircle, ShowerHead, Ticket, UsersRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { getGuestOfferFn } from "@/lib/guest/guest.functions";
@@ -41,19 +33,6 @@ function GuestOfferPage() {
   ] as const;
   return (
     <div className="space-y-6">
-      <button
-        type="button"
-        onClick={() =>
-          navigate({
-            to: "/guest/search",
-            search: { partySize: 4, startsOn: undefined, region: undefined },
-          })
-        }
-        className="flex min-h-11 items-center gap-1 text-sm font-bold text-foreground"
-      >
-        <ChevronLeft className="size-5" />
-        게스트
-      </button>
       <section className="pt-2">
         <p className="text-sm font-bold text-brand-green">{offer.clubName}</p>
         <h1 className="mt-2 page-heading">{offer.title}</h1>

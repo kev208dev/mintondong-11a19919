@@ -14,6 +14,7 @@ import { acceptAuthCallback } from "@/lib/auth/native-callback";
 import { safeNextPath } from "@/lib/auth/username";
 import { goBackOrFallback, resolveClubRouteBackFallback } from "@/lib/navigation/club-route-back";
 import { NativeChrome } from "@/lib/native/native-chrome";
+import { isNavigationCancellation } from "@/lib/navigation/navigation-errors";
 
 export function NativeRuntimeBridge() {
   const router = useRouter();
@@ -40,12 +41,18 @@ export function NativeRuntimeBridge() {
         await router.navigate({ to: next, replace: true });
       } catch (error) {
         authCallbackUrls.current.delete(url);
+        if (isNavigationCancellation(error)) return;
         console.error("[native-auth] OAuth callback failed", error);
-        await router.navigate({
-          to: "/auth",
-          search: { next: safeNextPath(sessionStorage.getItem(NEXT_STORAGE_KEY)) },
-          replace: true,
-        });
+        await router
+          .navigate({
+            to: "/auth",
+            search: { next: safeNextPath(sessionStorage.getItem(NEXT_STORAGE_KEY)) },
+            replace: true,
+          })
+          .catch((navigationError) => {
+            if (!isNavigationCancellation(navigationError))
+              console.error("[native-auth] callback recovery navigation failed", navigationError);
+          });
       }
     },
     [router],
@@ -89,7 +96,12 @@ export function NativeRuntimeBridge() {
 
       const networkListener = await Network.addListener("networkStatusChange", (status) => {
         setConnected(status.connected);
-        if (status.connected) void router.invalidate();
+        if (status.connected) {
+          void router.invalidate().catch((error) => {
+            if (!isNavigationCancellation(error))
+              console.error("[native] route refresh failed", error);
+          });
+        }
       });
       const backListener = await App.addListener("backButton", ({ canGoBack }) => {
         const openDialog = document.querySelector('[role="dialog"][data-state="open"]');
@@ -135,7 +147,10 @@ export function NativeRuntimeBridge() {
         const currentPathname = routeState.current.pathname;
         if (!isBottomTabRoute(route)) return;
         if (isExactBottomTabDestination(currentPathname, route)) return;
-        void router.navigate({ to: route });
+        void router.navigate({ to: route }).catch((error) => {
+          if (!isNavigationCancellation(error))
+            console.error("[native-chrome] tab navigation failed", error);
+        });
       });
       const backListener = await NativeChrome.addListener("backRequested", () => {
         const current = routeState.current;
@@ -155,7 +170,10 @@ export function NativeRuntimeBridge() {
               : "/";
 
         goBackOrFallback(router.history, () => {
-          void router.navigate({ to: fallback, replace: true });
+          void router.navigate({ to: fallback, replace: true }).catch((error) => {
+            if (!isNavigationCancellation(error))
+              console.error("[native-chrome] back navigation failed", error);
+          });
         });
       });
       if (cancelled) {

@@ -3,7 +3,6 @@ import { Capacitor } from "@capacitor/core";
 import { Bell, Home, Trophy, User, UserRoundPlus, Users } from "lucide-react";
 import { memo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ClubSectionNav } from "./ClubSectionNav";
 import { ClubSwitcher } from "./ClubSwitcher";
 import { PublicFooter } from "./PublicFooter";
 import { ClubRouteBackButton } from "./ClubRouteBackButton";
@@ -61,6 +60,9 @@ const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
                 preload="intent"
                 preloadDelay={0}
                 disabled={atDestination}
+                onClick={(event) => {
+                  if (atDestination) event.preventDefault();
+                }}
                 aria-current={atDestination ? "page" : undefined}
                 className={`relative mx-auto flex h-12 w-full max-w-[68px] touch-manipulation select-none flex-col items-center justify-center gap-0.5 rounded-[18px] text-xs font-bold transition-[color,background-color,transform] duration-150 active:scale-[0.96] ${
                   active ? "bg-foreground text-background" : "text-muted-foreground"
@@ -95,9 +97,9 @@ export function AppShell() {
   const showNativeInlineBack =
     usesUIKitChrome &&
     getNativeChromeState(pathname).showsBackButton &&
-    !pathname.startsWith("/clubs/find") &&
-    !pathname.startsWith("/clubs/new") &&
-    !pathname.startsWith("/tournaments/");
+    !pathname.startsWith("/clubs/") &&
+    !pathname.startsWith("/tournaments/") &&
+    !pathname.startsWith("/notifications");
   const pageOwnsHeading =
     pathname === "/" ||
     pathname === "/club" ||
@@ -197,9 +199,6 @@ export function AppShell() {
             </div>
           ) : null}
           {showNativeInlineBack ? <ClubRouteBackButton /> : null}
-          {isClubSection(pathname) && !isExactBottomTabDestination(pathname, "/club") ? (
-            <ClubSectionNav pathname={pathname} />
-          ) : null}
           {authFlow || usesUIKitChrome || pageOwnsHeading ? null : (
             <h1 className="mt-1 mb-3 text-[17px] font-extrabold tracking-tight text-foreground">
               {title}

@@ -43,6 +43,22 @@ export type ClubMemberRow = {
   level: number;
 };
 
+export type ClubJoinRequestStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export type ClubJoinRequest = {
+  id: string;
+  club_id: string;
+  user_id: string;
+  status: ClubJoinRequestStatus;
+  message: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  display_name?: string | null;
+  username?: string | null;
+};
+
 const CLUB_COLUMNS =
   "id, name, description, profile_image_url, cover_image_url, region:location, is_public, owner_id, member_count, lessons_enabled, session_label, session_time, created_at";
 
@@ -98,6 +114,9 @@ export const clubKeys = {
   detail: (id: string) => ["clubs", "detail", id] as const,
   members: (id: string, userId: string | null) => ["clubs", "members", id, userId] as const,
   membership: (id: string, userId: string | null) => ["clubs", "membership", id, userId] as const,
+  joinRequest: (id: string, userId: string | null) =>
+    ["clubs", "join-request", id, userId] as const,
+  joinRequests: (id: string) => ["clubs", "join-requests", id] as const,
   mine: (userId: string | null) => ["clubs", "mine", userId] as const,
   publicLessons: (id: string) => ["clubs", "public-lessons", id] as const,
 };
@@ -273,26 +292,87 @@ export async function createClub(input: CreateClubInput): Promise<ClubRow> {
   return club;
 }
 
-/**
- * 가입 신청. 공개 동호회는 즉시 active, 비공개는 pending 으로 생성된다(서버에서 결정).
- * 클라이언트가 role/status 를 지정할 수 없다.
- */
-export async function joinClub(clubId: string): Promise<ClubMemberRow> {
-  const { data, error } = await db.rpc("request_club_join", { p_club_id: clubId });
+function normalizeJoinRequest(row: Record<string, unknown>): ClubJoinRequest {
+  const status = String(row["status"] ?? "pending");
+  return {
+    id: String(row["id"]),
+    club_id: String(row["club_id"]),
+    user_id: String(row["user_id"]),
+    status:
+      status === "approved" || status === "rejected" || status === "cancelled" ? status : "pending",
+    message: (row["message"] as string | null) ?? null,
+    reviewed_by: (row["reviewed_by"] as string | null) ?? null,
+    reviewed_at: (row["reviewed_at"] as string | null) ?? null,
+    created_at: String(row["created_at"] ?? ""),
+    updated_at: String(row["updated_at"] ?? row["created_at"] ?? ""),
+    display_name: (row["display_name"] as string | null) ?? null,
+    username: (row["username"] as string | null) ?? null,
+  };
+}
+
+/** 가입 신청. 멤버십 row는 운영진 승인 전까지 생성/활성화하지 않는다. */
+export async function joinClub(clubId: string, message?: string): Promise<ClubJoinRequest> {
+  const result = message?.trim()
+    ? await db.rpc("request_club_join", { p_club_id: clubId, p_message: message.trim() })
+    : await db.rpc("request_club_join", { p_club_id: clubId });
+  const { data, error } = result;
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
-  if (!row) throw new Error("club join returned no membership");
-  const record = row as Record<string, unknown>;
-  return {
-    id: String(record["id"]),
-    club_id: String(record["club_id"]),
-    user_id: (record["user_id"] as string | null) ?? null,
-    name: String(record["name"] ?? ""),
-    role: record["role"] === "owner" || record["role"] === "admin" ? record["role"] : "member",
-    status: record["status"] === "pending" ? "pending" : "active",
-    joined_at: String(record["joined_at"] ?? record["created_at"] ?? ""),
-    level: Number(record["level"] ?? 0),
-  };
+  if (!row) throw new Error("club join request returned no row");
+  return normalizeJoinRequest(row as Record<string, unknown>);
+}
+
+export async function getClubJoinRequest(clubId: string, userId: string | null) {
+  if (!userId) return null;
+  const { data, error } = await db
+    .from("club_join_requests")
+    .select("id,club_id,user_id,status,message,reviewed_by,reviewed_at,created_at,updated_at")
+    .eq("club_id", clubId)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? normalizeJoinRequest(data as Record<string, unknown>) : null;
+}
+
+export async function cancelClubJoinRequest(requestId: string) {
+  const { data, error } = await db.rpc("cancel_club_join_request", { p_request_id: requestId });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) throw new Error("club join request cancellation returned no row");
+  return normalizeJoinRequest(row as Record<string, unknown>);
+}
+
+export async function requestClubJoinByCode(code: string, message?: string) {
+  const result = message?.trim()
+    ? await db.rpc("request_club_join_by_code", {
+        p_invite_code: code.trim(),
+        p_message: message.trim(),
+      })
+    : await db.rpc("request_club_join_by_code", { p_invite_code: code.trim() });
+  const { data, error } = result;
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) throw new Error("club join request returned no row");
+  return normalizeJoinRequest(row as Record<string, unknown>);
+}
+
+export async function listClubJoinRequests(clubId: string) {
+  const { data, error } = await db.rpc("list_club_join_requests", { p_club_id: clubId });
+  if (error) throw error;
+  return ((data ?? []) as Record<string, unknown>[]).map(normalizeJoinRequest);
+}
+
+export async function reviewClubJoinRequest(requestId: string, decision: "approved" | "rejected") {
+  const { data, error } = await db.rpc("review_club_join_request", {
+    p_request_id: requestId,
+    p_decision: decision,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) throw new Error("club join request review returned no row");
+  return normalizeJoinRequest(row as Record<string, unknown>);
 }
 
 /** 동호회 소유자용 멤버 관리 (승인 / 역할 변경) */

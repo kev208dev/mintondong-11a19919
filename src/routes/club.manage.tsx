@@ -14,6 +14,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { FinanceSection } from "@/components/app/FinanceSection";
 import { RoleBadges, RolesSection } from "@/components/app/RolesSection";
@@ -35,6 +36,8 @@ import { Input } from "@/components/ui/input";
 import { useStore } from "@/lib/badminton/store";
 import { ATTENDANCE_LABEL, LEVEL_LABEL } from "@/lib/badminton/types";
 import type { Place } from "@/lib/places/types";
+import { requestClubJoinByCode } from "@/lib/clubs/api";
+import { useAuth } from "@/lib/auth/AuthProvider";
 
 export const Route = createFileRoute("/club/manage")({
   head: () => ({
@@ -85,17 +88,9 @@ const triggerClass =
   "min-h-[56px] gap-2 px-3 py-2 no-underline hover:no-underline active:bg-accent/60";
 
 function ClubPage() {
-  const {
-    club,
-    clubs,
-    switchClub,
-    createClub,
-    joinClub,
-    leaveClub,
-    renameClub,
-    setCourtCount,
-    can,
-  } = useStore();
+  const { club, clubs, switchClub, createClub, leaveClub, renameClub, setCourtCount, can } =
+    useStore();
+  const { user } = useAuth();
   const canSettings = can("MANAGE_CLUB_SETTINGS");
   const canCourts = can("MANAGE_COURTS");
   const canInvite = can("INVITE_MEMBERS");
@@ -111,6 +106,15 @@ function ClubPage() {
   const [editLoc, setEditLoc] = useState(club.club.location);
   const [editPlace, setEditPlace] = useState<Place | null>(null);
   const [syncedId, setSyncedId] = useState(club.club.id);
+  const codeJoin = useMutation({
+    mutationFn: () => requestClubJoinByCode(code),
+    onSuccess: () => {
+      toast.success("가입 신청을 보냈어요. 운영진 승인을 기다려주세요.");
+      setJoinOpen(false);
+      setCode("");
+    },
+    onError: () => toast.error("초대 코드를 확인하지 못했어요."),
+  });
   if (syncedId !== club.club.id) {
     setSyncedId(club.club.id);
     setEditName(club.club.name);
@@ -222,17 +226,16 @@ function ClubPage() {
 
             <Button
               className="h-12 rounded-2xl font-bold"
-              disabled={!code.trim()}
               onClick={() => {
-                const res = joinClub(code);
-                if (res.ok) {
-                  toast.success(res.message);
-                  setJoinOpen(false);
-                  setCode("");
-                } else toast.error(res.message);
+                if (!user) {
+                  toast.error("로그인 후 가입 신청을 보내 주세요.");
+                  return;
+                }
+                codeJoin.mutate();
               }}
+              disabled={!code.trim() || codeJoin.isPending}
             >
-              가입하기
+              {codeJoin.isPending ? "신청 중..." : "가입 신청"}
             </Button>
           </DialogContent>
         </Dialog>

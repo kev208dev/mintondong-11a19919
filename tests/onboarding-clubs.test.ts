@@ -197,7 +197,7 @@ test("로그아웃은 계정별 query cache와 profile 상태를 함께 비운�
   assert.match(auth, /onboarding_completed_at/);
 });
 
-test("생성·가입 화면은 auth와 membership 로딩 완료 전 잘못된 CTA를 노출하지 않는다", () => {
+test("생성·가입 화면은 auth와 membership/request 로딩 완료 전 잘못된 CTA를 노출하지 않는다", () => {
   const createRoute = readFileSync(new URL("../src/routes/clubs.new.tsx", import.meta.url), "utf8");
   const detailRoute = readFileSync(
     new URL("../src/routes/clubs.$clubId.tsx", import.meta.url),
@@ -206,9 +206,9 @@ test("생성·가입 화면은 auth와 membership 로딩 완료 전 잘못된 CT
   assert.match(createRoute, /loading \|\| profileLoading \|\| profileStatus !== "ready"/);
   assert.match(detailRoute, /user && membershipQuery\.isLoading/);
   assert.match(detailRoute, /user && membershipQuery\.isError/);
-  assert.match(detailRoute, /setQueryData\(clubKeys\.membership/);
+  assert.match(detailRoute, /clubKeys\.joinRequest/);
   assert.match(createRoute, /refreshProfile\(\)/);
-  assert.match(detailRoute, /nextMembership\.status === "active"[\s\S]*refreshProfile\(\)/);
+  assert.match(detailRoute, /가입 신청을 보냈어요/);
 });
 
 test("헤더 동호회 선택은 seed store가 아닌 Supabase active club 목록을 사용한다", () => {

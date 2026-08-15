@@ -4,7 +4,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "test": "npm run test:lessons && npm run test:portone && npm run test:tournaments && npm run test:tournament-admin && npm run test:account-deletion && npm run test:apple-notifications && npm run test:onboarding && npm run test:onboarding-render && npm run test:app-shell && npm run test:auth-entry && npm run test:guest && npm run test:places && npm run test:date-time && node --test --experimental-strip-types tests/native-auth.test.ts",
+    "test": "npm run test:lessons && npm run test:portone && npm run test:tournaments && npm run test:tournament-admin && npm run test:account-deletion && npm run test:apple-notifications && npm run test:onboarding && npm run test:onboarding-render && npm run test:app-shell && npm run test:auth-entry && npm run test:guest && npm run test:places && npm run test:date-time && npm run test:club-join && node --test --experimental-strip-types tests/native-auth.test.ts",
     "dev": "node scripts/dev-with-env.mjs",
     "build": "vite build",
     "build:dev": "vite build --mode development",
@@ -25,6 +25,7 @@
     "test:guest": "node --test --experimental-strip-types tests/guest-marketplace.test.ts",
     "test:places": "node --test --experimental-strip-types tests/places.test.ts",
     "test:date-time": "node --test --experimental-strip-types tests/date-time.test.ts",
+    "test:club-join": "node --test --experimental-strip-types tests/club-join-approval.test.ts",
     "mobile:sync": "cap sync",
     "mobile:ios": "cap sync ios",
     "mobile:android": "cap sync android",

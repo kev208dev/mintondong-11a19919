@@ -18,22 +18,23 @@ import { NEXT_STORAGE_KEY } from "../lib/auth/providers";
 import { logOnboardingState } from "../lib/auth/onboarding-debug";
 import { resolvePostAuthRedirect } from "../lib/auth/onboarding-state";
 import { NativeRuntimeBridge } from "../components/native/NativeRuntimeBridge";
+import { isNavigationCancellation } from "../lib/navigation/navigation-errors";
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">페이지를 찾을 수 없어요</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          주소가 잘못되었거나 페이지가 이동되었을 수 있어요.
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            홈으로
           </Link>
         </div>
       </div>
@@ -48,27 +49,30 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+        <h1 className="text-xl font-extrabold tracking-tight text-foreground">
+          페이지를 불러오지 못했어요
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          잠시 후 다시 시도하거나 홈으로 이동해 주세요.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
-              router.invalidate();
+              void router.invalidate().catch((invalidateError) => {
+                if (!isNavigationCancellation(invalidateError))
+                  console.error("[root] retry failed", invalidateError);
+              });
               reset();
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            다시 시도
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            홈으로
           </a>
         </div>
       </div>
@@ -165,7 +169,9 @@ function PostAuthRedirect() {
       redirectTarget: target,
     });
     if (target) {
-      void router.navigate({ to: target, replace: true });
+      void router.navigate({ to: target, replace: true }).catch((error) => {
+        if (!isNavigationCancellation(error)) console.error("[auth] redirect failed", error);
+      });
       return;
     }
 
@@ -182,7 +188,9 @@ function PostAuthRedirect() {
     if (!next) return;
     sessionStorage.removeItem(NEXT_STORAGE_KEY);
     if (next.startsWith("/") && !next.startsWith("//") && next !== pathname) {
-      void router.navigate({ to: next });
+      void router.navigate({ to: next }).catch((error) => {
+        if (!isNavigationCancellation(error)) console.error("[auth] next navigation failed", error);
+      });
     }
   }, [user, profile, loading, profileLoading, profileStatus, pathname, router]);
   return null;

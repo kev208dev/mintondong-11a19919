@@ -1,32 +1,33 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Lock, MapPin, Users } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import {
+  cancelClubJoinRequest,
   clubKeys,
   clubMutationErrorMessage,
   getClub,
+  getClubJoinRequest,
   getMyMembership,
   joinClub,
 } from "@/lib/clubs/api";
+import { ClubRouteBackButton } from "@/components/app/ClubRouteBackButton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { ClubAvatar } from "./clubs.find";
 
 export const Route = createFileRoute("/clubs/$clubId")({
   component: ClubDetailLayout,
 });
 
-const TABS = [
-  { key: "home", label: "홈", to: "/clubs/$clubId" as const, exact: true },
-  { key: "schedule", label: "일정", to: "/clubs/$clubId/schedule" as const },
-  { key: "members", label: "멤버", to: "/clubs/$clubId/members" as const },
-];
-
 function ClubDetailLayout() {
   const { clubId } = Route.useParams();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { user, loading, refreshProfile } = useAuth();
+  const { user, loading } = useAuth();
   const queryClient = useQueryClient();
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [message, setMessage] = useState("");
 
   const clubQuery = useQuery({ queryKey: clubKeys.detail(clubId), queryFn: () => getClub(clubId) });
   const membershipQuery = useQuery({
@@ -34,31 +35,46 @@ function ClubDetailLayout() {
     queryFn: () => getMyMembership(clubId, user?.id ?? null),
     enabled: !!user,
   });
+  const joinRequestQuery = useQuery({
+    queryKey: clubKeys.joinRequest(clubId, user?.id ?? null),
+    queryFn: () => getClubJoinRequest(clubId, user?.id ?? null),
+    enabled: !!user,
+  });
 
   const join = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("unauthenticated");
-      return joinClub(clubId);
+      return joinClub(clubId, message);
     },
 
-    onSuccess: async (nextMembership) => {
-      queryClient.setQueryData(clubKeys.membership(clubId, user?.id ?? null), nextMembership);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: clubKeys.mine(user?.id ?? null) }),
-        queryClient.invalidateQueries({ queryKey: clubKeys.detail(clubId) }),
-        queryClient.invalidateQueries({ queryKey: clubKeys.members(clubId, user?.id ?? null) }),
-        ...(nextMembership.status === "active" ? [refreshProfile()] : []),
-      ]);
-      toast.success(
-        nextMembership.status === "active"
-          ? "가입 완료!"
-          : "가입 신청을 보냈어요. 승인을 기다려주세요.",
-      );
+    onSuccess: async (request) => {
+      setRequestOpen(false);
+      setMessage("");
+      queryClient.setQueryData(clubKeys.joinRequest(clubId, user?.id ?? null), request);
+      await queryClient.invalidateQueries({
+        queryKey: clubKeys.joinRequest(clubId, user?.id ?? null),
+      });
+      await queryClient.invalidateQueries({ queryKey: clubKeys.detail(clubId) });
+      toast.success("가입 신청을 보냈어요. 승인을 기다려주세요.");
     },
     onError: (error) => {
       console.error("[clubs] join failed", error);
       toast.error(clubMutationErrorMessage("join", error));
     },
+  });
+
+  const cancel = useMutation({
+    mutationFn: () => {
+      const request = joinRequestQuery.data;
+      if (!request) throw new Error("request not found");
+      return cancelClubJoinRequest(request.id);
+    },
+    onSuccess: async (request) => {
+      queryClient.setQueryData(clubKeys.joinRequest(clubId, user?.id ?? null), request);
+      await joinRequestQuery.refetch();
+      toast.success("가입 신청을 취소했어요.");
+    },
+    onError: (error) => toast.error(clubMutationErrorMessage("join", error)),
   });
 
   if (clubQuery.isLoading) {
@@ -96,8 +112,11 @@ function ClubDetailLayout() {
 
   const membership = membershipQuery.data;
 
+  const request = joinRequestQuery.data;
+
   return (
     <div className="-mt-1 space-y-3">
+      <ClubRouteBackButton />
       <div className="-mx-4">
         {club.cover_image_url ? (
           <img
@@ -148,6 +167,13 @@ function ClubDetailLayout() {
         >
           <Loader2 className="mr-1.5 size-4 animate-spin" /> 가입 상태 확인 중
         </div>
+      ) : user && joinRequestQuery.isLoading ? (
+        <div
+          className="flex h-11 items-center justify-center rounded-2xl bg-secondary text-xs font-bold text-muted-foreground"
+          aria-label="가입 신청 상태 확인 중"
+        >
+          <Loader2 className="mr-1.5 size-4 animate-spin" /> 가입 상태 확인 중
+        </div>
       ) : user && membershipQuery.isError ? (
         <div className="rounded-2xl bg-secondary p-3 text-center">
           <p className="text-xs font-bold text-muted-foreground">가입 상태를 확인하지 못했어요.</p>
@@ -157,6 +183,33 @@ function ClubDetailLayout() {
             className="mt-2 h-9 rounded-xl bg-card px-3 text-xs font-bold text-foreground"
           >
             다시 시도
+          </button>
+        </div>
+      ) : user && joinRequestQuery.isError ? (
+        <div className="rounded-2xl bg-secondary p-3 text-center">
+          <p className="text-xs font-bold text-muted-foreground">
+            가입 신청 상태를 확인하지 못했어요.
+          </p>
+          <button
+            type="button"
+            onClick={() => void joinRequestQuery.refetch()}
+            className="mt-2 h-9 rounded-xl bg-card px-3 text-xs font-bold text-foreground"
+          >
+            다시 시도
+          </button>
+        </div>
+      ) : request?.status === "pending" && membership?.status !== "active" ? (
+        <div className="space-y-2">
+          <div className="flex h-11 items-center justify-center rounded-2xl bg-secondary text-xs font-bold text-secondary-foreground">
+            승인 대기 중
+          </div>
+          <button
+            type="button"
+            onClick={() => cancel.mutate()}
+            disabled={cancel.isPending}
+            className="mx-auto flex min-h-10 items-center justify-center px-3 text-xs font-semibold text-muted-foreground underline-offset-4 hover:underline disabled:opacity-50"
+          >
+            {cancel.isPending ? "취소 중..." : "신청 취소"}
           </button>
         </div>
       ) : membership ? (
@@ -177,10 +230,16 @@ function ClubDetailLayout() {
         <button
           type="button"
           disabled={join.isPending}
-          onClick={() => join.mutate()}
+          onClick={() => setRequestOpen(true)}
           className="flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-extrabold text-primary-foreground disabled:opacity-60"
         >
-          {join.isPending ? <Loader2 className="size-4 animate-spin" /> : "가입하기"}
+          {join.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : request?.status === "rejected" ? (
+            "다시 신청"
+          ) : (
+            "가입 신청"
+          )}
         </button>
       ) : (
         <Link
@@ -192,31 +251,33 @@ function ClubDetailLayout() {
         </Link>
       )}
 
-      <nav className="-mx-4 border-b border-border px-4">
-        <ul className="flex items-center gap-1">
-          {TABS.map((t) => {
-            const href = t.to.replace("$clubId", clubId);
-            const active = t.exact ? pathname === href : pathname.startsWith(href);
-            return (
-              <li key={t.key} className="flex-1">
-                <Link
-                  to={t.to}
-                  params={{ clubId }}
-                  className={`flex h-10 items-center justify-center border-b-2 text-xs font-bold transition-colors ${
-                    active
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground"
-                  }`}
-                >
-                  {t.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
       <Outlet />
+
+      <Dialog open={requestOpen} onOpenChange={setRequestOpen}>
+        <DialogContent className="max-w-[340px] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>가입 신청</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm leading-6 text-muted-foreground">
+            {club.name}에 가입을 신청할까요?
+          </p>
+          <Input
+            value={message}
+            onChange={(event) => setMessage(event.target.value)}
+            maxLength={500}
+            placeholder="한마디 (선택)"
+            className="h-12 rounded-2xl"
+          />
+          <button
+            type="button"
+            disabled={join.isPending}
+            onClick={() => join.mutate()}
+            className="h-12 rounded-2xl bg-primary text-sm font-bold text-primary-foreground disabled:opacity-60"
+          >
+            {join.isPending ? "신청 중..." : "가입 신청"}
+          </button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
