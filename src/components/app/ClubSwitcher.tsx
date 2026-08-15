@@ -66,7 +66,7 @@ export function ClubSwitcher() {
       </DrawerTrigger>
       <DrawerContent className="mx-auto max-h-[85vh] max-w-md">
         <DrawerHeader className="flex flex-row items-center justify-between gap-2 text-left">
-          <DrawerTitle className="min-w-0 truncate text-base">동호회 선택</DrawerTitle>
+          <DrawerTitle className="min-w-0 truncate text-base">내 동호회</DrawerTitle>
           <DrawerClose asChild>
             <button
               type="button"
@@ -108,20 +108,20 @@ export function ClubSwitcher() {
             );
           })}
         </ul>
-        <div className="flex gap-2 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="space-y-2 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <Link
             to="/clubs/new"
             onClick={() => setOpen(false)}
-            className="flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary text-sm font-bold text-primary-foreground"
+            className="flex min-h-12 w-full items-center gap-3 rounded-2xl bg-primary px-4 text-sm font-bold text-primary-foreground"
           >
-            <Plus className="size-4 shrink-0" /> <span className="truncate">동호회 만들기</span>
+            <Plus className="size-4 shrink-0" /> <span className="truncate">새 동호회 만들기</span>
           </Link>
           <Link
             to="/clubs/find"
             onClick={() => setOpen(false)}
-            className="flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl bg-secondary text-sm font-bold text-secondary-foreground"
+            className="flex min-h-12 w-full items-center gap-3 rounded-2xl bg-secondary px-4 text-sm font-bold text-secondary-foreground"
           >
-            <Search className="size-4 shrink-0" /> <span className="truncate">참여하기</span>
+            <Search className="size-4 shrink-0" /> <span className="truncate">코드로 가입하기</span>
           </Link>
         </div>
       </DrawerContent>
