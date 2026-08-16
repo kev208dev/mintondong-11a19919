@@ -255,3 +255,4 @@ comment on function public.create_manual_tournament(
 ) is 'Service-role-only atomic creation of canonical + MANUAL source rows.';
 
 commit;
+;

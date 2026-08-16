@@ -220,3 +220,4 @@ grant execute on function public.process_apple_auth_notification(
 ) to service_role;
 
 commit;
+;

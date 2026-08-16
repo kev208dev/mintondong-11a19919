@@ -28,7 +28,7 @@ test("guest party size is limited to 2 through 20", () => {
 
 test("guest migration keeps capacity and notification writes server-controlled", () => {
   const migration = readFileSync(
-    "supabase/migrations/20260815120000_guest_marketplace_notifications.sql",
+    "supabase/archive-migrations/20260815120000_guest_marketplace_notifications.sql",
     "utf8",
   );
   assert.match(migration, /for update/);

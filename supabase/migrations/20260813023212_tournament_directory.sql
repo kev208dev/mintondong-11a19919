@@ -154,3 +154,4 @@ comment on table public.tournament_sync_runs is
   'Server-only bounded collector run log; no secret or response body is stored.';
 
 commit;
+;

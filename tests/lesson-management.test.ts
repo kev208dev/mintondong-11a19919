@@ -54,7 +54,7 @@ test("판매중지 상품은 checkout 판매 가능 판정을 통과하지 못�
 
 test("migration은 anon/member write와 다른 club_id 변조를 DB에서 차단한다", () => {
   const sql = readFileSync(
-    "supabase/migrations/20260812055429_coach_lesson_management.sql",
+    "supabase/migrations/20260812062356_coach_lesson_management_20260812.sql",
     "utf8",
   );
   assert.match(sql, /revoke all on table public\.coaches from public, anon, authenticated/i);
@@ -68,7 +68,7 @@ test("migration은 anon/member write와 다른 club_id 변조를 DB에서 차단
 
 test("hard delete 없이 is_active 판매중지와 유효 상품 constraint를 사용한다", () => {
   const sql = readFileSync(
-    "supabase/migrations/20260812055429_coach_lesson_management.sql",
+    "supabase/migrations/20260812062356_coach_lesson_management_20260812.sql",
     "utf8",
   );
   assert.match(sql, /add column if not exists is_active boolean not null default false/i);

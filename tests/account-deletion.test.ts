@@ -13,7 +13,7 @@ import {
 } from "../src/lib/auth/apple-revocation.server.ts";
 
 const migration = readFileSync(
-  new URL("../supabase/migrations/20260813035134_account_deletion.sql", import.meta.url),
+  new URL("../supabase/migrations/20260813050946_account_deletion.sql", import.meta.url),
   "utf8",
 );
 const serverFunction = readFileSync(

@@ -1,4 +1,4 @@
--- One-time club onboarding state (production migration 20260813132809).
+-- One-time club onboarding state.
 --
 -- Existing profiles predate this state and are backfilled as completed. New
 -- profiles keep the nullable default and complete only after an ACTIVE club
@@ -98,4 +98,4 @@ create trigger trg_complete_onboarding_for_active_membership
 after insert or update of status on public.club_members
 for each row execute function private.complete_onboarding_for_active_membership();
 
-commit;
+commit;;
