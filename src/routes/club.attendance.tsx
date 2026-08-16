@@ -1,11 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useDailyAttendance, useStore, seoulDateKey } from "@/lib/badminton/store";
 import type { DailyAttendanceStatus } from "@/lib/badminton/types";
+import {
+  formatDailyAttendanceDate,
+  shiftDailyAttendanceDate,
+} from "@/lib/badminton/daily-attendance";
 
 export const Route = createFileRoute("/club/attendance")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    date:
+      typeof search["date"] === "string" && /^\d{4}-\d{2}-\d{2}$/.test(search["date"] as string)
+        ? (search["date"] as string)
+        : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "오늘 출석 – 민턴동 동호회" },
@@ -22,25 +32,16 @@ const STATUS_OPTIONS: { key: DailyAttendanceStatus; label: string }[] = [
 ];
 
 function formatDate(dateKey: string) {
-  const date = new Date(`${dateKey}T12:00:00+09:00`);
-  return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    month: "long",
-    day: "numeric",
-    weekday: "long",
-  }).format(date);
-}
-
-function shiftDate(dateKey: string, days: number) {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  const next = new Date(Date.UTC(year!, month! - 1, day!, 12));
-  next.setUTCDate(next.getUTCDate() + days);
-  return next.toISOString().slice(0, 10);
+  return formatDailyAttendanceDate(dateKey);
 }
 
 function AttendancePage() {
+  const { date: requestedDate } = Route.useSearch();
   const { can, meMemberId, setDailyAttendance } = useStore();
   const [date, setDate] = useState(seoulDateKey());
+  useEffect(() => {
+    if (requestedDate) setDate(requestedDate);
+  }, [requestedDate]);
   const { members, counts, getStatus } = useDailyAttendance(date);
 
   if (!can("VIEW_ATTENDANCE")) {
@@ -66,7 +67,7 @@ function AttendancePage() {
             type="button"
             aria-label="이전 날짜"
             className="grid size-11 place-items-center rounded-xl text-foreground active:bg-secondary"
-            onClick={() => setDate((value) => shiftDate(value, -1))}
+            onClick={() => setDate((value) => shiftDailyAttendanceDate(value, -1))}
           >
             <ChevronLeft className="size-5" />
           </button>
@@ -77,7 +78,7 @@ function AttendancePage() {
             type="button"
             aria-label="다음 날짜"
             className="grid size-11 place-items-center rounded-xl text-foreground active:bg-secondary"
-            onClick={() => setDate((value) => shiftDate(value, 1))}
+            onClick={() => setDate((value) => shiftDailyAttendanceDate(value, 1))}
           >
             <ChevronRight className="size-5" />
           </button>

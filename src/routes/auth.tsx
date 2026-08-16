@@ -10,13 +10,10 @@ export const Route = createFileRoute("/auth")({
 
 function AuthLayout() {
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col items-center gap-3 pt-8 text-center">
-        <img src="/mintondong-icon.png" alt="" className="size-16 rounded-[20px]" />
+    <div className="auth-flow space-y-4">
+      <header className="flex flex-col items-center gap-2 pt-3 text-center">
+        <img src="/mintondong-icon.png" alt="" className="size-14 rounded-[18px]" />
         <h1 className="page-heading">민턴동에 로그인</h1>
-        <p className="text-base font-medium text-muted-foreground">
-          배드민턴을 더 가볍게 시작하세요.
-        </p>
       </header>
       <Outlet />
     </div>

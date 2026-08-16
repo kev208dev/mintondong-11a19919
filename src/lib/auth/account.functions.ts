@@ -89,13 +89,29 @@ export const signUpWithUsername = createServerFn({ method: "POST" })
     }
 
     const userId = created.data.user.id;
-    const { data: profile, error: profileError } = await admin
-      .from("profiles")
-      .select("username")
-      .eq("id", userId)
-      .maybeSingle();
+    // auth.users trigger와 profiles 조회 사이의 짧은 커밋 지연은 가입 실패가 아니다.
+    // 최대 1초 동안만 bounded retry하고, 실제 DB 오류는 로그에 남긴다.
+    let profile: { username: string | null } | null = null;
+    let profileError: { code?: string; message?: string } | null = null;
+    for (const delay of [0, 150, 300, 500]) {
+      if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+      const result = await admin.from("profiles").select("username").eq("id", userId).maybeSingle();
+      profile = result.data;
+      profileError = result.error;
+      if (!profileError && profile) break;
+    }
 
-    if (profileError || !profile || normalizeUsername(String(profile.username ?? "")) !== username) {
+    if (
+      profileError ||
+      !profile ||
+      normalizeUsername(String(profile.username ?? "")) !== username
+    ) {
+      if (profileError) {
+        console.error("[auth] signup profile hydration failed", {
+          code: profileError.code,
+          message: profileError.message,
+        });
+      }
       // 프로필/아이디 확보 실패 → 방금 만든 계정을 롤백한다.
       await admin.auth.admin.deleteUser(userId);
       throw new Error("아이디를 저장하지 못했어요. 다른 아이디로 다시 시도해 주세요.");

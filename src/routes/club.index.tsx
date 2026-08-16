@@ -122,6 +122,7 @@ function ClubHomePage() {
           </div>
           <Link
             to="/club/attendance"
+            search={{ date: undefined }}
             className="flex min-h-11 shrink-0 items-center gap-1 rounded-xl px-2 text-sm font-bold text-primary active:bg-primary/10"
           >
             자세히

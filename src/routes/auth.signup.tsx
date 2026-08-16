@@ -101,15 +101,11 @@ function SignUpPage() {
   };
 
   return (
-    <section className="rounded-3xl border border-border bg-card p-5">
+    <section className="rounded-3xl border border-border bg-card p-4">
       <h2 className="text-base font-extrabold text-foreground">회원가입</h2>
-      <p className="mt-1 text-xs text-muted-foreground">
-        아이디와 비밀번호로 로그인해요. 이메일은 비밀번호 찾기 및 계정 복구에만 사용돼요.
-      </p>
-
-      <div className="mt-4 space-y-2">
+      <div className="mt-3 space-y-1.5">
         <Input
-          className="h-12 rounded-2xl"
+          className="h-11 rounded-2xl"
           placeholder="아이디 (영문 소문자·숫자·_ 4~20자)"
           autoCapitalize="none"
           autoComplete="username"
@@ -124,7 +120,7 @@ function SignUpPage() {
           <p className="px-1 text-[11px] font-semibold text-muted-foreground">{idNote}</p>
         ) : null}
         <Input
-          className="h-12 rounded-2xl"
+          className="h-11 rounded-2xl"
           type="password"
           autoComplete="new-password"
           placeholder="비밀번호 (8자 이상)"
@@ -132,7 +128,7 @@ function SignUpPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
         <Input
-          className="h-12 rounded-2xl"
+          className="h-11 rounded-2xl"
           type="password"
           autoComplete="new-password"
           placeholder="비밀번호 확인"
@@ -140,13 +136,13 @@ function SignUpPage() {
           onChange={(e) => setPassword2(e.target.value)}
         />
         <Input
-          className="h-12 rounded-2xl"
+          className="h-11 rounded-2xl"
           placeholder="닉네임 (2~20자)"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
         />
         <Input
-          className="h-12 rounded-2xl"
+          className="h-11 rounded-2xl"
           type="email"
           autoComplete="email"
           placeholder="복구 이메일"
@@ -160,7 +156,7 @@ function SignUpPage() {
         {emailNote ? (
           <p className="px-1 text-[11px] font-semibold text-destructive">{emailNote}</p>
         ) : null}
-        <Button className="h-12 w-full rounded-2xl font-bold" disabled={busy} onClick={submit}>
+        <Button className="h-11 w-full rounded-2xl font-bold" disabled={busy} onClick={submit}>
           {busy ? "가입 중..." : "가입하기"}
         </Button>
       </div>

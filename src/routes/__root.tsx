@@ -205,10 +205,30 @@ function RootComponent() {
         <NativeRuntimeBridge />
         <StoreProvider>
           <PostAuthRedirect />
-          <AppShell />
+          <AuthBootstrapGate />
           <Toaster position="top-center" />
         </StoreProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function AuthBootstrapGate() {
+  const { user, loading, profileLoading } = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAuthPage = pathname === "/auth" || pathname.startsWith("/auth/");
+
+  // 인증 화면은 세션 확인 중에도 즉시 보여준다. 인증된 세션이 있는 경우에만
+  // 프로필/온보딩 데이터가 준비될 때까지 앱 화면 진입을 잠깐 보류한다.
+  if (!isAuthPage && (loading || (Boolean(user) && profileLoading))) {
+    return (
+      <div className="app-shell mx-auto flex h-dvh w-full max-w-md items-center justify-center bg-background px-6">
+        <div className="text-center" role="status" aria-live="polite">
+          <img src="/mintondong-icon.png" alt="민턴동" className="mx-auto size-14 rounded-2xl" />
+          <p className="mt-4 text-sm font-bold text-foreground">민턴동을 준비하고 있어요</p>
+        </div>
+      </div>
+    );
+  }
+  return <AppShell />;
 }

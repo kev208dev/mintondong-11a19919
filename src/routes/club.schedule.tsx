@@ -28,6 +28,7 @@ function SchedulePage() {
         </p>
         <Link
           to="/club/attendance"
+          search={{ date: undefined }}
           className="mt-3 flex h-10 items-center justify-center rounded-xl bg-primary text-xs font-bold text-primary-foreground"
         >
           <CalendarDays className="mr-1 size-4" /> 오늘 출석 체크하기

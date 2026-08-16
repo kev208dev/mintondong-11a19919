@@ -134,26 +134,26 @@ function LoginPage() {
   };
 
   return (
-    <section className="surface-card p-5">
-      <div className="space-y-3">
+    <section className="surface-card p-4">
+      <div className="space-y-2">
         <label className="block text-sm font-bold text-foreground" htmlFor="login-id">
           아이디
         </label>
         <Input
           id="login-id"
-          className="h-13 rounded-2xl bg-secondary text-base shadow-none"
+          className="h-11 rounded-2xl bg-secondary text-base shadow-none"
           autoComplete="username"
           autoCapitalize="none"
           placeholder="아이디"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <label className="block pt-2 text-sm font-bold text-foreground" htmlFor="login-pw">
+        <label className="block pt-1 text-sm font-bold text-foreground" htmlFor="login-pw">
           비밀번호
         </label>
         <Input
           id="login-pw"
-          className="h-13 rounded-2xl bg-secondary text-base shadow-none"
+          className="h-11 rounded-2xl bg-secondary text-base shadow-none"
           type="password"
           autoComplete="current-password"
           placeholder="비밀번호"
@@ -164,7 +164,7 @@ function LoginPage() {
           }}
         />
         <Button
-          className="h-13 w-full rounded-2xl bg-brand-green text-base font-extrabold text-foreground hover:bg-brand-green-light"
+          className="h-11 w-full rounded-2xl bg-brand-green text-base font-extrabold text-foreground hover:bg-brand-green-light"
           disabled={busy !== null || !username.trim() || !password}
           onClick={submit}
         >
@@ -172,7 +172,7 @@ function LoginPage() {
         </Button>
       </div>
 
-      <div className="mt-4 flex items-center justify-center gap-3 text-sm font-bold">
+      <div className="mt-3 flex items-center justify-center gap-3 text-sm font-bold">
         <Link to="/auth/signup" search={{ next }} className="text-primary">
           회원가입
         </Link>
@@ -182,7 +182,7 @@ function LoginPage() {
         </Link>
       </div>
 
-      <div className="my-3.5 flex items-center gap-3">
+      <div className="my-2.5 flex items-center gap-3">
         <span className="h-px flex-1 bg-border" />
         <span className="shrink-0 text-sm font-bold text-muted-foreground">또는 계속하기</span>
         <span className="h-px flex-1 bg-border" />
@@ -190,7 +190,7 @@ function LoginPage() {
 
       <SocialLoginButtons busy={busy} onSelect={(provider) => void social(provider)} />
 
-      <p className="mt-4 text-center text-sm leading-relaxed text-muted-foreground">
+      <p className="mt-3 text-center text-xs leading-relaxed text-muted-foreground">
         로그인하면 민턴동{" "}
         <Link to="/terms" className="underline underline-offset-2">
           이용약관

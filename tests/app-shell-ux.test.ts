@@ -10,6 +10,10 @@ import {
   usesNativeUIKitChrome,
 } from "../src/components/app/app-shell-state.ts";
 import { isNavigationCancellation } from "../src/lib/navigation/navigation-errors.ts";
+import {
+  formatDailyAttendanceDate,
+  shiftDailyAttendanceDate,
+} from "../src/lib/badminton/daily-attendance.ts";
 
 test("하단 탭은 홈·동호회·게스트·대회·마이 5개를 유지한다", () => {
   assert.deepEqual(BOTTOM_TAB_ROUTES, ["/", "/club", "/guest", "/tournaments", "/me"]);
@@ -60,6 +64,14 @@ test("홈은 일정·장소가 아닌 날짜 단위 출석 요약을 우선한�
   assert.match(attendance, /ATTENDING|NOT_ATTENDING|UNDECIDED/);
   assert.match(store, /setDailyAttendance/);
   assert.match(store, /seoulDateKey/);
+  assert.match(home, /formatDailyAttendanceDate/);
+  assert.match(home, /shiftDailyAttendanceDate/);
+});
+
+test("홈 출석 날짜는 한국어 날짜와 date-only 이동을 사용한다", () => {
+  assert.match(formatDailyAttendanceDate("2026-08-16"), /2026년 8월 16일/);
+  assert.equal(shiftDailyAttendanceDate("2026-08-31", 1), "2026-09-01");
+  assert.equal(shiftDailyAttendanceDate("2026-01-01", -1), "2025-12-31");
 });
 
 test("날짜 출석 migration은 하루 한 건 unique와 멤버 RLS를 보장한다", () => {
@@ -86,6 +98,15 @@ test("인증과 온보딩 route에서는 BottomNav를 숨긴다", () => {
   for (const pathname of ["/", "/club", "/guest", "/tournaments", "/me", "/clubs/find"]) {
     assert.equal(hidesBottomNavigation(pathname), false, pathname);
   }
+});
+
+test("인증 bootstrap은 세션·프로필 준비 전 앱 화면 진입을 보류한다", () => {
+  const root = readFileSync("src/routes/__root.tsx", "utf8");
+  const auth = readFileSync("src/lib/auth/AuthProvider.tsx", "utf8");
+  assert.match(root, /AuthBootstrapGate/);
+  assert.match(root, /Boolean\(user\) && profileLoading/);
+  assert.match(auth, /bootstrapStatus/);
+  assert.match(auth, /SESSION_READY/);
 });
 
 test("현재 탭의 정확한 목적지만 재이동을 막는다", () => {

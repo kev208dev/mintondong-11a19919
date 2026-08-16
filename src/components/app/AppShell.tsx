@@ -167,9 +167,11 @@ export function AppShell() {
         className="app-scroll-region min-h-0 flex-1 overflow-y-auto"
       >
         <main
-          className={`px-4 pt-3 ${
+          className={`px-4 ${authFlow ? "pt-0" : "pt-3"} ${
             hideBottomNav
-              ? "pb-[max(2rem,env(safe-area-inset-bottom))]"
+              ? authFlow
+                ? "pb-4"
+                : "pb-[max(2rem,env(safe-area-inset-bottom))]"
               : showPublicFooter
                 ? "pb-8"
                 : isNativePlatform

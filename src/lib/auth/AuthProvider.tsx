@@ -34,6 +34,7 @@ type AuthValue = {
   /** 프로필을 아직 불러오는 중인지 (username 온보딩 판단용) */
   profileLoading: boolean;
   profileStatus: ProfileResolution;
+  bootstrapStatus: "UNKNOWN" | "AUTHENTICATING" | "SESSION_READY" | "PROFILE_READY" | "APP_READY";
   refreshProfile: () => Promise<void>;
   establishSession: (tokens: { access_token: string; refresh_token: string }) => Promise<void>;
   signOut: () => Promise<void>;
@@ -46,6 +47,7 @@ const AuthContext = createContext<AuthValue>({
   loading: true,
   profileLoading: true,
   profileStatus: "loading",
+  bootstrapStatus: "UNKNOWN",
   refreshProfile: async () => {},
   establishSession: async () => {},
   signOut: async () => {},
@@ -85,11 +87,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfileLoading(true);
     setProfileStatus("loading");
     try {
-      const result = await supabase
+      let result = await supabase
         .from("profiles")
         .select("id, display_name, avatar_url, username, role, onboarding_completed_at")
         .eq("id", id)
         .maybeSingle();
+      for (const delay of [150, 300, 500]) {
+        if (!result.error && result.data) break;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        result = await supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url, username, role, onboarding_completed_at")
+          .eq("id", id)
+          .maybeSingle();
+      }
       if (result.error) throw result.error;
       const row = result.data;
       if (currentUserId.current !== id || profileRequestId.current !== requestId) return;
@@ -160,6 +171,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       profileLoading,
       profileStatus,
+      bootstrapStatus: loading
+        ? "AUTHENTICATING"
+        : session
+          ? profileLoading
+            ? "SESSION_READY"
+            : profileStatus === "ready"
+              ? "APP_READY"
+              : "PROFILE_READY"
+          : "APP_READY",
       refreshProfile: async () => {
         if (userId) await loadProfile(userId);
       },
