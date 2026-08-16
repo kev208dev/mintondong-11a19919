@@ -49,7 +49,10 @@ function showsPublicFooter(pathname: string) {
 
 const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
   return (
-    <nav className="fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
+    <nav
+      data-web-bottom-nav="true"
+      className="fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
+    >
       <ul className="grid grid-cols-5 gap-1 px-2 pt-1.5">
         {TABS.map(({ to, label, icon: Icon }) => {
           const active = isTabActive(to, pathname);
@@ -93,7 +96,8 @@ export function AppShell() {
   const showPublicFooter = showsPublicFooter(pathname);
   const hideBottomNav = hidesBottomNavigation(pathname);
   const authFlow = pathname === "/auth" || pathname.startsWith("/auth/");
-  const usesUIKitChrome = usesNativeUIKitChrome(Capacitor.getPlatform());
+  const isNativePlatform = Capacitor.isNativePlatform();
+  const usesUIKitChrome = isNativePlatform && usesNativeUIKitChrome(Capacitor.getPlatform());
   const showNativePrimaryControls = usesUIKitChrome && showsNativePrimaryControls(pathname);
   const isClubSubroute = isClubSection(pathname) && !isExactBottomTabDestination(pathname, "/club");
   const showNativeInlineBack =
@@ -126,7 +130,7 @@ export function AppShell() {
 
   return (
     <div className="app-shell mx-auto flex h-dvh min-h-0 w-full max-w-md flex-col overflow-hidden bg-background">
-      {authFlow || usesUIKitChrome ? null : (
+      {authFlow || isNativePlatform ? null : (
         <header className="z-20 shrink-0 border-b border-border bg-card/95 backdrop-blur pt-[env(safe-area-inset-top)]">
           <div className="flex h-[54px] items-center gap-1 px-3">
             <Link to="/" aria-label="민턴동 홈" className="shrink-0">
@@ -168,7 +172,7 @@ export function AppShell() {
               ? "pb-[max(2rem,env(safe-area-inset-bottom))]"
               : showPublicFooter
                 ? "pb-8"
-                : usesUIKitChrome
+                : isNativePlatform
                   ? "pb-[calc(4rem+env(safe-area-inset-bottom))]"
                   : "pb-[calc(4.5rem+env(safe-area-inset-bottom))]"
           }`}
@@ -206,7 +210,7 @@ export function AppShell() {
           ) : showNativeInlineBack ? (
             <ClubRouteBackButton />
           ) : null}
-          {authFlow || usesUIKitChrome || pageOwnsHeading || isClubSubroute ? null : (
+          {authFlow || isNativePlatform || pageOwnsHeading || isClubSubroute ? null : (
             <h1 className="mt-1 mb-3 text-[17px] font-extrabold tracking-tight text-foreground">
               {title}
             </h1>
@@ -217,11 +221,11 @@ export function AppShell() {
         </main>
 
         {showPublicFooter ? (
-          <PublicFooter nativeTabBar={usesUIKitChrome && !hideBottomNav} />
+          <PublicFooter nativeTabBar={isNativePlatform && !hideBottomNav} />
         ) : null}
       </div>
 
-      {hideBottomNav || usesUIKitChrome ? null : <BottomNav pathname={pathname} />}
+      {hideBottomNav || isNativePlatform ? null : <BottomNav pathname={pathname} />}
     </div>
   );
 }

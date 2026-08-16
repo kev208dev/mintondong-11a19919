@@ -89,8 +89,10 @@ test("iOS native는 CSS glass nav 대신 UIKit chrome을 사용한다", () => {
   const footer = readFileSync("src/components/app/PublicFooter.tsx", "utf8");
   const styles = readFileSync("src/styles.css", "utf8");
   assert.match(shell, /usesNativeUIKitChrome/);
-  assert.match(shell, /hideBottomNav \|\| usesUIKitChrome/);
-  assert.match(shell, /authFlow \|\| usesUIKitChrome/);
+  assert.match(shell, /const isNativePlatform = Capacitor\.isNativePlatform\(\)/);
+  assert.match(shell, /hideBottomNav \|\| isNativePlatform/);
+  assert.match(shell, /authFlow \|\| isNativePlatform/);
+  assert.match(shell, /data-web-bottom-nav/);
   assert.match(shell, /!pathname\.startsWith\("\/tournaments\/"\)/);
   assert.match(shell, /isClubSubroute/);
   assert.match(shell, /<AppPageHeader title=\{title\} backLabel="동호회" fallback="\/club"/);
