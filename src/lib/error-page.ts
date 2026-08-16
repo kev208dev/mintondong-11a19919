@@ -3,7 +3,7 @@ export function renderErrorPage(): string {
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
-    <title>페이지를 불러오지 못했어요</title>
+    <title>화면을 준비하지 못했어요</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       body { font: 15px/1.5 system-ui, -apple-system, sans-serif; background: #fafafa; color: #111; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
@@ -18,7 +18,7 @@ export function renderErrorPage(): string {
   </head>
   <body>
     <div class="card">
-      <h1>페이지를 불러오지 못했어요</h1>
+      <h1>화면을 준비하지 못했어요</h1>
       <p>잠시 후 다시 시도하거나 홈으로 이동해 주세요.</p>
       <div class="actions">
         <button class="primary" onclick="location.reload()">다시 시도</button>

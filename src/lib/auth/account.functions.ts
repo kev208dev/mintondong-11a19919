@@ -85,7 +85,7 @@ export const signUpWithUsername = createServerFn({ method: "POST" })
           "이 이메일로는 새 계정을 만들 수 없어요. 기존 계정이 있다면 로그인 또는 비밀번호 찾기를 이용해 주세요.",
         );
       }
-      throw new Error("회원가입에 실패했어요. 잠시 후 다시 시도해 주세요.");
+      throw new Error("가입을 완료하지 못했어요. 잠시 후 다시 시도해 주세요.");
     }
 
     const userId = created.data.user.id;

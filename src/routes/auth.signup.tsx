@@ -87,7 +87,7 @@ function SignUpPage() {
       const message =
         error instanceof Error && error.message && error.message.length < 120
           ? error.message
-          : "회원가입에 실패했어요. 잠시 후 다시 시도해 주세요.";
+          : "가입을 완료하지 못했어요. 잠시 후 다시 시도해 주세요.";
 
       if (message.startsWith("이 이메일로는 새 계정을 만들 수 없어요.")) {
         setEmailNote(message);

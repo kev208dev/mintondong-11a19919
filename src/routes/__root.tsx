@@ -50,7 +50,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-extrabold tracking-tight text-foreground">
-          페이지를 불러오지 못했어요
+          화면을 준비하지 못했어요
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           잠시 후 다시 시도하거나 홈으로 이동해 주세요.
