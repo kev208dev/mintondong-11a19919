@@ -7,7 +7,6 @@ import { listGuestOffersFn } from "@/lib/guest/guest.functions";
 import { calculateGuestBookingPrice } from "@/lib/guest/guest-core";
 
 export const Route = createFileRoute("/guest/search")({
-  ssr: false,
   beforeLoad: () => {
     throw redirect({ to: "/" });
   },

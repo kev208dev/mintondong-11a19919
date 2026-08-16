@@ -16,7 +16,6 @@ import {
 import { portOnePublicConfig } from "@/config/portone";
 
 export const Route = createFileRoute("/guest_/$offerId/checkout")({
-  ssr: false,
   beforeLoad: () => {
     throw redirect({ to: "/" });
   },

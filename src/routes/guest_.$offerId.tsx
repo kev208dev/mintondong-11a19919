@@ -6,7 +6,6 @@ import { getGuestOfferFn } from "@/lib/guest/guest.functions";
 import { useAuth } from "@/lib/auth/AuthProvider";
 
 export const Route = createFileRoute("/guest_/$offerId")({
-  ssr: false,
   beforeLoad: () => {
     throw redirect({ to: "/" });
   },

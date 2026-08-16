@@ -7,7 +7,6 @@ import { DatePickerSheet } from "@/components/date-time/DatePickerSheet";
 import { dateOnlyFromDate } from "@/components/date-time/format";
 
 export const Route = createFileRoute("/guest")({
-  ssr: false,
   beforeLoad: () => {
     throw redirect({ to: "/" });
   },
