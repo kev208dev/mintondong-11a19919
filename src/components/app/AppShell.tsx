@@ -1,6 +1,6 @@
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import { Capacitor } from "@capacitor/core";
-import { Bell, Home, Trophy, User, UserRoundPlus, Users } from "lucide-react";
+import { Bell, Home, Trophy, User, Users } from "lucide-react";
 import { memo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ClubSwitcher } from "./ClubSwitcher";
@@ -22,7 +22,6 @@ import {
 const TABS = [
   { to: "/", label: "홈", icon: Home },
   { to: "/club", label: "동호회", icon: Users },
-  { to: "/guest", label: "게스트", icon: UserRoundPlus },
   { to: "/tournaments", label: "대회", icon: Trophy },
   { to: "/me", label: "마이", icon: User },
 ] as const;
@@ -30,7 +29,6 @@ const TABS = [
 function isTabActive(to: string, pathname: string) {
   if (to === "/") return pathname === "/" || pathname.startsWith("/clubs/find");
   if (to === "/club") return isClubSection(pathname);
-  if (to === "/guest") return pathname === "/guest" || pathname.startsWith("/guest/");
   return pathname === to || pathname.startsWith(`${to}/`);
 }
 
@@ -53,7 +51,7 @@ const BottomNav = memo(function BottomNav({ pathname }: { pathname: string }) {
       data-web-bottom-nav="true"
       className="fixed bottom-0 left-1/2 z-30 w-full max-w-md -translate-x-1/2 bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
     >
-      <ul className="grid grid-cols-5 gap-1 px-2 pt-1.5">
+      <ul className="grid grid-cols-4 gap-1 px-2 pt-1.5">
         {TABS.map(({ to, label, icon: Icon }) => {
           const active = isTabActive(to, pathname);
           const atDestination = isExactBottomTabDestination(pathname, to);
@@ -96,7 +94,7 @@ export function AppShell() {
   const showPublicFooter = showsPublicFooter(pathname);
   const hideBottomNav = hidesBottomNavigation(pathname);
   const authFlow = pathname === "/auth" || pathname.startsWith("/auth/");
-  const isNativePlatform = Capacitor.isNativePlatform();
+  const isNativePlatform = Capacitor.getPlatform() === "ios" || Capacitor.isNativePlatform();
   const usesUIKitChrome = isNativePlatform && usesNativeUIKitChrome(Capacitor.getPlatform());
   const showNativePrimaryControls = usesUIKitChrome && showsNativePrimaryControls(pathname);
   const isClubSubroute = isClubSection(pathname) && !isExactBottomTabDestination(pathname, "/club");
@@ -110,7 +108,6 @@ export function AppShell() {
   const pageOwnsHeading =
     pathname === "/" ||
     pathname === "/club" ||
-    pathname === "/guest" ||
     pathname === "/tournaments" ||
     pathname === "/me" ||
     pathname === "/notifications";

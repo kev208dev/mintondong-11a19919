@@ -15,8 +15,8 @@ import {
   shiftDailyAttendanceDate,
 } from "../src/lib/badminton/daily-attendance.ts";
 
-test("하단 탭은 홈·동호회·게스트·대회·마이 5개를 유지한다", () => {
-  assert.deepEqual(BOTTOM_TAB_ROUTES, ["/", "/club", "/guest", "/tournaments", "/me"]);
+test("출시 하단 탭은 홈·동호회·대회·마이 4개다", () => {
+  assert.deepEqual(BOTTOM_TAB_ROUTES, ["/", "/club", "/tournaments", "/me"]);
 });
 
 test("동호회 root는 secondary navigation 없이 상태와 핵심 행동만 보여준다", () => {
@@ -97,7 +97,7 @@ test("인증과 온보딩 route에서는 BottomNav를 숨긴다", () => {
   ]) {
     assert.equal(hidesBottomNavigation(pathname), true, pathname);
   }
-  for (const pathname of ["/", "/club", "/guest", "/tournaments", "/me", "/clubs/find"]) {
+  for (const pathname of ["/", "/club", "/tournaments", "/me", "/clubs/find"]) {
     assert.equal(hidesBottomNavigation(pathname), false, pathname);
   }
 });
@@ -137,7 +137,7 @@ test("iOS native는 CSS glass nav 대신 UIKit chrome을 사용한다", () => {
   const footer = readFileSync("src/components/app/PublicFooter.tsx", "utf8");
   const styles = readFileSync("src/styles.css", "utf8");
   assert.match(shell, /usesNativeUIKitChrome/);
-  assert.match(shell, /const isNativePlatform = Capacitor\.isNativePlatform\(\)/);
+  assert.match(shell, /const isNativePlatform = Capacitor\.getPlatform\(\) === "ios"/);
   assert.match(shell, /hideBottomNav \|\| isNativePlatform/);
   assert.match(shell, /authFlow \|\| isNativePlatform/);
   assert.match(shell, /data-web-bottom-nav/);
@@ -163,8 +163,7 @@ test("iOS는 상단 native navigation bar 없이 tab과 back 메타데이터만 
     showsBackButton: false,
   });
   assert.equal(getNativeChromeState("/club").selectedTab, "club");
-  assert.equal(getNativeChromeState("/guest").selectedTab, "guest");
-  assert.equal(getNativeChromeState("/guest").title, "게스트");
+  assert.equal(getNativeChromeState("/guest").selectedTab, "home");
   assert.equal(getNativeChromeState("/tournaments/abc").selectedTab, "tournaments");
   assert.equal(getNativeChromeState("/tournaments/abc").showsBackButton, true);
   assert.equal(getNativeChromeState("/tournaments/abc").showsNavigationBar, false);
@@ -211,12 +210,8 @@ test("iOS shell은 안정적인 UIKit native bar와 공식 Capacitor local plugi
 
 test("iOS native tab과 Debug/Release web origin이 분리되어 있다", () => {
   const native = readFileSync("ios/App/App/SceneDelegate.swift", "utf8");
-  assert.match(
-    native,
-    /case home[\s\S]*case club[\s\S]*case guest[\s\S]*case tournaments[\s\S]*case me/,
-  );
-  assert.match(native, /case \.guest: return "게스트"/);
-  assert.match(native, /case \.guest: return "\/guest"/);
+  assert.match(native, /case home[\s\S]*case club[\s\S]*case tournaments[\s\S]*case me/);
+  assert.doesNotMatch(native, /case \.guest/);
   assert.match(native, /#if DEBUG[\s\S]*descriptor\.serverURL = "http:\/\/127\.0\.0\.1:5173"/);
   assert.match(native, /#else[\s\S]*descriptor\.serverURL = nil/);
 });

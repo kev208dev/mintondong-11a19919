@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { ArrowRight, RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +8,9 @@ import { calculateGuestBookingPrice } from "@/lib/guest/guest-core";
 
 export const Route = createFileRoute("/guest/search")({
   ssr: false,
+  beforeLoad: () => {
+    throw redirect({ to: "/" });
+  },
   validateSearch: (search: Record<string, unknown>) => ({
     partySize: Number(search["partySize"] ?? 4),
     startsOn: typeof search["startsOn"] === "string" ? search["startsOn"] : undefined,
@@ -37,7 +40,7 @@ function GuestSearchPage() {
     <div className="space-y-6">
       <header className="pt-3">
         <Link
-          to="/guest"
+          to="/"
           className="inline-flex min-h-11 items-center text-sm font-bold text-foreground"
         >
           ← 조건 다시 설정
@@ -97,7 +100,7 @@ function GuestSearchPage() {
             return (
               <li key={offer.id}>
                 <Link
-                  to="/guest/$offerId"
+                  to="/"
                   params={{ offerId: offer.id }}
                   className="surface-card block p-5 active:scale-[0.99]"
                 >

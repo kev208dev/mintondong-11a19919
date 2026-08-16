@@ -1,11 +1,17 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { Check, MapPin, ParkingCircle, ShowerHead, Ticket, UsersRound } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { getGuestOfferFn } from "@/lib/guest/guest.functions";
 import { useAuth } from "@/lib/auth/AuthProvider";
 
-export const Route = createFileRoute("/guest_/$offerId")({ ssr: false, component: GuestOfferPage });
+export const Route = createFileRoute("/guest_/$offerId")({
+  ssr: false,
+  beforeLoad: () => {
+    throw redirect({ to: "/" });
+  },
+  component: GuestOfferPage,
+});
 
 function GuestOfferPage() {
   const { offerId } = Route.useParams();
@@ -21,8 +27,8 @@ function GuestOfferPage() {
     return (
       <div className="py-16 text-center">
         <p className="font-bold">게스트 모집을 찾을 수 없어요</p>
-        <Link to="/guest" className="mt-3 inline-block text-sm font-bold text-brand-deep">
-          게스트로 돌아가기
+        <Link to="/" className="mt-3 inline-block text-sm font-bold text-brand-deep">
+          홈으로 돌아가기
         </Link>
       </div>
     );
@@ -117,11 +123,11 @@ function GuestOfferPage() {
         onClick={() =>
           user
             ? navigate({
-                to: "/guest/$offerId/checkout",
+                to: "/",
                 params: { offerId },
                 search: { paymentId: undefined },
               })
-            : navigate({ to: "/auth", search: { next: `/guest/${offerId}/checkout` } })
+            : navigate({ to: "/auth", search: { next: "/" } })
         }
       >
         <UsersRound className="mr-2 size-5" />

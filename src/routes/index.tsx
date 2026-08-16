@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Search, UserCheck, UsersRound } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { HomeTournamentSection } from "@/components/tournaments/HomeTournamentSection";
 import { seoulDateKey, useDailyAttendance, useStore } from "@/lib/badminton/store";
 import type { DailyAttendanceStatus } from "@/lib/badminton/types";
@@ -12,8 +12,8 @@ import { useState } from "react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "민턴동 – 배드민턴 동호회와 게스트 운동" },
-      { name: "description", content: "동호회 활동과 주변 게스트 운동을 한 곳에서." },
+      { title: "민턴동 – 배드민턴 동호회" },
+      { name: "description", content: "오늘 출석과 동호회 활동을 한 곳에서." },
     ],
   }),
   component: HomePage,
@@ -51,17 +51,7 @@ function HomePage() {
         onNext={() => setAttendanceDate((value) => shiftDailyAttendanceDate(value, 1))}
         onStatusChange={(status) => setDailyAttendance(meMemberId, status, attendanceDate)}
       />
-      <section className="grid grid-cols-2 gap-3" aria-label="빠른 실행">
-        <Link
-          to="/guest"
-          className="surface-card flex min-h-32 flex-col justify-between p-4 active:scale-[0.98]"
-        >
-          <UserCheck className="size-6 text-brand-green" />
-          <span>
-            <strong className="block text-lg font-extrabold">게스트 찾기</strong>
-            <span className="text-sm text-muted-foreground">함께 칠 사람</span>
-          </span>
-        </Link>
+      <section className="grid grid-cols-1 gap-3" aria-label="빠른 실행">
         <Link
           to="/clubs/find"
           className="surface-card flex min-h-32 flex-col justify-between p-4 active:scale-[0.98]"
@@ -71,19 +61,6 @@ function HomePage() {
             <strong className="block text-lg font-extrabold">동호회 찾기</strong>
             <span className="text-sm text-muted-foreground">새 모임 둘러보기</span>
           </span>
-        </Link>
-      </section>
-      <section>
-        <SectionHeader title="근처 게스트" to="/guest" />
-        <Link to="/guest" className="surface-card flex items-center gap-4 p-5 active:scale-[0.99]">
-          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-wash text-brand-green">
-            <UsersRound className="size-6" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <strong className="block text-lg font-extrabold">가까운 운동 찾기</strong>
-            <span className="text-sm text-muted-foreground">가격과 시간 비교</span>
-          </span>
-          <ChevronRight className="size-5 text-foreground" />
         </Link>
       </section>
       <HomeTournamentSection />

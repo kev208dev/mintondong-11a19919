@@ -205,7 +205,6 @@ private final class MintondongShellViewController: UIViewController,
     private enum Tab: Int, CaseIterable {
         case home
         case club
-        case guest
         case tournaments
         case me
 
@@ -213,7 +212,6 @@ private final class MintondongShellViewController: UIViewController,
             switch self {
             case .home: return "home"
             case .club: return "club"
-            case .guest: return "guest"
             case .tournaments: return "tournaments"
             case .me: return "me"
             }
@@ -223,7 +221,6 @@ private final class MintondongShellViewController: UIViewController,
             switch self {
             case .home: return "홈"
             case .club: return "동호회"
-            case .guest: return "게스트"
             case .tournaments: return "대회"
             case .me: return "마이"
             }
@@ -233,7 +230,6 @@ private final class MintondongShellViewController: UIViewController,
             switch self {
             case .home: return "house"
             case .club: return "person.3"
-            case .guest: return "person.2"
             case .tournaments: return "trophy"
             case .me: return "person"
             }
@@ -243,7 +239,6 @@ private final class MintondongShellViewController: UIViewController,
             switch self {
             case .home: return "house.fill"
             case .club: return "person.3.fill"
-            case .guest: return "person.badge.plus"
             case .tournaments: return "trophy.fill"
             case .me: return "person.fill"
             }
@@ -253,7 +248,6 @@ private final class MintondongShellViewController: UIViewController,
             switch self {
             case .home: return "/"
             case .club: return "/club"
-            case .guest: return "/guest"
             case .tournaments: return "/tournaments"
             case .me: return "/me"
             }

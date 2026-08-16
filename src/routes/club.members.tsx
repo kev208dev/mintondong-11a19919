@@ -7,9 +7,9 @@ export const Route = createFileRoute("/club/members")({
   head: () => ({
     meta: [
       { title: "동호회 회원 – 민턴동" },
-      { name: "description", content: "동호회 회원과 게스트, 역할·권한을 확인해요." },
+      { name: "description", content: "동호회 회원과 역할·권한을 확인해요." },
       { property: "og:title", content: "동호회 회원 – 민턴동" },
-      { property: "og:description", content: "회원·게스트 목록과 역할 관리." },
+      { property: "og:description", content: "회원과 역할 관리." },
     ],
   }),
   component: MembersPage,
@@ -27,13 +27,13 @@ function MembersPage() {
     );
   }
 
-  const people = [...club.members, ...club.guests];
+  const people = club.members;
 
   return (
     <div className="space-y-4">
       <section>
         <p className="px-1 text-[11px] font-bold text-muted-foreground">
-          회원 {club.members.length}명 · 게스트 {club.guests.length}명
+          회원 {club.members.length}명
         </p>
         <ul className="mt-1.5 divide-y divide-border overflow-hidden rounded-3xl bg-card shadow-soft">
           {people.map((m) => (
@@ -42,16 +42,11 @@ function MembersPage() {
                 {m.name.slice(0, 1)}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-foreground">
-                  {m.name}
-                  {m.isGuest ? (
-                    <span className="ml-1 text-xs text-muted-foreground">게스트</span>
-                  ) : null}
-                </p>
+                <p className="truncate text-sm font-bold text-foreground">{m.name}</p>
                 <p className="truncate text-xs text-muted-foreground">
                   {LEVEL_LABEL[m.level]} · {ATTENDANCE_LABEL[club.attendance[m.id] ?? "NONE"]}
                 </p>
-                {m.isGuest ? null : <RoleBadges memberId={m.id} />}
+                <RoleBadges memberId={m.id} />
               </div>
             </li>
           ))}

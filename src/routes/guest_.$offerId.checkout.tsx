@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Minus, Plus } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -17,6 +17,9 @@ import { portOnePublicConfig } from "@/config/portone";
 
 export const Route = createFileRoute("/guest_/$offerId/checkout")({
   ssr: false,
+  beforeLoad: () => {
+    throw redirect({ to: "/" });
+  },
   validateSearch: (s: Record<string, unknown>) => ({
     paymentId: typeof s["paymentId"] === "string" ? s["paymentId"] : undefined,
   }),
@@ -57,7 +60,7 @@ function GuestCheckoutPage() {
         currency: "CURRENCY_KRW",
         payMethod: "CARD",
         customer: order.customer,
-        redirectUrl: `${window.location.origin}/guest/${offerId}/checkout?paymentId=${encodeURIComponent(order.paymentId)}`,
+        redirectUrl: `${window.location.origin}/?paymentId=${encodeURIComponent(order.paymentId)}`,
       });
       if (response?.code) throw new Error(response.message || "PAYMENT_FAILED");
       return completePortOnePayment({ data: { paymentId: order.paymentId } });
@@ -79,7 +82,7 @@ function GuestCheckoutPage() {
           예약과 결제를 위해 먼저 로그인해 주세요.
         </p>
         <Button asChild className="mt-6 h-12 rounded-2xl">
-          <Link to="/auth" search={{ next: `/guest/${offerId}/checkout` }}>
+          <Link to="/auth" search={{ next: "/" }}>
             로그인하기
           </Link>
         </Button>
@@ -108,12 +111,12 @@ function GuestCheckoutPage() {
   return (
     <div className="space-y-6">
       <Link
-        to="/guest/$offerId"
+        to="/"
         params={{ offerId }}
         className="inline-flex min-h-11 items-center gap-1 text-sm font-bold text-foreground"
       >
         <ArrowLeft className="size-4" />
-        게스트 상세
+        홈으로
       </Link>
       <div>
         <p className="text-sm font-bold text-brand-green">{item.clubName}</p>

@@ -1,7 +1,7 @@
-export const BOTTOM_TAB_ROUTES = ["/", "/club", "/guest", "/tournaments", "/me"] as const;
+export const BOTTOM_TAB_ROUTES = ["/", "/club", "/tournaments", "/me"] as const;
 
 export type BottomTabRoute = (typeof BOTTOM_TAB_ROUTES)[number];
-export type NativeTabId = "home" | "club" | "guest" | "tournaments" | "me";
+export type NativeTabId = "home" | "club" | "tournaments" | "me";
 
 export type NativeChromeState = {
   pathname: string;
@@ -42,8 +42,8 @@ export function pageTitle(pathname: string): string {
   if (pathname.startsWith("/clubs/new")) return "동호회 만들기";
   if (pathname.startsWith("/clubs/")) return "동호회";
   if (pathname.startsWith("/games")) return "경기";
-  if (pathname.startsWith("/lessons")) return "게스트";
-  if (pathname.startsWith("/guest")) return "게스트";
+  if (pathname.startsWith("/lessons")) return "홈";
+  if (pathname.startsWith("/guest")) return "홈";
   if (pathname.startsWith("/payments/toss")) return "이전 결제";
   if (pathname.startsWith("/terms")) return "이용약관";
   if (pathname.startsWith("/privacy")) return "개인정보처리방침";
@@ -73,7 +73,7 @@ export function selectedNativeTab(pathname: string): NativeTabId | null {
   const normalized = normalizedPathname(pathname);
   if (normalized === "/" || normalized.startsWith("/clubs/find")) return "home";
   if (isClubSection(normalized)) return "club";
-  if (normalized === "/guest" || normalized.startsWith("/guest/")) return "guest";
+  if (normalized === "/guest" || normalized.startsWith("/guest/")) return "home";
   if (normalized === "/tournaments" || normalized.startsWith("/tournaments/")) {
     return "tournaments";
   }

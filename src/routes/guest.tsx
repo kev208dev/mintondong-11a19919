@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { MapPin, Search, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,13 @@ import { Input } from "@/components/ui/input";
 import { DatePickerSheet } from "@/components/date-time/DatePickerSheet";
 import { dateOnlyFromDate } from "@/components/date-time/format";
 
-export const Route = createFileRoute("/guest")({ ssr: false, component: GuestPage });
+export const Route = createFileRoute("/guest")({
+  ssr: false,
+  beforeLoad: () => {
+    throw redirect({ to: "/" });
+  },
+  component: GuestPage,
+});
 
 function GuestPage() {
   const navigate = useNavigate();
@@ -52,7 +58,7 @@ function GuestPage() {
           className="mt-3 h-13 w-full rounded-2xl bg-brand-green text-base font-extrabold text-foreground hover:bg-brand-green-light"
           onClick={() =>
             navigate({
-              to: "/guest/search",
+              to: "/",
               search: { partySize, startsOn, region: region || undefined },
             })
           }

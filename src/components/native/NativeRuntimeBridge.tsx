@@ -20,7 +20,7 @@ export function NativeRuntimeBridge() {
   const router = useRouter();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { user, profile, profileStatus } = useAuth();
-  const native = Capacitor.isNativePlatform();
+  const native = Capacitor.getPlatform() === "ios" || Capacitor.isNativePlatform();
   const iosNative = Capacitor.getPlatform() === "ios";
   const [connected, setConnected] = useState(true);
   const authCallbackUrls = useRef(new Set<string>());
