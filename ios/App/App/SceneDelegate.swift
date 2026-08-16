@@ -199,7 +199,8 @@ private final class MintondongBridgeViewController: CAPBridgeViewController {
 }
 
 private final class MintondongShellViewController: UIViewController,
-    MintondongNativeChromeDelegate
+    MintondongNativeChromeDelegate,
+    UITabBarDelegate
 {
     private enum Tab: Int, CaseIterable {
         case home
@@ -238,6 +239,16 @@ private final class MintondongShellViewController: UIViewController,
             }
         }
 
+        var selectedSystemImageName: String {
+            switch self {
+            case .home: return "house.fill"
+            case .club: return "person.3.fill"
+            case .guest: return "person.badge.plus"
+            case .tournaments: return "trophy.fill"
+            case .me: return "person.fill"
+            }
+        }
+
         var route: String {
             switch self {
             case .home: return "/"
@@ -249,15 +260,13 @@ private final class MintondongShellViewController: UIViewController,
         }
     }
 
-    // iOS 26's Liquid Glass UITabBar replaces a custom selection indicator with
-    // a translucent system pill. A small public UIKit bar keeps the selected
-    // state deterministic without touching UITabBar's private subviews.
-    private let tabBar = UIView()
-    private let tabStack = UIStackView()
-    private var tabButtons: [UIButton] = []
+    private let tabBar = UITabBar()
+    private var tabItems: [UITabBarItem] = []
     private var displayedTab: Tab?
     private let bridgeViewController = MintondongBridgeViewController()
     private var bridgeTopToSafeArea: NSLayoutConstraint!
+    private var bridgeBottomToView: NSLayoutConstraint!
+    private var bridgeBottomToTabBar: NSLayoutConstraint!
     private var tabBarHeight: NSLayoutConstraint!
     private var chromeState = MintondongNativeChromeState.hidden
     private var keyboardVisible = false
@@ -275,7 +284,7 @@ private final class MintondongShellViewController: UIViewController,
 
     override func viewSafeAreaInsetsDidChange() {
         super.viewSafeAreaInsetsDidChange()
-        tabBarHeight?.constant = 54 + view.safeAreaInsets.bottom
+        tabBarHeight?.constant = 49 + view.safeAreaInsets.bottom
     }
 
     deinit {
@@ -296,57 +305,43 @@ private final class MintondongShellViewController: UIViewController,
 
         NSLayoutConstraint.activate([
             bridgeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            bridgeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            bridgeView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            bridgeView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
+        bridgeBottomToView = bridgeView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        bridgeBottomToTabBar = bridgeView.bottomAnchor.constraint(equalTo: tabBar.topAnchor)
+        bridgeBottomToView.isActive = true
         bridgeViewController.didMove(toParent: self)
     }
 
     private func configureTabBar() {
         tabBar.translatesAutoresizingMaskIntoConstraints = false
-        tabBar.backgroundColor = .white
-        tabBar.layer.shadowColor = UIColor.black.cgColor
-        tabBar.layer.shadowOpacity = 0.04
-        tabBar.layer.shadowRadius = 10
-        tabBar.layer.shadowOffset = CGSize(width: 0, height: -4)
-        tabBar.layer.masksToBounds = false
+        tabBar.delegate = self
+        tabBar.tintColor = .label
+        tabBar.unselectedItemTintColor = .secondaryLabel
 
-        tabStack.translatesAutoresizingMaskIntoConstraints = false
-        tabStack.axis = .horizontal
-        tabStack.alignment = .fill
-        tabStack.distribution = .fillEqually
-        tabStack.spacing = 4
-        tabBar.addSubview(tabStack)
-        NSLayoutConstraint.activate([
-            tabStack.leadingAnchor.constraint(equalTo: tabBar.leadingAnchor, constant: 8),
-            tabStack.trailingAnchor.constraint(equalTo: tabBar.trailingAnchor, constant: -8),
-            tabStack.topAnchor.constraint(equalTo: tabBar.topAnchor, constant: 5),
-            tabStack.heightAnchor.constraint(equalToConstant: 48),
-        ])
-
-        tabButtons = Tab.allCases.map { tab in
-            let button = UIButton(type: .system)
-            var configuration = UIButton.Configuration.plain()
-            configuration.image = UIImage(systemName: tab.systemImageName)
-            configuration.title = tab.title
-            configuration.imagePlacement = .top
-            configuration.imagePadding = 2
-            configuration.contentInsets = .zero
-            configuration.baseForegroundColor = .label
-            button.configuration = configuration
-            button.tag = tab.rawValue
-            button.accessibilityLabel = tab.title
-            button.accessibilityTraits = .button
-            button.addTarget(self, action: #selector(tabButtonTapped(_:)), for: .primaryActionTriggered)
-            button.layer.cornerRadius = 18
-            button.layer.masksToBounds = true
-            tabStack.addArrangedSubview(button)
-            return button
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+        appearance.backgroundColor = .systemBackground
+        tabBar.standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            tabBar.scrollEdgeAppearance = appearance
         }
+
+        tabItems = Tab.allCases.map { tab in
+            let item = UITabBarItem(
+                title: tab.title,
+                image: UIImage(systemName: tab.systemImageName),
+                selectedImage: UIImage(systemName: tab.selectedSystemImageName)
+            )
+            item.tag = tab.rawValue
+            item.accessibilityLabel = tab.title
+            return item
+        }
+        tabBar.items = tabItems
         tabBar.isHidden = true
         view.addSubview(tabBar)
 
-        tabBarHeight = tabBar.heightAnchor.constraint(equalToConstant: 54)
+        tabBarHeight = tabBar.heightAnchor.constraint(equalToConstant: 49 + view.safeAreaInsets.bottom)
         NSLayoutConstraint.activate([
             tabBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tabBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -363,7 +358,7 @@ private final class MintondongShellViewController: UIViewController,
                 queue: .main
             ) { [weak self] _ in
                 self?.keyboardVisible = true
-                self?.tabBar.isHidden = true
+                self?.applyChromeState(animated: true)
             }
         )
         keyboardObservers.append(
@@ -383,34 +378,34 @@ private final class MintondongShellViewController: UIViewController,
         applyChromeState(animated: true)
     }
 
-    @objc private func tabButtonTapped(_ sender: UIButton) {
-        guard let tab = Tab(rawValue: sender.tag) else { return }
+    func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
+        guard let tab = Tab(rawValue: item.tag) else { return }
         guard displayedTab?.identifier != tab.identifier else { return }
-        updateTabButtons(selected: tab)
+        displayedTab = tab
         bridgeViewController.nativeChromePlugin?.emitTabSelected(route: tab.route)
     }
 
-    private func updateTabButtons(selected: Tab?) {
+    private func updateTabSelection(selected: Tab?) {
         displayedTab = selected
-        for (index, button) in tabButtons.enumerated() {
-            let isSelected = selected?.rawValue == index
-            button.backgroundColor = isSelected ? .black : .clear
-            button.tintColor = isSelected ? .white : .label
-            button.configuration?.baseForegroundColor = isSelected ? .white : .label
-            button.accessibilityTraits = isSelected ? [.button, .selected] : [.button]
+        if let selected, tabItems.indices.contains(selected.rawValue) {
+            tabBar.selectedItem = tabItems[selected.rawValue]
+        } else {
+            tabBar.selectedItem = nil
         }
     }
 
     private func applyChromeState(animated: Bool) {
         let apply = {
-            self.tabBar.isHidden = !self.chromeState.showsTabBar || self.keyboardVisible
-            self.bridgeTopToSafeArea.isActive = true
+            let shouldShowTabBar = self.chromeState.showsTabBar && !self.keyboardVisible
+            self.tabBar.isHidden = !shouldShowTabBar
+            self.bridgeBottomToView.isActive = !shouldShowTabBar
+            self.bridgeBottomToTabBar.isActive = shouldShowTabBar
 
             if let selectedTab = self.chromeState.selectedTab,
                let tab = Tab.allCases.first(where: { $0.identifier == selectedTab }) {
-                self.updateTabButtons(selected: tab)
+                self.updateTabSelection(selected: tab)
             } else {
-                self.updateTabButtons(selected: nil)
+                self.updateTabSelection(selected: nil)
             }
             self.view.layoutIfNeeded()
         }

@@ -134,13 +134,18 @@ test("iOS는 상단 native navigation bar 없이 tab과 back 메타데이터만 
 test("iOS shell은 안정적인 UIKit native bar와 공식 Capacitor local plugin containment를 사용한다", () => {
   const native = readFileSync("ios/App/App/SceneDelegate.swift", "utf8");
   assert.match(native, /MintondongShellViewController/);
-  assert.match(native, /private let tabBar = UIView\(\)/);
-  assert.match(native, /private let tabStack = UIStackView\(\)/);
-  assert.match(native, /backgroundColor = isSelected \? \.black : \.clear/);
-  assert.match(native, /baseForegroundColor = isSelected \? \.white : \.label/);
-  assert.match(native, /tabButtonTapped/);
+  assert.match(native, /private let tabBar = UITabBar\(\)/);
+  assert.match(native, /private var tabItems: \[UITabBarItem\] = \[\]/);
+  assert.match(native, /let appearance = UITabBarAppearance\(\)/);
+  assert.match(native, /tabBar\.standardAppearance = appearance/);
+  assert.match(native, /tabBar\.delegate = self/);
+  assert.match(native, /func tabBar\(_ tabBar: UITabBar, didSelect item: UITabBarItem\)/);
+  assert.match(native, /selectedSystemImageName/);
   assert.doesNotMatch(native, /allControls\(in:/);
-  assert.doesNotMatch(native, /control\.backgroundColor = control\.isSelected/);
+  assert.doesNotMatch(
+    native,
+    /UIStackView|tabButtons|tabButtonTapped|backgroundColor = isSelected/,
+  );
   assert.match(native, /UIImage\(systemName: tab\.systemImageName\)/);
   assert.match(native, /CAPPlugin, CAPBridgedPlugin/);
   assert.match(native, /override func capacitorDidLoad\(\)/);
