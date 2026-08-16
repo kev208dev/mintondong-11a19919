@@ -18,6 +18,7 @@ const myClub: ClubState = {
   members: [{ id: ME_ID, name: "나", level: 3, gender: "M" }],
   guests: [],
   attendance: { [ME_ID]: "ATTEND" },
+  dailyAttendance: {},
   checkedIn: [],
   courtCount: 2,
   queue: [],

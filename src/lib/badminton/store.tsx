@@ -29,6 +29,7 @@ import type {
   Payment,
   PaymentMethod,
   ScoreSource,
+  DailyAttendanceStatus,
 } from "./types";
 
 const STORAGE_KEY = "badminton-club-state-v3";
@@ -54,6 +55,11 @@ interface Ctx {
   clubs: ClubState[];
   switchClub: (id: string) => void;
   setAttendance: (memberId: string, status: AttendanceStatus) => void;
+  setDailyAttendance: (
+    memberId: string,
+    status: DailyAttendanceStatus,
+    attendanceDate?: string,
+  ) => void;
   toggleCheckIn: (memberId: string) => void;
   addGuest: (name: string, level: Level) => void;
   removeGuest: (id: string) => void;
@@ -125,6 +131,7 @@ function normalize(state: AppState): AppState {
     const seeded = SEED_STATE.clubs[id];
     clubs[id] = {
       ...c,
+      dailyAttendance: migrateDailyAttendance(c),
       lessonsEnabled: c.lessonsEnabled ?? Boolean(seeded),
       coaches: c.coaches ?? seeded?.coaches ?? [],
       // 구버전 localStorage 호환: provider/토스 필드 기본값 보정
@@ -209,6 +216,35 @@ function loadState(): AppState {
     /* ignore */
   }
   return SEED_STATE;
+}
+
+export function seoulDateKey(date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function migrateDailyAttendance(c: ClubState): ClubState["dailyAttendance"] {
+  const existing = c.dailyAttendance ?? {};
+  const today = seoulDateKey();
+  if (existing[today]) return existing;
+  const legacy = Object.fromEntries(
+    Object.entries(c.attendance ?? {})
+      .map(([memberId, status]) => {
+        const next =
+          status === "ATTEND" || status === "LATE"
+            ? "ATTENDING"
+            : status === "ABSENT"
+              ? "NOT_ATTENDING"
+              : "UNDECIDED";
+        return [memberId, next] as const;
+      })
+      .filter(([memberId]) => c.members.some((member) => member.id === memberId)),
+  ) as Record<string, DailyAttendanceStatus>;
+  return Object.keys(legacy).length ? { ...existing, [today]: legacy } : existing;
 }
 
 
@@ -308,6 +344,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         patchCurrent((c) => ({
           ...c,
           attendance: { ...c.attendance, [memberId]: status },
+        }));
+      },
+      setDailyAttendance: (memberId, status, attendanceDate = seoulDateKey()) => {
+        if (memberId !== meMemberId && !can("MANAGE_ATTENDANCE")) {
+          toast.error("다른 멤버의 출석을 변경할 권한이 없어요.");
+          return;
+        }
+        patchCurrent((c) => ({
+          ...c,
+          dailyAttendance: {
+            ...c.dailyAttendance,
+            [attendanceDate]: {
+              ...(c.dailyAttendance[attendanceDate] ?? {}),
+              [memberId]: status,
+            },
+          },
         }));
       },
       toggleCheckIn: (memberId) => {
@@ -501,6 +553,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           members: [{ id: `${id}-m0`, name: "나 (개설자)", level: 3, gender: "M" }],
           guests: [],
           attendance: { [`${id}-m0`]: "ATTEND" },
+          dailyAttendance: {},
           checkedIn: [`${id}-m0`],
           courtCount: 2,
           queue: [{ id: `${id}-m0`, since: Date.now() }],
@@ -1029,4 +1082,18 @@ export function useTodayPlayers() {
       NONE: all.filter((m) => (club.attendance[m.id] ?? "NONE") === "NONE").length,
     },
   };
+}
+
+export function useDailyAttendance(attendanceDate = seoulDateKey()) {
+  const { club } = useStore();
+  const members = club.members;
+  const statuses = club.dailyAttendance[attendanceDate] ?? {};
+  const getStatus = (memberId: string): DailyAttendanceStatus =>
+    statuses[memberId] ?? "UNDECIDED";
+  const counts = {
+    ATTENDING: members.filter((m) => getStatus(m.id) === "ATTENDING").length,
+    UNDECIDED: members.filter((m) => getStatus(m.id) === "UNDECIDED").length,
+    NOT_ATTENDING: members.filter((m) => getStatus(m.id) === "NOT_ATTENDING").length,
+  };
+  return { members, statuses, counts, getStatus, attendanceDate };
 }

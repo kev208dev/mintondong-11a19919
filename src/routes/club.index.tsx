@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalendarDays, ChevronRight, MapPin, Trophy, Users, UserRoundPlus } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { resolveClubRootView } from "@/lib/auth/club-route-access";
-import { useStore, useTodayPlayers } from "@/lib/badminton/store";
+import { useDailyAttendance, useStore } from "@/lib/badminton/store";
 
 export const Route = createFileRoute("/club/")({
   head: () => ({
@@ -85,9 +85,7 @@ function ClubIndexPage() {
 
 function ClubHomePage() {
   const { club } = useStore();
-  const { coming } = useTodayPlayers();
-  const hasSchedule =
-    club.sessionLabel !== "운동 일정 미설정" && club.sessionTime !== "시간 미설정";
+  const { counts } = useDailyAttendance();
 
   return (
     <div className="space-y-5">
@@ -114,26 +112,19 @@ function ClubHomePage() {
       <section className="surface-card p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm font-bold text-muted-foreground">오늘 운동</p>
-            {hasSchedule ? (
-              <>
-                <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground">
-                  {club.sessionTime}
-                </p>
-                <p className="mt-1 text-base font-bold text-foreground">{club.sessionLabel}</p>
-                <p className="mt-2 text-sm font-medium text-muted-foreground">
-                  참가 {coming.length}명
-                </p>
-              </>
-            ) : (
-              <p className="mt-4 text-lg font-extrabold text-foreground">일정 없음</p>
-            )}
+            <p className="text-sm font-bold text-muted-foreground">오늘 출석</p>
+            <p className="mt-3 text-2xl font-extrabold tracking-tight text-foreground">
+              {counts.ATTENDING}명 참석
+            </p>
+            <p className="mt-2 text-sm font-medium text-muted-foreground">
+              참석 {counts.ATTENDING} · 미정 {counts.UNDECIDED} · 불참 {counts.NOT_ATTENDING}
+            </p>
           </div>
           <Link
-            to="/club/schedule"
+            to="/club/attendance"
             className="flex min-h-11 shrink-0 items-center gap-1 rounded-xl px-2 text-sm font-bold text-primary active:bg-primary/10"
           >
-            {hasSchedule ? "자세히" : "일정"}
+            자세히
             <ChevronRight className="size-4" aria-hidden />
           </Link>
         </div>

@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, CalendarDays, ChevronRight, Search, UserCheck, UsersRound } from "lucide-react";
+import { ChevronRight, Search, UserCheck, UsersRound } from "lucide-react";
 import { HomeTournamentSection } from "@/components/tournaments/HomeTournamentSection";
-import { useStore, useTodayPlayers } from "@/lib/badminton/store";
+import { useDailyAttendance, useStore } from "@/lib/badminton/store";
+import type { DailyAttendanceStatus } from "@/lib/badminton/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,18 +31,18 @@ function SectionHeader({ title, to }: { title: string; to?: string }) {
 }
 
 function HomePage() {
-  const { club, can } = useStore();
-  const { coming } = useTodayPlayers();
-  const placeUnset = !club.club.location || club.club.location === "장소 미설정";
-  const scheduleUnset = club.sessionLabel === "운동 일정 미설정";
-  const canSettings = can("MANAGE_CLUB_SETTINGS");
+  const { club, meMemberId, setDailyAttendance } = useStore();
+  const { counts, getStatus } = useDailyAttendance();
+  const myStatus = getStatus(meMemberId);
 
   return (
     <div className="space-y-8">
-      <header className="pt-3">
-        <p className="text-sm font-bold text-brand-green">민턴동</p>
-        <h1 className="mt-2 page-heading">오늘 어디서 칠까요?</h1>
-      </header>
+      <TodayAttendanceCard
+        clubName={club.club.name}
+        counts={counts}
+        myStatus={myStatus}
+        onStatusChange={(status) => setDailyAttendance(meMemberId, status)}
+      />
       <section className="grid grid-cols-2 gap-3" aria-label="빠른 실행">
         <Link
           to="/guest"
@@ -65,32 +66,6 @@ function HomePage() {
         </Link>
       </section>
       <section>
-        <SectionHeader title="오늘 운동" to="/club/schedule" />
-        <Link to="/club/schedule" className="surface-card block p-5 active:scale-[0.99]">
-          {scheduleUnset ? (
-            <p className="text-lg font-extrabold">오늘 일정 없음</p>
-          ) : (
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-3xl font-extrabold tracking-tight text-brand-green">
-                  {club.sessionTime}
-                </p>
-                <p className="mt-2 text-lg font-extrabold">{club.club.name}</p>
-                <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                  <CalendarDays className="size-4" /> {club.sessionLabel}
-                </p>
-              </div>
-              <span className="text-sm font-bold text-muted-foreground">
-                자세히 <ChevronRight className="inline size-4" />
-              </span>
-            </div>
-          )}
-          {!scheduleUnset ? (
-            <p className="mt-4 text-sm text-muted-foreground">참가 {coming.length}명</p>
-          ) : null}
-        </Link>
-      </section>
-      <section>
         <SectionHeader title="근처 게스트" to="/guest" />
         <Link to="/guest" className="surface-card flex items-center gap-4 p-5 active:scale-[0.99]">
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-wash text-brand-green">
@@ -104,29 +79,71 @@ function HomePage() {
         </Link>
       </section>
       <HomeTournamentSection />
-      {placeUnset ? (
-        <section className="surface-card p-5">
-          <div className="flex items-start gap-3">
-            <span className="grid size-10 place-items-center rounded-xl bg-secondary">
-              <Bell className="size-5" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-extrabold">운동 장소 없음</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {canSettings ? "장소를 등록해 주세요." : "운영진이 장소를 등록하면 표시돼요."}
-              </p>
-            </div>
-          </div>
-          {canSettings ? (
-            <Link
-              to="/club/manage"
-              className="mt-4 flex h-12 items-center justify-center rounded-2xl bg-foreground text-base font-bold text-background"
-            >
-              장소 설정
-            </Link>
-          ) : null}
-        </section>
-      ) : null}
+    </div>
+  );
+}
+
+function TodayAttendanceCard({
+  clubName,
+  counts,
+  myStatus,
+  onStatusChange,
+}: {
+  clubName: string;
+  counts: { ATTENDING: number; UNDECIDED: number; NOT_ATTENDING: number };
+  myStatus: DailyAttendanceStatus;
+  onStatusChange: (status: DailyAttendanceStatus) => void;
+}) {
+  const statuses: { key: DailyAttendanceStatus; label: string }[] = [
+    { key: "ATTENDING", label: "참석" },
+    { key: "NOT_ATTENDING", label: "불참" },
+    { key: "UNDECIDED", label: "미정" },
+  ];
+  return (
+    <section className="surface-card p-5" aria-label="오늘 출석">
+      <p className="text-lg font-extrabold">오늘 출석</p>
+      <p className="mt-3 text-[32px] font-extrabold tracking-tight text-foreground">
+        {counts.ATTENDING}명 참석
+      </p>
+      <p className="mt-1 text-sm font-medium text-muted-foreground">{clubName}</p>
+      <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+        <AttendanceMetric label="참석" value={counts.ATTENDING} />
+        <AttendanceMetric label="미정" value={counts.UNDECIDED} />
+        <AttendanceMetric label="불참" value={counts.NOT_ATTENDING} />
+      </div>
+      <p className="mt-5 text-sm font-bold text-foreground">오늘 참석하시나요?</p>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {statuses.map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={myStatus === key}
+            onClick={() => onStatusChange(key)}
+            className={`h-11 rounded-xl text-sm font-bold transition-colors ${
+              myStatus === key
+                ? "bg-foreground text-background"
+                : "bg-secondary text-secondary-foreground"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <Link
+        to="/club/attendance"
+        className="mt-4 flex min-h-11 items-center justify-between text-sm font-bold text-foreground"
+      >
+        출석 현황 보기 <ChevronRight className="size-4" />
+      </Link>
+    </section>
+  );
+}
+
+function AttendanceMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl bg-secondary/70 py-2">
+      <p className="text-lg font-extrabold">{value}</p>
+      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
     </div>
   );
 }

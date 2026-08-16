@@ -3,6 +3,7 @@ import type { RoleDefinition } from "./permissions";
 export type { PermissionKey, RoleDefinition } from "./permissions";
 
 export type AttendanceStatus = "ATTEND" | "LATE" | "MAYBE" | "ABSENT" | "NONE";
+export type DailyAttendanceStatus = "ATTENDING" | "NOT_ATTENDING" | "UNDECIDED";
 
 export type Level = 1 | 2 | 3 | 4 | 5;
 
@@ -76,6 +77,8 @@ export interface ClubState {
   members: Member[];
   guests: Member[];
   attendance: Record<string, AttendanceStatus>;
+  /** 날짜별 출석 응답. 일정/session과 분리된 하루 단위 상태다. */
+  dailyAttendance: Record<string, Record<string, DailyAttendanceStatus>>;
   checkedIn: string[];
   courtCount: number;
   queue: { id: string; since: number }[];

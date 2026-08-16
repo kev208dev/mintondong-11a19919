@@ -1,238 +1,157 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Clock, HelpCircle, MapPin, Plus, UserPlus, XCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { RoleBadges } from "@/components/app/RolesSection";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { useStore, useTodayPlayers } from "@/lib/badminton/store";
-import {
-  ATTENDANCE_LABEL,
-  LEVEL_LABEL,
-  type AttendanceStatus,
-  type Level,
-} from "@/lib/badminton/types";
+import { useDailyAttendance, useStore, seoulDateKey } from "@/lib/badminton/store";
+import type { DailyAttendanceStatus } from "@/lib/badminton/types";
 
 export const Route = createFileRoute("/club/attendance")({
   head: () => ({
     meta: [
-      { title: "출석 체크 – 민턴동 동호회" },
-      {
-        name: "description",
-        content:
-          "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱.",
-      },
-      { property: "og:title", content: "출석 체크 – 민턴동 동호회" },
-      {
-        property: "og:description",
-        content:
-          "오늘 누가 오는지 한 번에 확인하고, 참석 체크·게스트·코트 배정까지 관리하는 배드민턴 동호회 앱.",
-      },
+      { title: "오늘 출석 – 민턴동 동호회" },
+      { property: "og:title", content: "오늘 출석 – 민턴동 동호회" },
     ],
   }),
   component: AttendancePage,
 });
 
-const STATES: { key: AttendanceStatus; label: string; icon: typeof CheckCircle2 }[] = [
-  { key: "ATTEND", label: "참석", icon: CheckCircle2 },
-  { key: "LATE", label: "늦게", icon: Clock },
-  { key: "MAYBE", label: "미정", icon: HelpCircle },
-  { key: "ABSENT", label: "불참", icon: XCircle },
+const STATUS_OPTIONS: { key: DailyAttendanceStatus; label: string }[] = [
+  { key: "ATTENDING", label: "참석" },
+  { key: "UNDECIDED", label: "미정" },
+  { key: "NOT_ATTENDING", label: "불참" },
 ];
 
+function formatDate(dateKey: string) {
+  const date = new Date(`${dateKey}T12:00:00+09:00`);
+  return new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  }).format(date);
+}
+
+function shiftDate(dateKey: string, days: number) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const next = new Date(Date.UTC(year!, month! - 1, day!, 12));
+  next.setUTCDate(next.getUTCDate() + days);
+  return next.toISOString().slice(0, 10);
+}
+
 function AttendancePage() {
-  const { club, setAttendance, toggleCheckIn, addGuest, removeGuest, can, meMemberId } = useStore();
-  const { all, counts, coming } = useTodayPlayers();
-  const [guestName, setGuestName] = useState("");
-  const [guestLevel, setGuestLevel] = useState<Level>(3);
-  const [open, setOpen] = useState(false);
-  // 본인 출석/체크인은 항상 가능하고, 타인 대리 변경은 권한이 필요하다
-  const canManageMembers = can("MANAGE_MEMBERS");
-  const canManageAttendance = can("MANAGE_ATTENDANCE");
-  const canCheckinOthers = can("CHECKIN_OTHERS");
+  const { can, meMemberId, setDailyAttendance } = useStore();
+  const [date, setDate] = useState(seoulDateKey());
+  const { members, counts, getStatus } = useDailyAttendance(date);
 
   if (!can("VIEW_ATTENDANCE")) {
     return (
-      <section className="rounded-3xl border border-border bg-card shadow-soft p-6 text-center">
+      <section className="surface-card p-6 text-center">
         <p className="text-base font-bold text-foreground">출석 현황을 볼 권한이 없어요</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          클럽 운영자에게 출석 보기 권한을 요청해 주세요.
-        </p>
       </section>
     );
   }
 
-  const guests = club.guests;
-  const checkedInCount = club.checkedIn.length;
+  const updateMine = (status: DailyAttendanceStatus) =>
+    setDailyAttendance(meMemberId, status, date);
+  const grouped = STATUS_OPTIONS.map((status) => ({
+    ...status,
+    members: members.filter((member) => getStatus(member.id) === status.key),
+  }));
 
   return (
-    <>
-      <section className="rounded-3xl bg-card p-5 shadow-soft">
-        <p className="text-sm font-bold text-muted-foreground">오늘 참석 예정</p>
-        <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground">
-          <span className="text-primary">{coming.length}</span>
-          <span className="ml-1 text-lg font-bold text-muted-foreground">명</span>
-        </p>
-        <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <MapPin className="size-3.5 text-primary" />
-          {club.club.location}
+    <div className="space-y-6">
+      <header>
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            aria-label="이전 날짜"
+            className="grid size-11 place-items-center rounded-xl text-foreground active:bg-secondary"
+            onClick={() => setDate((value) => shiftDate(value, -1))}
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-muted-foreground">{formatDate(date)}</p>
+          </div>
+          <button
+            type="button"
+            aria-label="다음 날짜"
+            className="grid size-11 place-items-center rounded-xl text-foreground active:bg-secondary"
+            onClick={() => setDate((value) => shiftDate(value, 1))}
+          >
+            <ChevronRight className="size-5" />
+          </button>
         </div>
-        <div className="mt-4 grid grid-cols-4 gap-2 text-center">
-          {STATES.map((s) => (
-            <div key={s.key} className="rounded-2xl bg-muted/40 py-2">
-              <p className="text-lg font-extrabold text-foreground">{counts[s.key]}</p>
-              <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
-            </div>
+        {date !== seoulDateKey() ? (
+          <Button
+            variant="ghost"
+            className="mx-auto mt-1 flex h-9 text-xs font-bold"
+            onClick={() => setDate(seoulDateKey())}
+          >
+            오늘로
+          </Button>
+        ) : null}
+      </header>
+
+      <section className="surface-card p-5">
+        <p className="text-sm font-bold text-muted-foreground">내 출석</p>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {STATUS_OPTIONS.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={getStatus(meMemberId) === key}
+              onClick={() => updateMine(key)}
+              className={`h-11 rounded-xl text-sm font-bold ${
+                getStatus(meMemberId) === key
+                  ? "bg-foreground text-background"
+                  : "bg-secondary text-secondary-foreground"
+              }`}
+            >
+              {label}
+            </button>
           ))}
         </div>
-        <div className="mt-3 flex items-center justify-between rounded-2xl bg-muted/40 px-3 py-2.5 text-sm">
-          <span className="font-semibold text-foreground">현장 체크인</span>
-          <span className="font-extrabold text-primary">
-            {checkedInCount} / {coming.length}
-          </span>
-        </div>
       </section>
 
-      <section className="mt-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-foreground">게스트 {guests.length}명</h2>
-          {canManageMembers ? (
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="secondary" className="h-9 rounded-full font-bold">
-                  <UserPlus className="mr-1 size-4" /> 게스트 추가
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-[340px] rounded-3xl">
-                <DialogHeader>
-                  <DialogTitle>게스트 추가</DialogTitle>
-                </DialogHeader>
-                <Input
-                  placeholder="이름"
-                  value={guestName}
-                  onChange={(e) => setGuestName(e.target.value)}
-                  className="h-12 rounded-2xl"
-                />
-                <div className="flex gap-2">
-                  {([1, 2, 3, 4, 5] as Level[]).map((lv) => (
-                    <button
-                      key={lv}
-                      onClick={() => setGuestLevel(lv)}
-                      className={`h-10 flex-1 rounded-xl text-xs font-bold ${
-                        guestLevel === lv
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-secondary-foreground"
-                      }`}
-                    >
-                      {LEVEL_LABEL[lv]}
-                    </button>
-                  ))}
-                </div>
-                <Button
-                  className="h-12 rounded-2xl font-bold"
-                  disabled={!guestName.trim()}
-                  onClick={() => {
-                    addGuest(guestName.trim(), guestLevel);
-                    setGuestName("");
-                    setOpen(false);
-                  }}
-                >
-                  <Plus className="mr-1 size-4" /> 추가하고 바로 체크인
-                </Button>
-              </DialogContent>
-            </Dialog>
-          ) : null}
-        </div>
-        {guests.length > 0 ? (
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {guests.map((g) => (
-              <li
-                key={g.id}
-                className="flex items-center gap-2 rounded-full border border-border bg-card shadow-soft px-3 py-1.5 text-xs font-semibold"
-              >
-                {g.name} · {LEVEL_LABEL[g.level]}
-                {canManageMembers ? (
-                  <button
-                    onClick={() => removeGuest(g.id)}
-                    className="text-muted-foreground"
-                    aria-label={`${g.name} 삭제`}
-                  >
-                    <XCircle className="size-4" />
-                  </button>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-2 text-xs text-muted-foreground">아직 게스트가 없어요.</p>
-        )}
+      <section className="grid grid-cols-3 gap-2 text-center" aria-label="출석 요약">
+        <Summary label="참석" value={counts.ATTENDING} />
+        <Summary label="미정" value={counts.UNDECIDED} />
+        <Summary label="불참" value={counts.NOT_ATTENDING} />
       </section>
 
-      <section className="mt-6">
-        <h2 className="text-base font-bold text-foreground">멤버 {all.length}명</h2>
-        <ul className="mt-3 space-y-2">
-          {all.map((m) => {
-            const status = club.attendance[m.id] ?? "NONE";
-            const isIn = club.checkedIn.includes(m.id);
-            return (
-              <li key={m.id} className="rounded-2xl border border-border bg-card shadow-soft p-3">
-                <div className="flex items-center gap-3">
-                  <span className="grid size-10 place-items-center rounded-xl bg-secondary text-sm font-bold text-secondary-foreground">
-                    {m.name.slice(0, 1)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-foreground">
-                      {m.name}
-                      {m.isGuest ? (
-                        <span className="ml-1 text-xs font-bold text-muted-foreground">게스트</span>
-                      ) : null}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {LEVEL_LABEL[m.level]} · {ATTENDANCE_LABEL[status]}
-                    </p>
-                    {m.isGuest ? null : <RoleBadges memberId={m.id} />}
-                  </div>
-                  <button
-                    onClick={() => toggleCheckIn(m.id)}
-                    disabled={m.id !== meMemberId && !canCheckinOthers}
-                    className={`h-9 rounded-full px-3 text-xs font-bold transition-colors disabled:opacity-40 ${
-                      isIn
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground"
-                    }`}
-                  >
-                    {isIn ? "체크인 완료" : "체크인"}
-                  </button>
-                </div>
-                <div className="mt-2.5 grid grid-cols-4 gap-1.5">
-                  {STATES.map((s) => (
-                    <button
-                      key={s.key}
-                      onClick={() => setAttendance(m.id, s.key)}
-                      disabled={m.id !== meMemberId && !canManageAttendance}
-                      className={`h-10 rounded-xl text-xs font-bold transition-colors duration-75 disabled:opacity-40 ${
-                        status !== s.key
-                          ? "bg-muted text-muted-foreground active:bg-accent"
-                          : s.key === "ABSENT"
-                            ? "bg-secondary text-secondary-foreground ring-1 ring-border"
-                            : "bg-primary text-primary-foreground"
-                      }`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+      <section className="space-y-5">
+        {grouped.map(({ key, label, members: group }) => (
+          <div key={key}>
+            <h2 className="text-lg font-extrabold">
+              {label} {group.length}
+            </h2>
+            {group.length ? (
+              <ul className="mt-2 divide-y divide-border/70 rounded-2xl bg-card px-4">
+                {group.map((member) => (
+                  <li key={member.id} className="flex min-h-14 items-center gap-3">
+                    <span className="grid size-9 place-items-center rounded-full bg-secondary text-sm font-bold">
+                      {member.name.slice(0, 1)}
+                    </span>
+                    <span className="text-sm font-bold">{member.name}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">아직 응답한 멤버가 없어요.</p>
+            )}
+          </div>
+        ))}
       </section>
-    </>
+    </div>
+  );
+}
+
+function Summary({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-2xl bg-secondary/70 py-3">
+      <p className="text-xl font-extrabold">{value}</p>
+      <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+    </div>
   );
 }

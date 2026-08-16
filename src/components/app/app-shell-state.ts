@@ -53,7 +53,7 @@ export function pageTitle(pathname: string): string {
   if (pathname.startsWith("/account-deletion")) return "계정 삭제";
   if (pathname.startsWith("/admin/tournaments")) return "대회 관리";
   if (pathname.startsWith("/records")) return "활동 기록";
-  if (pathname.startsWith("/club/attendance")) return "출석 체크";
+  if (pathname.startsWith("/club/attendance")) return "오늘 출석";
   if (pathname.startsWith("/club/schedule")) return "일정";
   if (pathname.startsWith("/club/ranking")) return "랭킹";
   if (pathname.startsWith("/club/members")) return "회원";

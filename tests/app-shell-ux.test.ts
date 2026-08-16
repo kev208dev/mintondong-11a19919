@@ -19,7 +19,8 @@ test("동호회 root는 secondary navigation 없이 상태와 핵심 행동만 �
   const shell = readFileSync("src/components/app/AppShell.tsx", "utf8");
   const clubRoot = readFileSync("src/routes/club.index.tsx", "utf8");
   assert.doesNotMatch(shell, /ClubSectionNav/);
-  assert.match(clubRoot, /오늘 운동/);
+  assert.match(clubRoot, /오늘 출석/);
+  assert.match(clubRoot, /\/club\/attendance/);
   assert.match(clubRoot, /QUICK_ACTIONS/);
   assert.match(clubRoot, /게스트 모집/);
   assert.match(clubRoot, /to="\/club\/manage"/);
@@ -46,6 +47,30 @@ test("동호회 하위 route는 legacy 6개 chip과 중복 상위 UI를 렌더�
   }
   const guestManagement = readFileSync("src/routes/club.manage_.guest.tsx", "utf8");
   assert.doesNotMatch(guestManagement, /동호회 운동에 참여할 자리를/);
+});
+
+test("홈은 일정·장소가 아닌 날짜 단위 출석 요약을 우선한다", () => {
+  const home = readFileSync("src/routes/index.tsx", "utf8");
+  const attendance = readFileSync("src/routes/club.attendance.tsx", "utf8");
+  const store = readFileSync("src/lib/badminton/store.tsx", "utf8");
+  assert.match(home, /TodayAttendanceCard/);
+  assert.match(home, /useDailyAttendance/);
+  assert.doesNotMatch(home, /오늘 운동|오늘 일정|운동 장소 없음|장소 설정/);
+  assert.match(attendance, /날짜/);
+  assert.match(attendance, /ATTENDING|NOT_ATTENDING|UNDECIDED/);
+  assert.match(store, /setDailyAttendance/);
+  assert.match(store, /seoulDateKey/);
+});
+
+test("날짜 출석 migration은 하루 한 건 unique와 멤버 RLS를 보장한다", () => {
+  const migration = readFileSync(
+    "supabase/migrations/20260816140000_club_daily_attendance.sql",
+    "utf8",
+  );
+  assert.match(migration, /club_daily_attendance/);
+  assert.match(migration, /UNIQUE \(club_id, user_id, attendance_date\)/);
+  assert.match(migration, /public\.is_club_member\(club_id\)/);
+  assert.match(migration, /user_id = auth\.uid\(\)/);
 });
 
 test("인증과 온보딩 route에서는 BottomNav를 숨긴다", () => {
