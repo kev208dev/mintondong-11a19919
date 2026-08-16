@@ -26,8 +26,10 @@ test("동호회 root는 secondary navigation 없이 상태와 핵심 행동만 �
   assert.match(clubRoot, /오늘 출석/);
   assert.match(clubRoot, /\/club\/attendance/);
   assert.match(clubRoot, /QUICK_ACTIONS/);
-  assert.match(clubRoot, /게스트 모집/);
-  assert.match(clubRoot, /to="\/club\/manage"/);
+  assert.match(clubRoot, /회비 관리/);
+  assert.doesNotMatch(clubRoot, /게스트 모집/);
+  assert.doesNotMatch(clubRoot, /to="\/club\/manage"/);
+  assert.doesNotMatch(clubRoot, /일정/);
   assert.doesNotMatch(clubRoot, /동호회 만들기|동호회 찾기|더보기/);
 });
 
@@ -231,7 +233,8 @@ test("알림은 자체 페이지 헤더 하나만 소유하고 빠른 실패를 
   assert.match(shell, /!pathname\.startsWith\("\/notifications"\)/);
   assert.match(notifications, /<AppPageHeader[\s\S]*title="알림"/);
   assert.match(notifications, /retry: 0/);
-  assert.match(notifications, /알림을 불러오지 못했어요/);
+  assert.match(notifications, /잠시 후 다시 시도해 주세요/);
+  assert.match(notifications, /새 알림이 없어요/);
   assert.doesNotMatch(notifications, /ChevronLeft/);
 });
 

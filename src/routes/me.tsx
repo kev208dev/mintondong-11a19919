@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Bell, Copy, LogOut, Settings, Check } from "lucide-react";
+import { ArrowRight, Copy, LogOut, Settings, Check } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -179,20 +179,6 @@ function MePage() {
       <section>
         <h2 className="mb-3 text-xl font-extrabold">설정</h2>
         <div className="surface-card divide-y divide-border overflow-hidden">
-          <Link
-            to="/notifications"
-            className="flex min-h-14 items-center gap-3 px-4 text-base font-bold"
-          >
-            <Bell className="size-5 text-brand-green" /> 알림{" "}
-            <ArrowRight className="ml-auto size-4 text-muted-foreground" />
-          </Link>
-          <Link
-            to="/account-deletion"
-            className="flex min-h-14 items-center gap-3 px-4 text-base font-bold"
-          >
-            <Settings className="size-5" /> 계정 정보{" "}
-            <ArrowRight className="ml-auto size-4 text-muted-foreground" />
-          </Link>
           <Link to="/support" className="flex min-h-14 items-center px-4 text-base font-bold">
             고객지원 <ArrowRight className="ml-auto size-4 text-muted-foreground" />
           </Link>

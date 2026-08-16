@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { clubKeys, getClub, getMyMembership, listClubMembers } from "@/lib/clubs/api";
 
@@ -42,14 +42,6 @@ function ClubDetailHome() {
           </dd>
         </div>
       </dl>
-
-      <section>
-        <h2 className="text-[13px] font-extrabold text-foreground">다가오는 일정</h2>
-        <div className="mt-1.5 rounded-2xl bg-secondary/60 p-5 text-center">
-          <CalendarDays className="mx-auto size-4 text-muted-foreground" />
-          <p className="mt-1.5 text-xs text-muted-foreground">등록된 일정이 없어요.</p>
-        </div>
-      </section>
 
       <section>
         <h2 className="text-[13px] font-extrabold text-foreground">최근 가입 멤버</h2>

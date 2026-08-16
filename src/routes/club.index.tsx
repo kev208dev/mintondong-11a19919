@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarDays, ChevronRight, MapPin, Trophy, Users, UserRoundPlus } from "lucide-react";
+import { ChevronRight, MapPin, Trophy, Users, Wallet } from "lucide-react";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { resolveClubRootView } from "@/lib/auth/club-route-access";
 import { useDailyAttendance, useStore } from "@/lib/badminton/store";
@@ -10,10 +10,10 @@ export const Route = createFileRoute("/club/")({
       { title: "동호회 – 민턴동" },
       {
         name: "description",
-        content: "선택한 동호회의 출석·경기·게스트 모집·회비·회원 현황을 한 화면에서 확인해요.",
+        content: "선택한 동호회의 출석·경기·회비·회원 현황을 한 화면에서 확인해요.",
       },
       { property: "og:title", content: "동호회 – 민턴동" },
-      { property: "og:description", content: "동호회 출석·경기·게스트 모집·회비 현황 요약." },
+      { property: "og:description", content: "동호회 출석·경기·회비 현황 요약." },
     ],
   }),
   component: ClubIndexPage,
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/club/")({
 
 const QUICK_ACTIONS = [
   { to: "/games", label: "경기", icon: Trophy },
-  { to: "/club/schedule", label: "일정", icon: CalendarDays },
+  { to: "/club/attendance", label: "출석", icon: Users },
   { to: "/club/members", label: "멤버", icon: Users },
 ] as const;
 
@@ -35,7 +35,7 @@ export function ClubLoginGate() {
         동호회 기능은 로그인이 필요해요
       </h2>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        로그인하면 가입한 동호회의 일정, 출석, 경기, 회원 정보를 이용할 수 있어요.
+        로그인하면 가입한 동호회의 출석, 경기, 회원 정보를 이용할 수 있어요.
       </p>
       <Link
         to="/auth"
@@ -84,7 +84,7 @@ function ClubIndexPage() {
 }
 
 function ClubHomePage() {
-  const { club } = useStore();
+  const { club, can } = useStore();
   const { counts } = useDailyAttendance();
 
   return (
@@ -144,34 +144,26 @@ function ClubHomePage() {
         ))}
       </section>
 
-      <section>
-        <h2 className="mb-2 text-xl font-extrabold tracking-tight text-foreground">게스트</h2>
+      {can("VIEW_FINANCE") ? (
         <Link
-          to="/club/manage/guest"
-          className="surface-card flex min-h-[88px] items-center gap-3 p-4 transition-transform active:scale-[0.99]"
+          to="/club/finance"
+          className="surface-card flex min-h-14 items-center justify-between px-4 text-base font-extrabold text-foreground transition-transform active:scale-[0.99]"
         >
-          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-brand-wash text-primary">
-            <UserRoundPlus className="size-5" aria-hidden />
+          <span className="flex items-center gap-2">
+            <Wallet className="size-5 text-primary" /> 회비 관리
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-base font-extrabold text-foreground">게스트 모집</span>
-            <span className="mt-1 block text-sm font-medium text-muted-foreground">
-              현재 모집 없음
-            </span>
-          </span>
-          <span className="flex min-h-11 items-center gap-1 px-1 text-sm font-bold text-primary">
-            만들기 <ChevronRight className="size-4" aria-hidden />
-          </span>
+          <ChevronRight className="size-5 text-muted-foreground" aria-hidden />
         </Link>
-      </section>
-
-      <Link
-        to="/club/manage"
-        className="surface-card flex min-h-14 items-center justify-between px-4 text-base font-extrabold text-foreground transition-transform active:scale-[0.99]"
-      >
-        관리
-        <ChevronRight className="size-5 text-muted-foreground" aria-hidden />
-      </Link>
+      ) : (
+        <div
+          className="surface-card flex min-h-14 items-center justify-between px-4 text-base font-extrabold text-muted-foreground"
+          aria-disabled="true"
+        >
+          <span className="flex items-center gap-2">
+            <Wallet className="size-5" /> 회비 관리 🔒
+          </span>
+        </div>
+      )}
     </div>
   );
 }

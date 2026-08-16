@@ -115,7 +115,7 @@ test("동일 제목·날짜·지역인 고신뢰 대회만 중복으로 판정�
 });
 
 test("migration은 public read와 자기 favorite만 허용하고 source raw data는 보호한다", () => {
-  const sql = readFileSync("supabase/migrations/20260812235109_tournament_directory.sql", "utf8");
+  const sql = readFileSync("supabase/migrations/20260813023212_tournament_directory.sql", "utf8");
   assert.match(sql, /public reads tournaments[\s\S]*to anon, authenticated[\s\S]*using \(true\)/i);
   assert.match(sql, /auth\.uid\(\)\) = user_id/i);
   assert.match(

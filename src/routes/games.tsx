@@ -1,6 +1,6 @@
 import { authGuard } from "@/components/app/RequireAuth";
 import { createFileRoute } from "@tanstack/react-router";
-import { Camera, Minus, Plus, Sparkles, Timer, Zap } from "lucide-react";
+import { Camera, Minus, Plus, Sparkles, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Scoreboard } from "@/components/app/Scoreboard";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,10 @@ export const Route = createFileRoute("/games")({
       { title: "경기 운영 – 코트 배정과 점수판" },
       {
         name: "description",
-        content: "코트 수 설정, 대기열 관리, 공정 복식 자동 배정과 21점 듀스 점수판.",
+        content: "코트 수 설정, 대기열 관리와 21점 듀스 점수판.",
       },
       { property: "og:title", content: "경기 운영 – 민턴동" },
-      { property: "og:description", content: "공정한 복식 배정과 점수판을 한 화면에서." },
+      { property: "og:description", content: "경기 운영과 점수판을 한 화면에서." },
     ],
   }),
   ...authGuard(),
@@ -28,9 +28,8 @@ export const Route = createFileRoute("/games")({
 const TARGETS = [21, 15, 11];
 
 function GamesPage() {
-  const { club, setCourtCount, setDefaultTarget, startMatch, dequeue, enqueue, can, meMemberId } = useStore();
+  const { club, setCourtCount, setDefaultTarget, dequeue, enqueue, can, meMemberId } = useStore();
   const canCourts = can("MANAGE_COURTS");
-  const canCreate = can("CREATE_MATCHES");
   const canManageQueue = can("MANAGE_COURTS");
   const [openMatchId, setOpenMatchId] = useState<string | null>(null);
   const [custom, setCustom] = useState("");
@@ -60,7 +59,9 @@ function GamesPage() {
     return (
       <section className="rounded-3xl border border-border bg-card shadow-soft p-6 text-center">
         <p className="text-base font-bold text-foreground">경기 현황을 볼 권한이 없어요</p>
-        <p className="mt-1 text-xs text-muted-foreground">클럽 운영자에게 경기 보기 권한을 요청해 주세요.</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          클럽 운영자에게 경기 보기 권한을 요청해 주세요.
+        </p>
       </section>
     );
   }
@@ -68,64 +69,64 @@ function GamesPage() {
   return (
     <>
       {canCourts ? (
-      <section className="rounded-3xl border border-border bg-card shadow-soft p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-bold text-foreground">코트 수</p>
-            <p className="text-[11px] text-muted-foreground">클럽별로 따로 저장돼요</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              size="icon"
-              variant="secondary"
-              className="size-11 rounded-2xl"
-              onClick={() => setCourtCount(club.courtCount - 1)}
-            >
-              <Minus className="size-4" />
-            </Button>
-            <span className="w-8 text-center text-2xl font-extrabold tabular-nums">
-              {club.courtCount}
-            </span>
-            <Button
-              size="icon"
-              variant="secondary"
-              className="size-11 rounded-2xl"
-              onClick={() => setCourtCount(club.courtCount + 1)}
-            >
-              <Plus className="size-4" />
-            </Button>
-          </div>
-        </div>
-        <div className="mt-4 border-t border-border pt-3">
-          <p className="text-sm font-bold text-foreground">기본 점수제</p>
-          <div className="mt-2 flex gap-2">
-            {TARGETS.map((t) => (
-              <button
-                key={t}
-                onClick={() => setDefaultTarget(t)}
-                className={`h-11 flex-1 rounded-xl text-sm font-bold ${
-                  club.defaultTarget === t
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-secondary-foreground"
-                }`}
+        <section className="rounded-3xl border border-border bg-card shadow-soft p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-foreground">코트 수</p>
+              <p className="text-[11px] text-muted-foreground">클럽별로 따로 저장돼요</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                size="icon"
+                variant="secondary"
+                className="size-11 rounded-2xl"
+                onClick={() => setCourtCount(club.courtCount - 1)}
               >
-                {t}점
-              </button>
-            ))}
-            <input
-              inputMode="numeric"
-              placeholder="직접"
-              value={custom}
-              onChange={(e) => {
-                setCustom(e.target.value);
-                const n = Number(e.target.value);
-                if (n >= 5 && n <= 50) setDefaultTarget(n);
-              }}
-              className="h-11 w-16 rounded-xl bg-secondary text-center text-sm font-bold text-secondary-foreground placeholder:text-muted-foreground"
-            />
+                <Minus className="size-4" />
+              </Button>
+              <span className="w-8 text-center text-2xl font-extrabold tabular-nums">
+                {club.courtCount}
+              </span>
+              <Button
+                size="icon"
+                variant="secondary"
+                className="size-11 rounded-2xl"
+                onClick={() => setCourtCount(club.courtCount + 1)}
+              >
+                <Plus className="size-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-      </section>
+          <div className="mt-4 border-t border-border pt-3">
+            <p className="text-sm font-bold text-foreground">기본 점수제</p>
+            <div className="mt-2 flex gap-2">
+              {TARGETS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setDefaultTarget(t)}
+                  className={`h-11 flex-1 rounded-xl text-sm font-bold ${
+                    club.defaultTarget === t
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground"
+                  }`}
+                >
+                  {t}점
+                </button>
+              ))}
+              <input
+                inputMode="numeric"
+                placeholder="직접"
+                value={custom}
+                onChange={(e) => {
+                  setCustom(e.target.value);
+                  const n = Number(e.target.value);
+                  if (n >= 5 && n <= 50) setDefaultTarget(n);
+                }}
+                className="h-11 w-16 rounded-xl bg-secondary text-center text-sm font-bold text-secondary-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+          </div>
+        </section>
       ) : null}
 
       <section className="mt-5 space-y-3">
@@ -134,21 +135,19 @@ function GamesPage() {
           <div
             key={index}
             className={`rounded-3xl border p-4 ${
-              match
-                ? "border-primary/35 bg-card card-soft"
-                : "border-dashed border-border bg-card"
+              match ? "border-primary/35 bg-card card-soft" : "border-dashed border-border bg-card"
             }`}
           >
             <div className="flex items-center justify-between">
               <p className="text-sm font-extrabold text-foreground">{index + 1}번 코트</p>
               <span
                 className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-                  match ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground"
+                  match
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-secondary text-secondary-foreground"
                 }`}
               >
-                {match ? (
-                  <span className="size-1.5 rounded-full bg-primary" aria-hidden />
-                ) : null}
+                {match ? <span className="size-1.5 rounded-full bg-primary" aria-hidden /> : null}
                 {match ? "경기 중" : "비어 있음"}
               </span>
             </div>
@@ -174,20 +173,10 @@ function GamesPage() {
                   점수판 열기
                 </Button>
               </>
-            ) : canCreate ? (
-              <Button
-                className="mt-3 h-12 w-full rounded-2xl font-bold"
-                onClick={() => {
-                  const id = startMatch(index);
-                  if (!id) toast.error("대기 인원이 4명 이상이어야 배정할 수 있어요.");
-                  else {
-                    setOpenMatchId(id);
-                    toast.success("공정 배정 완료 – 경기수·대기시간·실력 반영");
-                  }
-                }}
-              >
-                <Zap className="mr-1 size-4" /> 자동 배정 시작
-              </Button>
+            ) : can("CREATE_MATCHES") ? (
+              <p className="mt-3 rounded-2xl bg-secondary p-3 text-[11px] text-secondary-foreground">
+                경기 생성은 다음 출시에서 제공돼요.
+              </p>
             ) : (
               <p className="mt-3 rounded-2xl bg-secondary p-3 text-[11px] text-secondary-foreground">
                 경기 배정은 운영 권한이 있는 멤버만 할 수 있어요.
@@ -221,7 +210,8 @@ function GamesPage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-foreground">{p?.name}</p>
                     <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <Timer className="size-3" /> {wait === null ? "–" : wait}분 대기 · {club.stats[q.id]?.games ?? 0}경기
+                      <Timer className="size-3" /> {wait === null ? "–" : wait}분 대기 ·{" "}
+                      {club.stats[q.id]?.games ?? 0}경기
                       {p ? ` · ${LEVEL_LABEL[p.level]}` : ""}
                     </p>
                   </div>

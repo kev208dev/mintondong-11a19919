@@ -104,7 +104,7 @@ test("수동 등록 대회도 기존 날짜 기반 상태 계산을 사용한다
 
 test("migration은 canonical과 MANUAL source를 원자적으로 만들고 soft delete한다", () => {
   const sql = readFileSync(
-    "supabase/migrations/20260813022012_tournament_manual_admin.sql",
+    "supabase/migrations/20260813023220_tournament_manual_admin.sql",
     "utf8",
   );
   assert.match(
@@ -119,7 +119,7 @@ test("migration은 canonical과 MANUAL source를 원자적으로 만들고 soft 
 
 test("role은 self-service write에서 제외되고 DB 함수는 service_role 전용이다", () => {
   const migration = readFileSync(
-    "supabase/migrations/20260813022012_tournament_manual_admin.sql",
+    "supabase/migrations/20260813023220_tournament_manual_admin.sql",
     "utf8",
   );
   assert.match(migration, /role in \('USER', 'ADMIN'\)/i);

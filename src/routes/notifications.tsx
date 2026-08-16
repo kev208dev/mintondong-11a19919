@@ -92,7 +92,7 @@ function NotificationsPage() {
           role="alert"
         >
           <Bell className="size-8 text-brand-green" />
-          <p className="mt-3 text-sm font-bold">알림을 불러오지 못했어요</p>
+          <p className="mt-3 text-sm font-bold">잠시 후 다시 시도해 주세요</p>
           <button
             type="button"
             onClick={() => void query.refetch()}

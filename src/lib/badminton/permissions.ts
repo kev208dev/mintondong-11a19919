@@ -83,7 +83,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     items: [
       { key: "VIEW_GAMES", label: "경기 보기", desc: "코트·대기열 열람" },
       { key: "MANAGE_COURTS", label: "코트 관리", desc: "코트 수·대기열 조정" },
-      { key: "CREATE_MATCHES", label: "경기 배정", desc: "자동 복식 배정·경기 취소" },
+      { key: "CREATE_MATCHES", label: "경기 생성", desc: "경기 생성·취소" },
       { key: "EDIT_SCORES", label: "점수 입력/수정", desc: "득점·되돌리기" },
       { key: "FINISH_MATCHES", label: "경기 종료", desc: "결과 확정 및 기록 반영" },
     ],
@@ -150,14 +150,7 @@ export interface RoleDefinition {
   createdAt: number;
 }
 
-export const ROLE_COLORS = [
-  "primary",
-  "amber",
-  "sky",
-  "violet",
-  "rose",
-  "slate",
-] as const;
+export const ROLE_COLORS = ["primary", "amber", "sky", "violet", "rose", "slate"] as const;
 
 export const ROLE_COLOR_CLASS: Record<string, string> = {
   primary: "bg-primary text-primary-foreground",
